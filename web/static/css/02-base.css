@@ -1,0 +1,657 @@
+/* Structure : menu latéral et contenu */
+
+.layout {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    min-height: 100vh;
+}
+
+/* Sans cela, un élément de grille ne rétrécit pas sous la largeur de son contenu :
+   le menu défilant élargirait toute la page sur téléphone. */
+.layout > * {
+    min-width: 0;
+}
+
+.layout-public {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+}
+
+.public-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+}
+
+.sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 22px 16px 18px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+}
+
+.brand {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+    color: var(--heading);
+}
+
+.brand:hover {
+    text-decoration: none;
+}
+
+.brand img {
+    border-radius: 10px;
+}
+
+.brand strong {
+    display: block;
+    font-size: 15px;
+}
+
+.brand small {
+    display: block;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.nav-item {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: var(--text);
+    font-weight: 600;
+}
+
+.nav-item svg {
+    color: var(--muted);
+}
+
+.nav-item:hover {
+    background: var(--primary-light);
+    text-decoration: none;
+}
+
+.nav-item.is-active {
+    background: var(--primary);
+    color: var(--on-primary);
+}
+
+.nav-item.is-active svg {
+    color: var(--on-primary);
+}
+
+.sidebar-footer {
+    display: grid;
+    gap: 2px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+}
+
+.sidebar-footer a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    color: var(--text);
+}
+
+.sidebar-footer a:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.sidebar-footer svg {
+    width: 16px;
+    height: 16px;
+    color: var(--muted);
+}
+
+.content {
+    padding: 28px 32px 40px;
+    max-width: 1440px;
+    width: 100%;
+}
+
+/* En-tête de page */
+
+.page-title {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+}
+
+.page-icon {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.page-header {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 22px;
+}
+
+.page-header h1 {
+    font-size: 26px;
+    font-weight: 700;
+}
+
+.page-header p {
+    margin: 4px 0 0;
+    color: var(--muted);
+}
+
+.page-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* Boutons */
+
+.button {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.button:hover {
+    background: var(--primary-light);
+    border-color: var(--primary);
+    text-decoration: none;
+}
+
+.button-danger {
+    border-color: var(--danger);
+    background: transparent;
+    color: var(--danger);
+}
+
+.logs-clear {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.availability {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    align-items: center;
+    margin-top: 16px;
+}
+
+.duplicate-actions {
+    margin-top: 14px;
+}
+
+.profile-form {
+    display: grid;
+    gap: 14px;
+}
+
+.profile-form label {
+    display: grid;
+    gap: 6px;
+    font-weight: 600;
+}
+
+.profile-form label.check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 400;
+}
+
+.profile-form textarea,
+.letter {
+    width: 100%;
+    font: inherit;
+}
+
+.preparation summary {
+    cursor: pointer;
+    list-style: none;
+}
+
+.preparation summary h2 {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    margin: 0;
+}
+
+.inline-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.copy-field {
+    display: grid;
+    gap: 8px;
+    justify-items: start;
+}
+
+.copy-field textarea {
+    width: 100%;
+    font-family: monospace;
+    font-size: 0.85rem;
+    resize: none;
+}
+
+/* Fond blanc fixe : un QR code sur fond sombre se lit mal à la caméra. */
+.qr-code svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin-top: 8px;
+    background: #ffffff;
+}
+
+.reset-form {
+    display: grid;
+    gap: 12px;
+    justify-items: start;
+}
+
+.purge-list {
+    max-height: 240px;
+    margin: 12px 0;
+    padding-left: 20px;
+    overflow-y: auto;
+    overflow-wrap: anywhere;
+}
+
+.button-primary {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--on-primary);
+}
+
+.button-primary:hover {
+    background: var(--primary-dark);
+    color: var(--on-primary);
+}
+
+.button-banner {
+    background: var(--on-primary);
+    border: none;
+    color: var(--primary-dark);
+    padding: 10px 18px;
+}
+
+.button-block {
+    width: 100%;
+    justify-content: center;
+}
+
+/* Cartes */
+
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+}
+
+.card h2 {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.card-subtitle {
+    margin: 2px 0 14px;
+    color: var(--muted);
+}
+
+.grid {
+    display: grid;
+    gap: 18px;
+}
+
+.grid-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.grid-dashboard {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    margin-top: 18px;
+}
+
+.grid-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.grid-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.section-gap {
+    margin-top: 18px;
+}
+
+.grid-settings {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+}
+
+.stack {
+    display: grid;
+    gap: 18px;
+}
+
+/* Bannière */
+
+.banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 18px;
+    padding: 26px 40px 26px 32px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--banner-start), var(--banner-end));
+    color: var(--banner-text);
+}
+
+.banner h2 {
+    color: var(--banner-title);
+    font-size: 24px;
+}
+
+.banner p {
+    margin: 8px 0 16px;
+    font-size: 15px;
+}
+
+.banner-icons {
+    display: flex;
+    gap: 22px;
+    color: var(--banner-text);
+}
+
+.banner-message {
+    margin: 12px 0 0;
+    color: var(--on-primary);
+}
+
+.banner-message:empty {
+    display: none;
+}
+
+.banner-actions form {
+    margin: 0;
+}
+
+.banner-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.banner-actions .button:not(.button-banner) {
+    background: transparent;
+    border-color: var(--banner-text);
+    color: var(--banner-title);
+}
+
+/* Cartes statistiques */
+
+.stat {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    padding: 16px 18px;
+    border-radius: 12px;
+    background: var(--accent-light);
+    color: var(--text);
+}
+
+a.stat:hover {
+    text-decoration: none;
+    outline: 2px solid var(--accent);
+}
+
+.stat-icon {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--accent);
+}
+
+.stat strong {
+    display: block;
+    color: var(--accent);
+    font-size: 28px;
+    line-height: 1.1;
+}
+
+.stat span {
+    color: var(--muted);
+}
+
+.accent-blue {
+    --accent: var(--blue);
+    --accent-light: var(--blue-light);
+}
+
+.accent-green {
+    --accent: var(--green);
+    --accent-light: var(--green-light);
+}
+
+.accent-amber {
+    --accent: var(--amber);
+    --accent-light: var(--amber-light);
+}
+
+.accent-purple {
+    --accent: var(--purple);
+    --accent-light: var(--purple-light);
+}
+
+/* Diplôme du profil, sur deux colonnes quand la largeur le permet */
+
+.profile-education {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+}
+
+/* Métiers qui recrutent */
+
+.outlook-panel {
+    padding: 16px 18px;
+    border-radius: 12px;
+    background: var(--accent-light);
+}
+
+.outlook-panel h3 {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin: 0 0 4px;
+    color: var(--accent);
+}
+
+.outlook-panel a {
+    color: var(--text);
+}
+
+/* Graphiques */
+
+.legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    margin: 0 0 6px;
+    padding: 0;
+    list-style: none;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.legend li {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.legend i {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+}
+
+.legend-column {
+    flex-direction: column;
+    font-size: 13px;
+    color: var(--text);
+}
+
+/* Ligne haute en pointillé : elle correspond à la valeur « max » de l'axe. */
+.chart {
+    display: flex;
+    gap: 4px;
+    height: 200px;
+    padding-top: 22px;
+    background: linear-gradient(90deg, var(--border) 50%, transparent 0) 0 22px / 8px 1px
+        repeat-x;
+}
+
+/* Largeur plafonnée : avec peu de jours, les barres restent à gauche. */
+.chart-group {
+    display: flex;
+    flex: 1 1 0;
+    max-width: 56px;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+/* Catégories plutôt que jours : les barres occupent toute la largeur. */
+.chart-fill .chart-group {
+    max-width: none;
+}
+
+.chart-bars {
+    display: flex;
+    flex: 1;
+    gap: 2px;
+    align-items: flex-end;
+    justify-content: center;
+    border-bottom: 1px solid var(--border);
+}
+
+.chart-bars i {
+    position: relative;
+    width: min(100%, 18px);
+    border-radius: 3px 3px 0 0;
+    background: var(--bar-color);
+}
+
+.chart-bars i.is-empty {
+    background: var(--border);
+}
+
+.chart-bars b {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--heading);
+    font-size: 10px;
+    white-space: nowrap;
+}
+
+.chart-group small {
+    margin: 0 -12px;
+    color: var(--muted);
+    font-size: 11px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* La date la plus récente reste toujours visible */
+.chart-dense .chart-group:nth-last-child(even) small {
+    visibility: hidden;
+}
+
+.pie-chart {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    min-height: 200px;
+}
+
+.pie {
+    position: relative;
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 170px;
+    height: 170px;
+    border-radius: 50%;
+    background: var(--border);
+}
+
+/* Le disque central transforme le camembert en anneau, plus lisible */
+.pie span {
+    display: grid;
+    place-items: center;
+    width: 56%;
+    height: 56%;
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--heading);
+    font-size: 22px;
+    font-weight: 700;
+}
+

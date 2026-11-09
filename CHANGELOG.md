@@ -6,6 +6,10 @@ dans l'historique git.
 ## Non publié
 
 ### Point qualité
+- Tests web découpés en huit fichiers par domaine (`tests/web/test_app_*.py`),
+  avec `conftest.py` et `helpers.py` communs
+- Feuille de style découpée en sept parties dans `web/static/css/`,
+  importées dans l'ordre par `style.css` ; cache hors ligne passé en v5
 - Tests du téléchargement des taux de la BCE (date, fichier sans taux,
   taux enregistrés illisibles), des alertes de biais des questionnaires
   et d'un texte Remote OK non réparable

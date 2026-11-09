@@ -543,7 +543,8 @@ scraper-data-python/
 │   │   ├── quiz_exam.html                     # Examen de révision, une question à la fois
 │   │   └── error.html                         # Page d'erreur
 │   └── static/                                # Fichiers statiques
-│       ├── style.css                          # Feuille de style, thèmes clair et sombre
+│       ├── style.css                          # Importe, dans l'ordre de la cascade, les parties de css/
+│       ├── css/                               # Feuille de style en sept parties : thème, base, contenu, progression, exercices, écrans étroits, modules
 │       ├── theme.js                           # Applique et mémorise le thème choisi
 │       ├── forms.js                           # Envoi automatique des filtres, sans script en ligne
 │       ├── schema_editor.js                   # Éditeur des schémas à construire de la révision
@@ -1020,7 +1021,16 @@ scraper-data-python/
 │   │
 │   ├── web/                                    # Tests du tableau de bord
 │   │   ├── __init__.py                          # Initialise le package de tests Web
-│   │   ├── test_app.py                         # Teste les routes et la sécurité de l'affichage
+│   │   ├── conftest.py                         # Fournit le client connecté sur une base temporaire
+│   │   ├── helpers.py                          # Construit une offre de test
+│   │   ├── test_app_offres.py                  # Teste la liste, le détail et la qualité des offres
+│   │   ├── test_app_candidatures.py            # Teste le suivi des candidatures et les documents
+│   │   ├── test_app_entretien.py               # Teste les entretiens et la négociation
+│   │   ├── test_app_quiz.py                    # Teste les quiz, examens et compétences
+│   │   ├── test_app_exercices.py               # Teste les défis, énigmes et exercices pratiques
+│   │   ├── test_app_tableau_de_bord.py         # Teste le tableau de bord, la progression et le planning
+│   │   ├── test_app_reglages.py                # Teste les réglages, sauvegardes, journaux et la sécurité
+│   │   ├── test_app_rendu.py                   # Teste graphiques, icônes et feuille de style
 │   │   ├── test_main.py                        # Teste le rechargement à chaud du certificat
 │   │   ├── test_api.py                         # Teste l'API mobile : jeton, contenu et réponses
 │   │   ├── test_api_interview.py               # Teste l'API de simulation et d'auto-évaluation

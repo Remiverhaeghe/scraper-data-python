@@ -4,13 +4,20 @@
 // lecture sont gardées, 40 au plus, et la déconnexion les efface
 // (en-tête Clear-Site-Data de /logout).
 
-const CACHE_NAME = "jobboard-static-v4";
+const CACHE_NAME = "jobboard-static-v5";
 const PAGES_CACHE_NAME = "jobboard-pages-v1";
 const MAX_PAGES = 40;
 const OFFLINE_URL = "/static/offline.html";
 const STATIC_FILES = [
     OFFLINE_URL,
     "/static/style.css",
+    "/static/css/01-theme.css",
+    "/static/css/02-base.css",
+    "/static/css/03-contenu.css",
+    "/static/css/04-progression.css",
+    "/static/css/05-exercices.css",
+    "/static/css/06-ecrans.css",
+    "/static/css/07-modules.css",
     "/static/theme.js",
     "/static/htmx.min.js",
     "/static/forms.js",

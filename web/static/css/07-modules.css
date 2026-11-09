@@ -1,0 +1,828 @@
+/* Candidature déjà envoyée à l'entreprise de l'offre */
+.company-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 0 0 10px;
+    padding: 8px 12px;
+    border: 1px solid var(--warning);
+    border-radius: 8px;
+    background: var(--amber-light);
+    color: var(--warning);
+    font-weight: 600;
+}
+
+.company-warning svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.company-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 12px;
+}
+
+.company-actions .link-button {
+    width: auto;
+    color: var(--primary);
+}
+
+/* Tableau de suivi des candidatures */
+.board {
+    align-items: start;
+}
+
+.board-column h2 {
+    font-size: 1rem;
+}
+
+.board-card {
+    display: grid;
+    gap: 4px;
+    margin-bottom: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface-alt);
+}
+
+.board-card p {
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+.board-card select {
+    width: 100%;
+    margin-top: 4px;
+}
+
+.statistic-tables {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 1100px) {
+    .statistic-tables {
+        grid-template-columns: 1fr;
+    }
+}
+
+.attachment {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.attachment a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.attachment form {
+    margin: 0 0 0 auto;
+}
+
+.attachment .link-button {
+    width: auto;
+    color: var(--danger);
+}
+
+/* Révision technique */
+.quiz-card {
+    max-width: 860px;
+}
+
+.quiz-verdict {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+}
+
+.quiz-code {
+    overflow-x: auto;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    font-size: 0.875rem;
+}
+
+.quiz-form {
+    display: grid;
+    gap: 10px;
+}
+
+.quiz-choice {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.quiz-choice:hover {
+    border-color: var(--primary);
+}
+
+.quiz-choice input {
+    margin-top: 3px;
+}
+
+/* Tests de recrutement : une question par écran quand aptitude.js est actif */
+.aptitude-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.aptitude-timer {
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--primary);
+}
+
+.aptitude-question {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+.aptitude-question[hidden] {
+    display: none;
+}
+
+.aptitude-question legend {
+    margin-bottom: 10px;
+}
+
+.aptitude-correction {
+    padding: 10px 0;
+    border-top: 1px solid var(--border);
+}
+
+.ladder-code,
+.sql-code {
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+
+/* Feuille de l'atelier Excel : cellules à remplir surlignées, vertes ou rouges après essai */
+.excel-sheet th {
+    color: var(--muted);
+    text-align: center;
+}
+
+.excel-sheet .excel-header {
+    font-weight: 600;
+}
+
+.excel-sheet .excel-target {
+    background: var(--primary-light);
+    font-weight: 600;
+}
+
+.excel-sheet .excel-target.ok {
+    background: var(--green-light);
+    color: var(--success);
+}
+
+.excel-sheet .excel-target.ko {
+    color: var(--danger);
+    outline: 1px solid var(--danger);
+    outline-offset: -1px;
+}
+
+/* Ladder et chronogramme : défilement horizontal plutôt qu'un dessin écrasé */
+.ladder-drawing {
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+.troubleshooting-actions {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.troubleshooting-actions .button {
+    width: 100%;
+    justify-content: flex-start;
+}
+
+.aptitude-tile {
+    color: inherit;
+    text-decoration: none;
+}
+
+.aptitude-tile:hover {
+    outline: 1px solid var(--primary);
+}
+
+/* Réponses saisies : calcul, code à compléter, ordre et association */
+.quiz-typed {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-weight: 600;
+}
+
+.quiz-code-input {
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+
+.quiz-order {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding-left: 24px;
+}
+
+.quiz-pairs {
+    display: grid;
+    gap: 8px;
+}
+
+.quiz-pairs label {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+}
+
+.quiz-order select,
+.quiz-pairs select {
+    width: 100%;
+}
+
+@media (max-width: 640px) {
+    .quiz-pairs label {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+}
+
+.quiz-progress {
+    height: 8px;
+    margin: 10px 0 14px;
+    overflow: hidden;
+    border-radius: 4px;
+    background: var(--surface-alt);
+}
+
+.quiz-progress span {
+    display: block;
+    height: 100%;
+    background: var(--success);
+}
+
+.follow-up {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 12px 0;
+    border-top: 1px solid var(--border);
+}
+
+.follow-up-body {
+    flex: 1 1 260px;
+    min-width: 0;
+}
+
+.follow-up textarea {
+    width: 100%;
+    margin-top: 8px;
+}
+
+.pre-line {
+    white-space: pre-line;
+}
+
+.exam-timer {
+    margin: 0 0 12px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.funnel-row {
+    display: grid;
+    grid-template-columns: 90px minmax(0, 1fr) minmax(0, 200px);
+    gap: 12px;
+    align-items: center;
+    margin-top: 8px;
+}
+
+.funnel-track {
+    display: block;
+    border-radius: 6px;
+    background: var(--surface-alt);
+}
+
+.funnel-bar {
+    display: block;
+    min-width: 4.5em;
+    padding: 3px 8px;
+    border-radius: 6px;
+    color: #FFFFFF;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.funnel-1 .funnel-bar { background: #155FCC; }
+.funnel-2 .funnel-bar { background: #15803D; }
+.funnel-3 .funnel-bar { background: #B45309; }
+.funnel-4 .funnel-bar { background: #7C3AED; }
+
+@media (max-width: 640px) {
+    .funnel-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+}
+
+.nav-alerts {
+    margin-left: auto;
+}
+
+.offers-map {
+    height: min(70vh, 640px);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+
+/* Indicateur HTMX : visible seulement pendant la requête */
+.htmx-indicator {
+    display: none;
+}
+
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+    display: inline;
+}
+
+.offer-summary {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 6px 14px;
+    margin: 0;
+}
+
+.offer-summary dt {
+    font-weight: 600;
+}
+
+.offer-summary dd {
+    margin: 0;
+}
+
+@media (max-width: 640px) {
+    .offer-summary {
+        grid-template-columns: 1fr;
+    }
+}
+
+.checklist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+}
+
+.checklist li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 12px;
+}
+
+.checklist a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+}
+
+.map-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.map-legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    margin-bottom: 10px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.map-key {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    white-space: nowrap;
+}
+
+.map-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: -8px;
+}
+
+.map-dot-success {
+    background: var(--success);
+}
+
+.map-dot-warning {
+    background: var(--warning);
+}
+
+.map-dot-muted {
+    background: var(--muted);
+}
+
+.map-dot-primary {
+    background: var(--primary);
+}
+
+.map-dot-danger {
+    background: var(--danger);
+}
+
+.skill-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 8px 16px;
+}
+
+.skill-grid label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.skill-grid input[type="number"] {
+    width: 4.5em;
+}
+
+.week-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.week-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.week-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+}
+
+.season-medal {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--medal);
+}
+
+.season-medal strong {
+    color: var(--text);
+}
+
+.week-trend {
+    font-weight: 600;
+}
+
+.trend-up {
+    color: var(--success);
+}
+
+.trend-down {
+    color: var(--danger);
+}
+
+.glossary dt {
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+.glossary dd {
+    margin: 2px 0 0;
+    color: var(--muted);
+}
+
+.offline-banner {
+    margin: 0;
+    padding: 8px 16px;
+    background: color-mix(in srgb, var(--warning) 15%, var(--surface));
+    color: var(--text);
+    border-bottom: 1px solid var(--warning);
+    text-align: center;
+}
+
+/* Console simulée de Maven et Docker : défile plutôt que d'élargir la page */
+.devops-console {
+    max-height: 420px;
+    overflow: auto;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: #0f172a;
+    color: #e2e8f0;
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+    font-size: 0.85rem;
+    white-space: pre;
+}
+
+/* Mission d'entretien : étapes cochées, faites ou vérifiées d'après les examens */
+.mission-steps {
+    display: grid;
+    gap: 8px;
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mission-steps li {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.mission-steps li.is-done strong {
+    color: var(--success);
+}
+
+/* Entretien oral : chrono de la réponse, rouge une fois le temps dépassé */
+.oral-clock {
+    font-size: 1.4rem;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Jeu de négociation : dialogue avec le recruteur et réponses possibles */
+.negotiation-transcript {
+    display: grid;
+    gap: 6px;
+    padding: 0;
+    list-style: none;
+}
+
+.negotiation-transcript li {
+    max-width: 85%;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: var(--surface-muted, color-mix(in srgb, var(--border) 30%, transparent));
+}
+
+.negotiation-transcript .negotiation-candidate {
+    justify-self: end;
+    background: color-mix(in srgb, var(--primary) 15%, transparent);
+}
+
+.negotiation-choices {
+    display: grid;
+    gap: 6px;
+}
+
+.negotiation-choices .button {
+    justify-content: flex-start;
+    text-align: left;
+    white-space: normal;
+}
+
+/* Mascotte du tableau de bord : le robot et sa bulle */
+.mascot {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 16px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.mascot-drawing svg {
+    display: block;
+    width: 84px;
+    height: 84px;
+}
+
+.mascot-bubble {
+    position: relative;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--primary) 10%, transparent);
+}
+
+/* Session de concentration : anneau qui se vide, temps restant au centre */
+.focus-body {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.focus-ring {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle, var(--surface, #ffffff) 58%, transparent 59%),
+        conic-gradient(var(--primary) calc(var(--share, 1) * 360deg), var(--border) 0);
+    font-size: 1.4rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Planning de la semaine : sept colonnes, une par jour, repliées sur téléphone */
+.planning-week {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+}
+
+.planning-day ul {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.planning-day.is-today {
+    border-color: var(--primary);
+}
+
+.planning-day.is-target {
+    background: color-mix(in srgb, var(--primary) 10%, transparent);
+}
+
+.planning-item {
+    padding: 6px 8px;
+    border-left: 4px solid var(--primary);
+    border-radius: 6px;
+    background: var(--surface-alt);
+    cursor: grab;
+}
+
+.planning-interview {
+    border-left-color: var(--danger);
+}
+
+.planning-follow-up {
+    border-left-color: var(--warning);
+}
+
+/* Couleurs d'accent débloquées avec les niveaux (job/cosmetics.py) */
+:root[data-accent="vert"] {
+    --primary: #15803d;
+    --primary-dark: #166534;
+    --primary-light: #e7f7ec;
+    --primary-gradient: #22c55e;
+    --banner-text: #dcfce7;
+    --banner-start: #15803d;
+    --banner-end: #166534;
+}
+
+:root[data-accent="vert"][data-theme="dark"] {
+    --primary: #4ade80;
+    --primary-dark: #86efac;
+    --primary-light: #132a1f;
+    --primary-gradient: #15803d;
+    --banner-text: #dcfce7;
+    --banner-start: #15803d;
+    --banner-end: #14532d;
+}
+
+:root[data-accent="violet"] {
+    --primary: #7c3aed;
+    --primary-dark: #6d28d9;
+    --primary-light: #f1eafe;
+    --primary-gradient: #a78bfa;
+    --banner-text: #ede9fe;
+    --banner-start: #7c3aed;
+    --banner-end: #5b21b6;
+}
+
+:root[data-accent="violet"][data-theme="dark"] {
+    --primary: #c084fc;
+    --primary-dark: #d8b4fe;
+    --primary-light: #251a3a;
+    --primary-gradient: #7c3aed;
+    --banner-text: #ede9fe;
+    --banner-start: #6d28d9;
+    --banner-end: #4c1d95;
+}
+
+:root[data-accent="orange"] {
+    --primary: #c2410c;
+    --primary-dark: #9a3412;
+    --primary-light: #fff1e6;
+    --primary-gradient: #fb923c;
+    --banner-text: #ffedd5;
+    --banner-start: #c2410c;
+    --banner-end: #9a3412;
+}
+
+:root[data-accent="orange"][data-theme="dark"] {
+    --primary: #fb923c;
+    --primary-dark: #fdba74;
+    --primary-light: #2e1d10;
+    --primary-gradient: #c2410c;
+    --banner-text: #ffedd5;
+    --banner-start: #c2410c;
+    --banner-end: #7c2d12;
+}
+
+:root[data-accent="rouge"] {
+    --primary: #b91c1c;
+    --primary-dark: #991b1b;
+    --primary-light: #fdecec;
+    --primary-gradient: #f87171;
+    --banner-text: #fee2e2;
+    --banner-start: #b91c1c;
+    --banner-end: #7f1d1d;
+}
+
+:root[data-accent="rouge"][data-theme="dark"] {
+    --primary: #f87171;
+    --primary-dark: #fca5a5;
+    --primary-light: #3a1a1c;
+    --primary-gradient: #b91c1c;
+    --banner-text: #fee2e2;
+    --banner-start: #b91c1c;
+    --banner-end: #7f1d1d;
+}
+
+:root[data-accent="or"] {
+    --primary: #a16207;
+    --primary-dark: #854d0e;
+    --primary-light: #fef9c3;
+    --primary-gradient: #eab308;
+    --banner-text: #fef9c3;
+    --banner-start: #a16207;
+    --banner-end: #713f12;
+}
+
+:root[data-accent="or"][data-theme="dark"] {
+    --primary: #facc15;
+    --primary-dark: #fde047;
+    --primary-light: #2e2810;
+    --primary-gradient: #a16207;
+    --banner-text: #fef9c3;
+    --banner-start: #a16207;
+    --banner-end: #713f12;
+}
+
+/* Cadres du badge de niveau (job/cosmetics.py) */
+.frame-bronze {
+    box-shadow: 0 0 0 3px #b45309;
+}
+
+.frame-argent {
+    box-shadow: 0 0 0 3px #94a3b8;
+}
+
+.frame-or {
+    box-shadow: 0 0 0 4px #eab308;
+}
+
+.frame-diamant {
+    box-shadow: 0 0 0 4px #22d3ee;
+}
+
+/* Récompenses : pastille de la couleur ou du cadre, récompense choisie mise en avant */
+.rewards-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.reward {
+    border-left: 12px solid var(--reward);
+}
+
+.reward.is-chosen {
+    outline: 2px solid var(--primary);
+}

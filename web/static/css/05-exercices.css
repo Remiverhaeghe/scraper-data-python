@@ -1,0 +1,576 @@
+/* Graphiques : axes, titres et anneaux */
+
+.chart-axis {
+    margin: 0 0 6px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+/* Schéma d'une question : dessiné en sombre sur blanc, même en thème sombre */
+.quiz-visual {
+    margin: 12px 0;
+}
+
+.quiz-visual img {
+    display: block;
+    width: 100%;
+    max-width: 640px;
+    height: auto;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+/* Schéma à construire : palette d'icônes, grille et fils */
+.schema-editor {
+    display: grid;
+    gap: 10px;
+}
+
+.schema-palette {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 8px;
+}
+
+.schema-tool {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #ffffff;
+    color: #0f172a;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.schema-tool svg {
+    width: 36px;
+    height: 45px;
+}
+
+.schema-tool:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.schema-canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #ffffff;
+    touch-action: none;
+}
+
+.schema-component {
+    cursor: grab;
+}
+
+.schema-frame {
+    fill: #ffffff;
+    stroke: none;
+}
+
+.schema-component.is-selected .schema-frame {
+    stroke: var(--primary);
+    stroke-dasharray: 6 4;
+}
+
+.schema-port {
+    fill: #ffffff;
+    stroke: var(--primary);
+    stroke-width: 2;
+    cursor: pointer;
+}
+
+.schema-port.is-pending {
+    fill: var(--danger);
+}
+
+.schema-wire-hit {
+    fill: none;
+    stroke: transparent;
+    stroke-width: 12;
+    cursor: pointer;
+}
+
+.schema-wire-line {
+    fill: none;
+    stroke-width: 2.5;
+    pointer-events: none;
+}
+
+.schema-wire.is-selected .schema-wire-line {
+    stroke: var(--danger);
+    stroke-width: 3.5;
+}
+
+.schema-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.schema-expected svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+/* Zone à désigner : image à sa taille d'origine, le clic vaut réponse */
+.quiz-zone {
+    max-width: 100%;
+    margin: 12px 0;
+    overflow-x: auto;
+}
+
+.quiz-zone-image {
+    display: block;
+    max-width: none;
+    height: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #ffffff;
+    cursor: crosshair;
+}
+
+.guide h2,
+.guide h3 {
+    margin-top: 18px;
+}
+
+/* En-têtes des domaines de révision et badges des sous-domaines */
+.domain-header {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.domain-header h2,
+.domain-header p {
+    margin: 0;
+}
+
+.domain-icon {
+    display: inline-flex;
+    padding: 8px;
+    border-radius: 10px;
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.subdomain-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--primary-light);
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Entreprises : liste à exclure en rouge, à privilégier en vert */
+textarea.companies-excluded {
+    border-color: var(--danger);
+}
+
+textarea.companies-preferred {
+    border-color: var(--success);
+}
+
+/* Défis : liste en grille, étoiles et exemple en chasse fixe */
+.challenge-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px;
+}
+
+.challenge-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.challenge-item:hover,
+.challenge-item.is-active {
+    border-color: var(--primary);
+}
+
+.challenge-puzzles {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+}
+
+.challenge-puzzles:hover {
+    border-color: var(--primary);
+}
+
+/* Ligne de code à désigner : indentation gardée, défilement sur téléphone */
+.puzzle-line code {
+    white-space: pre;
+    overflow-x: auto;
+}
+
+.challenge-item.is-done {
+    border-color: var(--success);
+    background: color-mix(in srgb, var(--success) 10%, transparent);
+}
+
+.challenge-item.is-done strong {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    color: var(--success);
+}
+
+.challenge-item.is-done.is-active {
+    box-shadow: 0 0 0 2px var(--primary);
+}
+
+/* Séries de niveaux du bac à sable Git */
+.level-series {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin: 18px 0 8px;
+    font-size: 1rem;
+}
+
+/* Cartes titrées repliables : chevron ajouté au titre par forms.js */
+.card-title {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.card-toggle {
+    flex: none;
+    width: 28px;
+    height: 28px;
+    margin-left: auto;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.card-toggle::before {
+    display: block;
+    width: 8px;
+    height: 8px;
+    margin: 0 auto;
+    border-right: 2px solid var(--muted);
+    border-bottom: 2px solid var(--muted);
+    content: "";
+    transform: rotate(-135deg);
+    transition: transform 0.2s;
+}
+
+.card-toggle:hover {
+    background: var(--surface-alt);
+}
+
+.card.is-collapsed .card-toggle::before {
+    transform: rotate(45deg);
+}
+
+.card.is-collapsed > :not(h2) {
+    display: none;
+}
+
+/* Blocs repliables : titre cliquable et chevron, état gardé par forms.js */
+.collapsible > summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    align-items: baseline;
+    cursor: pointer;
+    list-style: none;
+}
+
+.collapsible > summary::-webkit-details-marker {
+    display: none;
+}
+
+.collapsible > summary h2 {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    margin: 0;
+}
+
+.collapsible > summary::after {
+    content: "";
+    align-self: center;
+    width: 8px;
+    height: 8px;
+    margin-left: auto;
+    border-right: 2px solid var(--muted);
+    border-bottom: 2px solid var(--muted);
+    transform: rotate(45deg);
+    transition: transform 0.2s;
+}
+
+.collapsible:not([open]) > summary::after {
+    transform: rotate(-45deg);
+}
+
+.collapsible[open] > summary {
+    margin-bottom: 12px;
+}
+
+.challenge-stars {
+    color: var(--warning);
+    letter-spacing: 2px;
+}
+
+.challenge-example {
+    overflow-x: auto;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+/* Bac à sable Git : graphes côte à côte, défilants sur un petit écran */
+.git-graphs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.git-graphs figure {
+    margin: 0;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.git-graphs svg {
+    display: block;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.git-command {
+    flex: 1 1 220px;
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+
+.git-commands {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 6px 16px;
+    margin: 0;
+}
+
+.git-commands dd {
+    margin: 0;
+}
+
+@media (max-width: 640px) {
+    .git-commands {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Thèmes à compléter en priorité : libellé, demande et bouton sur une ligne */
+.priority-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.priority-list li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.priority-list li strong {
+    flex: 1 1 220px;
+}
+
+.tone-info {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* Détail d'un import de questions, replié par défaut */
+.import-details pre {
+    max-height: 240px;
+    overflow: auto;
+    white-space: pre-wrap;
+    font-size: 13px;
+}
+
+/* Progression par catégorie : domaines en gras, sous-domaines en retrait */
+.category-domain td:first-child {
+    font-weight: 600;
+}
+
+.category-subdomain td:first-child {
+    padding-left: 30px;
+    color: var(--muted);
+}
+
+.category-progress .quiz-progress {
+    display: inline-block;
+    width: 120px;
+    vertical-align: middle;
+}
+
+/* Révision : onglets des domaines et pastilles des sous-domaines */
+.quiz-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+}
+
+.quiz-tab {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    padding: 8px 14px;
+    border-bottom: 3px solid transparent;
+    color: var(--muted);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.quiz-tab:hover,
+.quiz-tab.is-active {
+    color: var(--primary);
+}
+
+.quiz-tab.is-active {
+    border-bottom-color: var(--primary);
+}
+
+.quiz-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 12px 0;
+}
+
+.quiz-chip {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    padding: 4px 12px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.quiz-chip:hover,
+.quiz-chip.is-active {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.quiz-chip.is-active {
+    background: color-mix(in srgb, var(--primary) 10%, transparent);
+    font-weight: 600;
+}
+
+.quiz-tab.is-empty,
+.quiz-chip.is-empty {
+    color: var(--muted);
+}
+
+.quiz-chip.is-empty {
+    border-style: dashed;
+}
+
+.empty-rubric {
+    display: grid;
+    gap: 8px;
+    padding: 0;
+    list-style: none;
+}
+
+.empty-rubric li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.quiz-main-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.quiz-main-header h2 {
+    margin: 0;
+}
+
+.chart-scale {
+    margin-left: 12px;
+    font-weight: 600;
+}
+
+/* La couleur de la série sur une pastille : en texte, elle manquait de contraste. */
+.chart-key {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: 4px;
+    border-radius: 50%;
+}
+
+.chart-axis-x {
+    margin: 4px 0 0;
+    text-align: center;
+}
+
+.chart + .legend,
+.chart-axis-x + .legend {
+    margin: 10px 0 0;
+}
+
+.pies {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 18px;
+}
+
+.pies .pie {
+    width: 130px;
+    height: 130px;
+}
+
+.pie-figure {
+    display: grid;
+    justify-items: center;
+}
+
+.chart-title {
+    margin: 0 0 8px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+}
+
