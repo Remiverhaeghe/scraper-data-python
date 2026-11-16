@@ -1,8 +1,6 @@
 """Tests web des entretiens et de la négociation"""
 
 
-
-
 def test_interview_simulation_on_the_web(client):
     """Vérifie une série de simulation sur le web jusqu'au bilan."""
 

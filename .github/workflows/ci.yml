@@ -215,6 +215,19 @@ jobs:
         with:
           python-version: "3.14"
 
+      # Le Dockerfile installe requirements-server.lock : il doit suivre
+      # requirements-server.txt, que Dependabot modifie seul. Le verrou actuel
+      # sert de point de départ, seules les versions demandées changent ; en
+      # cas d'écart, le diff affiché donne les lignes à reporter.
+      - name: Fichier verrouillé à jour
+        run: |
+          pip install "$(grep '^uv==' requirements.txt)"
+          cp requirements-server.lock "$RUNNER_TEMP/verrou.lock"
+          python -m uv pip compile requirements-server.txt --generate-hashes \
+            --python-version 3.14 --python-platform linux --no-header \
+            -o "$RUNNER_TEMP/verrou.lock"
+          diff -u requirements-server.lock "$RUNNER_TEMP/verrou.lock"
+
       # Compare les versions de requirements.txt aux failles publiées (base PyPI/OSV)
       - name: Analyse pip-audit
         run: |

@@ -23,7 +23,9 @@ from storage.database import initialize_database
 from storage.job_applications import get_application, save_application
 from storage.job_offers import get_offer, save_offers, set_availability
 
-NOW = datetime(2026, 10, 11, 10, 0)
+# Date des offres ajoutées à la main : la liste masque les offres de plus de
+# EXPIRY_DAYS jours, une date figée faisait échouer ces tests un mois plus tard.
+NOW = datetime.now().replace(second=0, microsecond=0)
 
 
 @pytest.fixture
