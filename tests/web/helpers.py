@@ -1,8 +1,6 @@
 """Aides communes aux tests web."""
 
 
-
-
 def build_offer(pSourceId, **pValues):
     """Construit une offre au format commun avec quelques valeurs par défaut."""
 

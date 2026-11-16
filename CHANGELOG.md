@@ -5,6 +5,14 @@ dans l'historique git.
 
 ## Non publié
 
+### Sécurité et CI
+- opentelemetry-api 1.45.2 dans l'image Docker (faille CVE-2026-126360,
+  dépendance de fastapi)
+- La CI vérifie que `requirements-server.lock` suit `requirements-server.txt`
+- Tests de la liste des offres datés du jour : la date figée du 11 octobre
+  les faisait échouer depuis le 10 novembre (offres masquées après 30 jours)
+- Deux fichiers de tests reformatés par Black
+
 ### Point qualité
 - Tests web découpés en huit fichiers par domaine (`tests/web/test_app_*.py`),
   avec `conftest.py` et `helpers.py` communs
