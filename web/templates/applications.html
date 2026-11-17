@@ -89,11 +89,15 @@
 
 <article class="card section-gap">
     <h2>{{ icon("file-text") }} Journal de recherche</h2>
-    <p class="card-subtitle">Vos démarches datées (candidatures, relances, réponses, entretiens) dans un fichier pour tableur, pour les justifier auprès de France Travail par exemple</p>
+    <p class="card-subtitle">Vos démarches datées (candidatures, spontanées comprises, relances, réponses, entretiens) dans un fichier pour tableur, ou un récapitulatif du mois à imprimer pour France Travail</p>
     <form class="inline-form" method="get" action="{{ url_for('download_journal').path }}">
         <label>Du <input type="date" name="start" value="{{ journal_start }}"></label>
         <label>au <input type="date" name="end" value="{{ journal_end }}"></label>
         <button class="button" type="submit">{{ icon("download", 16) }} Télécharger le journal</button>
+    </form>
+    <form class="inline-form" method="get" action="{{ url_for('show_monthly_report').path }}" target="_blank">
+        <label>Mois <input type="month" name="month" value="{{ report_month }}"></label>
+        <button class="button" type="submit">{{ icon("list-checks", 16) }} Récapitulatif du mois pour France Travail</button>
     </form>
 </article>
 
