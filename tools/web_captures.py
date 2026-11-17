@@ -22,6 +22,7 @@ from pathlib import Path
 import pandas as pd
 import uvicorn
 
+from storage.database import initialize_database
 from storage.geo_cache import save_offer_positions
 from storage.job_applications import create_application
 from storage.job_offers import save_offers
@@ -176,6 +177,7 @@ def build_offers(pNow):
 def fill_database(pDatabaseFile, pNow):
     """Remplit la base avec les offres, leurs positions et quelques candidatures."""
 
+    initialize_database(pDatabaseFile)
     save_offers(pDatabaseFile, build_offers(pNow), pNow)
     save_offer_positions(
         pDatabaseFile,
