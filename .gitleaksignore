@@ -4,3 +4,5 @@
 a3c6af4947860b0ed011dc9c769d5a34d44211fb:tools/quiz_lots/microservices/part1.txt:generic-api-key:168
 # Clé d'API factice citée dans une question de révision sur les clés passées dans l'URL
 13b5e57a0aebffb373510963b025613692ff4758:tools/quiz_lots/api-rest/part2.txt:generic-api-key:30
+# Secret vide dans .env.example : la règle lit la ligne suivante, la portée publique de l'API France Travail
+0eff36a7742bdc9a876ca5b460632eacbff22d1d:.env.example:generic-api-key:27
