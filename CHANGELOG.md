@@ -12,6 +12,8 @@ dans l'historique git.
   téléphone déjà installé retrouve le nouveau serveur, et inversement.
 - Inchangés pour ne rien perdre : dossier des données `Documents\JobBoard`, base
   `scraper.db`, préfixe des sauvegardes, identifiant Android, image Docker.
+- Captures du tableau de bord et des offres en tête du README (`docs/captures/`),
+  produites par `tools/web_captures.py` sur des données fictives
 
 ### Captures
 - `tools/web_captures.py` remplit une base fictive, démarre le tableau de bord et en

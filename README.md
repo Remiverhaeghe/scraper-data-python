@@ -9,6 +9,8 @@ PC, sur mon NAS et sur mon téléphone, sans service payant.
 
 ![Tableau de bord web, sur des données fictives](docs/captures/tableau-de-bord.png)
 
+![Liste des offres, sur des données fictives](docs/captures/offres.png)
+
 Le projet s'appelait `scraper-data-python` : il a commencé comme un scraper de pages
 web, avant que toutes les sources passent par des API.
 
