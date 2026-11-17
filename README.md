@@ -57,6 +57,7 @@ python -m job.translation                     # télécharge les modèles allema
 python -m playwright install chromium   # une fois, pour les tests de bout en bout du web
 pytest                            # tous les tests ; ceux du navigateur sont ignorés sans Chromium
 pytest -n auto                    # les mêmes, en parallèle sur tous les cœurs
+python -m tools.web_captures captures   # captures du tableau de bord sur des données fictives
 ```
 
 ### Où sont les données

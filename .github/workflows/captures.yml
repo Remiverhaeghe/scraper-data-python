@@ -1,0 +1,45 @@
+# Captures du tableau de bord sur des données fictives (tools/web_captures.py), pour le
+# README et le portfolio. Elles sont jointes au passage comme artefact.
+name: Captures
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "tools/web_captures.py"
+      - "web/templates/**"
+      - "web/static/**"
+      - ".github/workflows/captures.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  captures:
+    name: Captures du tableau de bord
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.14"
+          cache: pip
+
+      - name: Installation des dépendances
+        run: pip install -r requirements.txt
+
+      - name: Installation de Chromium pour Playwright
+        run: python -m playwright install --with-deps chromium
+
+      - name: Captures
+        run: python -m tools.web_captures captures
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: captures-tableau-de-bord
+          path: captures/*.png
+          if-no-files-found: error

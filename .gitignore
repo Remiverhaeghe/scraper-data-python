@@ -213,3 +213,6 @@ mobile/android/app/*.keystore
 # Configuration locale de l'éditeur
 CLAUDE.md
 .claude/
+
+# Captures produites par tools/web_captures.py
+/captures/
