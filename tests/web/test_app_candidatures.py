@@ -730,6 +730,26 @@ def test_search_journal_is_downloaded(client):
     assert "Journal de recherche" in client.get("/applications").text
 
 
+def test_monthly_report_for_france_travail(client):
+    """Vérifie le récapitulatif imprimable du mois, et le mois mal saisi ignoré."""
+
+    client.post(
+        "/offer/application",
+        data={"source": "adzuna", "id": "old", "status": "APPLIED"},
+    )
+    vMonth = datetime.now().strftime("%Y-%m")
+
+    vPage = client.get(f"/applications/france-travail?month={vMonth}").text
+
+    assert "<h1>Démarches " in vPage
+    assert "<strong>1</strong>Candidature envoyée" in vPage
+    assert "Enregistrer au format PDF" in vPage
+    assert client.get("/applications/france-travail?month=hier").status_code == 200
+    assert (
+        "Récapitulatif du mois pour France Travail" in client.get("/applications").text
+    )
+
+
 def test_spontaneous_application_is_added(client):
     """Vérifie la candidature spontanée ajoutée à la colonne Postulé."""
 

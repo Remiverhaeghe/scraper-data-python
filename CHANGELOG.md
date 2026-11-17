@@ -5,6 +5,12 @@ dans l'historique git.
 
 ## Non publié
 
+### Récapitulatif pour France Travail
+- Page « Récapitulatif du mois » à imprimer ou enregistrer en PDF : nombre de
+  candidatures, candidatures spontanées, relances, entretiens et réponses, puis la
+  liste datée des démarches (Candidatures > Journal de recherche)
+- Le journal de recherche compte aussi les candidatures spontanées
+
 ### Relances groupées
 - Réglage « Jour des relances » : le rappel par e-mail ne part que ce jour-là (le lundi
   avec 1) et regroupe les relances dues et celles des 7 jours suivants, pour les faire

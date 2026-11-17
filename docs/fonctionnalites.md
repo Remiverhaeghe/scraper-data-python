@@ -207,6 +207,7 @@ Suivi des fonctionnalités par partie de l'application.
 - [x] Synonymes de métier dans la recherche : « Java » trouve « JEE » ou « Spring », « maintenance » trouve « GMAO »
 - [x] Salaire estimé (médiane des offres comparables) pour les offres sans salaire, argumentaire de négociation en brut annuel
 - [x] Lettre de motivation en Word, candidatures spontanées, journal de recherche exportable (justificatif de démarches)
+- [x] Récapitulatif du mois pour France Travail, à imprimer ou enregistrer en PDF : nombres par démarche et liste datée, candidatures spontanées comprises
 - [x] Date d'entretien lue dans les réponses Gmail ; taux de réponse par type d'employeur et par délai de candidature
 - [x] Examen blanc sur les compétences prioritaires de Mon marché ; raccourcis clavier dans la liste des offres (I, P, X, O)
 - [x] Progression façon jeu : points (XP) calculés depuis l'activité déjà en base, niveaux au vocabulaire de la maintenance, série avec un joker par semaine, trois quêtes du jour et une de la semaine

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ report.title }}</title>
+    {# Page autonome, sans menu : imprimée telle quelle ou enregistrée en PDF. #}
+    <style>
+        body { font-family: system-ui, sans-serif; color: #1f2937; background: #fff; max-width: 900px; margin: 24px auto; padding: 0 16px; line-height: 1.45; }
+        h1 { font-size: 1.5rem; margin-bottom: 4px; }
+        h2 { font-size: 1.05rem; margin: 20px 0 6px; border-bottom: 1px solid #d1d5db; padding-bottom: 2px; break-after: avoid; }
+        p { margin: 2px 0; color: #4b5563; }
+        .counts { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 8px 0; padding: 0; list-style: none; }
+        .counts strong { font-size: 1.3rem; color: #111827; margin-right: 4px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+        th, td { text-align: left; padding: 4px 6px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+        tr { break-inside: avoid; }
+        .print-hint { margin-top: 16px; padding: 8px 12px; background: #eef2ff; border-radius: 6px; color: #1e3a8a; }
+        @media print { .print-hint { display: none; } body { margin: 0; } }
+    </style>
+</head>
+<body>
+    <h1>{{ report.title }}</h1>
+    {% if report.name %}<p>{{ report.name }}</p>{% endif %}
+    <p>{{ report.period }}</p>
+    <p class="print-hint">Pour un PDF : Ctrl+P, puis « Enregistrer au format PDF ». Les nombres reprennent les rubriques de l'actualisation ; la liste sert de justificatif en cas de contrôle.</p>
+
+    <h2>En résumé</h2>
+    <ul class="counts">
+        {% for step, count in report.counts %}<li><strong>{{ count }}</strong>{{ step }}</li>{% endfor %}
+    </ul>
+
+    <h2>Démarches</h2>
+    {% if report.rows %}
+    <table>
+        <thead><tr><th>Date</th><th>Démarche</th><th>Entreprise</th><th>Poste</th><th>Lieu</th><th>Statut actuel</th></tr></thead>
+        <tbody>
+        {% for row in report.rows %}
+            <tr><td>{{ row.date.strftime("%d/%m/%Y") }}</td><td>{{ row.step }}</td><td>{{ row.company }}</td><td>{{ row.title }}</td><td>{{ row.location }}</td><td>{{ row.status }}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>Aucune démarche notée ce mois-ci.</p>
+    {% endif %}
+</body>
+</html>

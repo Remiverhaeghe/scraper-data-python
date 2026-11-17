@@ -26,7 +26,9 @@ from job.manual_offers import add_spontaneous_application
 from job.search_journal import (
     DEFAULT_JOURNAL_DAYS,
     build_journal_file_name,
+    build_monthly_report,
     build_search_journal,
+    parse_month,
     write_journal_csv,
 )
 from job.followed_availability import count_alerts
@@ -81,6 +83,7 @@ def show_applications(
                 datetime.now() - timedelta(days=DEFAULT_JOURNAL_DAYS)
             ).strftime("%Y-%m-%d"),
             "journal_end": datetime.now().strftime("%Y-%m-%d"),
+            "report_month": datetime.now().strftime("%Y-%m"),
             "follow_up_message": FOLLOW_UP_MESSAGES.get(pFollowUpResult),
             "can_send_email": not get_missing_email_settings(),
         },
@@ -155,6 +158,25 @@ def download_journal(
                 f'attachment; filename="{build_journal_file_name(vStart, vEnd)}"'
             )
         },
+    )
+
+    return rResponse
+
+
+@router.get("/applications/france-travail", response_class=HTMLResponse)
+def show_monthly_report(
+    request: Request,
+    pMonth: str = Query("", alias="month"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Affiche le récapitulatif des démarches du mois, prêt à imprimer en PDF."""
+
+    vMonth = parse_month(pMonth) or datetime.now().date().replace(day=1)
+
+    rResponse = templates.TemplateResponse(
+        request,
+        "france_travail.html",
+        {"report": build_monthly_report(pDatabaseFile, vMonth)},
     )
 
     return rResponse
