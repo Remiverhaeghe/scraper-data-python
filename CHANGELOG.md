@@ -14,6 +14,8 @@ dans l'historique git.
 - Deux fichiers de tests reformatés par Black
 - Recherche de secrets lancée à la main (tout l'historique) : faux positif sur le
   secret vide de `.env.example` ignoré, avec sa raison dans `.gitleaksignore`
+- Tests navigateur sous Windows : l'erreur réseau `ERR_NO_BUFFER_SPACE` de la machine
+  de CI n'est plus comptée comme une erreur de la page
 
 ### Point qualité
 - Tests web découpés en huit fichiers par domaine (`tests/web/test_app_*.py`),
