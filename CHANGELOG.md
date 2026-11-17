@@ -5,6 +5,10 @@ dans l'historique git.
 
 ## Non publié
 
+### Captures
+- `tools/web_captures.py` remplit une base fictive, démarre le tableau de bord et en
+  capture quatre pages ; le workflow « Captures » les joint au passage
+
 ### Sécurité et CI
 - opentelemetry-api 1.45.2 dans l'image Docker (faille CVE-2026-126360,
   dépendance de fastapi)
