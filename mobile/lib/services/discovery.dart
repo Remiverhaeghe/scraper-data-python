@@ -1,4 +1,4 @@
-// Recherche du serveur JobBoard Perso sur le Wi-Fi : chaque adresse du réseau
+// Recherche du serveur Tremplin sur le Wi-Fi : chaque adresse du réseau
 // local est interrogée sur la route /api/v1/ping, qui ne demande pas de jeton.
 
 import 'dart:convert';
@@ -19,6 +19,9 @@ const probeTimeout = Duration(milliseconds: 800);
 /// Adresses interrogées en même temps.
 const probeBatch = 32;
 
+/// Identifiant renvoyé par le ping du serveur (SERVER_IDENTIFIER côté PC) : l'ancien
+/// nom de l'application, gardé pour que téléphones et serveurs de versions différentes
+/// se reconnaissent.
 const applicationName = 'JobBoard Perso';
 
 /// Indique si une adresse IPv4 appartient à un réseau privé (maison, entreprise).
@@ -77,7 +80,7 @@ class ServerDiscovery {
   final http.Client client;
   final Future<List<String>> Function() findPrefixes;
 
-  /// Indique si un serveur JobBoard Perso répond à cette adresse.
+  /// Indique si un serveur Tremplin répond à cette adresse.
   Future<bool> isServer(String pHost, {String pScheme = 'http'}) async {
     bool rServer;
 

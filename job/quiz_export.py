@@ -3,6 +3,7 @@
 import json
 import zipfile
 
+from config import APPLICATION_NAME
 from job.quiz import get_flagged_questions, load_active_quiz
 from job.quiz_domains import classify_theme
 from storage.quiz_questions import (
@@ -65,7 +66,7 @@ def export_quiz_pack(pDatabaseFile, pTarget):
         raise ValueError("Aucune question importée à exporter.")
 
     vManifest = {
-        "project": "JobBoard Perso : questions de révision",
+        "project": f"{APPLICATION_NAME} : questions de révision",
         "language": "fr",
         "questionCount": sum(len(vTheme["questions"]) for vTheme in vThemes.values()),
         "themes": [

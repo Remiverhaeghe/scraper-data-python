@@ -9,7 +9,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, Body, Depends, Header, HTTPException, Response
 
-from config import APPLICATION_NAME
+from config import SERVER_IDENTIFIER
 from job.application_replies import load_pending_replies
 from job.followed_availability import list_withdrawn_offers
 from job.interview_simulation import (
@@ -76,11 +76,11 @@ def require_api_token(
 def ping():
     """Signale le serveur à l'application mobile qui le cherche sur le Wi-Fi.
 
-    Sans jeton : la réponse ne contient que le nom de l'application et la version
+    Sans jeton : la réponse ne contient que l'identifiant du serveur et la version
     de l'API, aucune donnée.
     """
 
-    rAnswer = {"application": APPLICATION_NAME, "api_version": API_VERSION}
+    rAnswer = {"application": SERVER_IDENTIFIER, "api_version": API_VERSION}
 
     return rAnswer
 

@@ -46,7 +46,7 @@ class RevisionApp extends StatelessWidget {
     final rApp = ListenableBuilder(
       listenable: state,
       builder: (_, __) => MaterialApp(
-        title: 'JobBoard Révision',
+        title: 'Tremplin',
         debugShowCheckedModeBanner: false,
         theme: buildTheme(Brightness.light),
         darkTheme: buildTheme(Brightness.dark),

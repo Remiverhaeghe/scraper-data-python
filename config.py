@@ -26,14 +26,18 @@ ASSETS_DIRECTORY = Path(__file__).parent / "assets"
 
 LOGO_FILE = ASSETS_DIRECTORY / "logo.png"
 
-APPLICATION_NAME = "JobBoard Perso"
+APPLICATION_NAME = "Tremplin"
+
+# Nom que le serveur donne au téléphone qui le cherche sur le Wi-Fi. C'est l'ancien
+# nom de l'application : les téléphones déjà installés le comparent, il ne change pas.
+SERVER_IDENTIFIER = "JobBoard Perso"
 
 # Titulaire des droits, tel qu'indiqué dans le fichier LICENSE
 AUTHOR_NAME = "Remiverhaeghe"
 
-TAGLINE = "Offres, candidatures et relances au même endroit"
+TAGLINE = "De l'offre à l'embauche : candidatures, entretiens et révisions"
 
-REPOSITORY_URL = "https://github.com/Remiverhaeghe/scraper-data-python"
+REPOSITORY_URL = "https://github.com/Remiverhaeghe/tremplin"
 
 LICENSE_NAME = "PolyForm Strict 1.0.0"
 

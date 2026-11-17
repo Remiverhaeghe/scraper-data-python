@@ -24,7 +24,7 @@ JSON_LD_PATTERN = re.compile(
 
 HEADERS = {
     "Accept": "text/html,application/xhtml+xml",
-    "User-Agent": "JobBoardPerso/1.0 (usage personnel)",
+    "User-Agent": "Tremplin/1.0 (usage personnel)",
 }
 
 # Type de contrat schema.org vers celui de l'application ; les autres (temps

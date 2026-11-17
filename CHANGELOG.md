@@ -5,6 +5,14 @@ dans l'historique git.
 
 ## Non publié
 
+### Nouveau nom : Tremplin
+- Le projet s'appelle Tremplin (dépôt, README, bureau, web, téléphone). Il s'appelait
+  `scraper-data-python`, puis « JobBoard Perso » dans l'application.
+- Le ping du serveur répond toujours « JobBoard Perso » (`SERVER_IDENTIFIER`) : un
+  téléphone déjà installé retrouve le nouveau serveur, et inversement.
+- Inchangés pour ne rien perdre : dossier des données `Documents\JobBoard`, base
+  `scraper.db`, préfixe des sauvegardes, identifiant Android, image Docker.
+
 ### Captures
 - `tools/web_captures.py` remplit une base fictive, démarre le tableau de bord et en
   capture quatre pages ; le workflow « Captures » les joint au passage

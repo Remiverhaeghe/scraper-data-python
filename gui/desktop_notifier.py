@@ -9,6 +9,7 @@ from datetime import datetime
 from PySide6.QtCore import QObject, QTimer
 from PySide6.QtWidgets import QSystemTrayIcon
 
+from config import APPLICATION_NAME
 from job.desktop_notifications import pick_notification
 from utils.logger import get_logger
 
@@ -35,7 +36,7 @@ class DesktopNotifier(QObject):
 
         if QSystemTrayIcon.isSystemTrayAvailable():
             self.tray = QSystemTrayIcon(pWindow.windowIcon(), self)
-            self.tray.setToolTip("JobBoard Perso")
+            self.tray.setToolTip(APPLICATION_NAME)
             self.tray.messageClicked.connect(self.open_page)
             self.tray.activated.connect(lambda _pReason: self.bring_to_front())
             self.tray.show()

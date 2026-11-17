@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 
-/// Bleu principal de JobBoard Perso, mêmes teintes que le bureau et le web.
+/// Bleu principal de Tremplin, mêmes teintes que le bureau et le web.
 const primaryColor = Color(0xFF155FCC);
 
 /// Vert et rouge lisibles en texte : foncés sur fond clair, clairs sur fond sombre.
