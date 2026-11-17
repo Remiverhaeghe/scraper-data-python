@@ -164,6 +164,11 @@ def build_offers(pNow):
                 "salary_max": vMax,
                 "salary_currency": "EUR" if vMin else None,
                 "salary_period": "year" if vMin else None,
+                # Net mensuel d'ordinaire calculé par le traitement des offres : environ 78 %
+                # du brut annuel, sur douze mois
+                "salary_net_monthly_min": round(vMin * 0.78 / 12) if vMin else None,
+                "salary_net_monthly_max": round(vMax * 0.78 / 12) if vMax else None,
+                "salary_label": f"{vMin} - {vMax} EUR par an" if vMin else None,
                 "remote": vRemote,
                 "published_at": (pNow - timedelta(days=vIndex % 10)).isoformat(),
                 "url": f"https://example.com/offres/{vIndex}",
