@@ -70,7 +70,7 @@ class _ScanScreenState extends State<ScanScreen> {
             padding: const EdgeInsets.all(16),
             child: Text(
               wrongCode
-                  ? "Ce QR code n'est pas celui de JobBoard Perso : sur le PC, "
+                  ? "Ce QR code n'est pas celui de Tremplin : sur le PC, "
                       'Paramètres, « Application mobile », bouton « QR code ».'
                   : 'Visez le QR code affiché sur le PC, dans Paramètres, '
                       '« Application mobile ».',

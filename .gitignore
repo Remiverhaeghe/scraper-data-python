@@ -180,7 +180,7 @@ __marimo__/
 .streamlit/secrets.toml
 
 # =========================
-# Web Scraper - fichiers générés
+# Tremplin - fichiers générés
 # =========================
 
 # Données de l'application : rangées hors du projet (Documents\JobBoard ou

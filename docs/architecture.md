@@ -44,7 +44,7 @@ Organisation du code, qualité et arborescence du projet.
 ## Structure
 
 ```text
-scraper-data-python/
+tremplin/
 │
 ├── .github/                                   # Configuration GitHub
 │   ├── dependabot.yml                         # Mises à jour hebdomadaires des dépendances

@@ -1,7 +1,7 @@
-# JobBoard Révision (application mobile)
+# Tremplin, application mobile de révision
 
 Application Flutter de révision technique hors ligne. Elle télécharge les questions
-du serveur JobBoard Perso, corrige les réponses sur le téléphone, les garde sans
+du serveur Tremplin, corrige les réponses sur le téléphone, les garde sans
 réseau, puis les envoie à la synchronisation suivante. Le serveur recalcule chaque
 correction : la progression reste la même sur le PC, le web et le téléphone.
 

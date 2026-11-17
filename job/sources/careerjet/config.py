@@ -9,7 +9,7 @@ LOCALE_CODE = "fr_FR"
 # Careerjet demande l'adresse IP et le navigateur de l'utilisateur à l'origine de
 # la recherche ; pour une application personnelle, ce poste.
 DEFAULT_USER_IP = "127.0.0.1"
-USER_AGENT = "JobBoardPerso/1.0"
+USER_AGENT = "Tremplin/1.0"
 
 
 @dataclass

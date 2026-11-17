@@ -206,7 +206,7 @@ def test_notify_follow_ups_once_a_day(database_file, sent_emails):
     )
 
     assert runner.notify_follow_ups(database_file, vSchedule, NOW) is True
-    assert sent_emails[0][1] == "JobBoard Perso : 1 relance(s) à faire"
+    assert sent_emails[0][1] == "Tremplin : 1 relance(s) à faire"
     assert "Acme · relance prévue le 10/10/2026" in sent_emails[0][2]
     assert runner.notify_follow_ups(database_file, vSchedule, NOW) is False
     assert len(sent_emails) == 1

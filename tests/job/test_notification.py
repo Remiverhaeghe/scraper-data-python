@@ -33,7 +33,7 @@ def test_build_new_offers_email():
 
     vSubject, vText, vHtml = build_new_offers_email([build_offer()], "Java · Lille")
 
-    assert vSubject == "JobBoard Perso : 1 nouvelle(s) offre(s)"
+    assert vSubject == "Tremplin : 1 nouvelle(s) offre(s)"
     assert "Recherche planifiée : Java · Lille" in vText
     assert "Acme · Lille · 2 500 €" in vText
     assert '<a href="https://example.com/offre">Développeur Java</a>' in vHtml

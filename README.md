@@ -1,30 +1,39 @@
-# 🐍 Web Scraper Automatique (Python)
+# Tremplin
 
-[![CI](https://github.com/Remiverhaeghe/scraper-data-python/actions/workflows/ci.yml/badge.svg)](https://github.com/Remiverhaeghe/scraper-data-python/actions/workflows/ci.yml)
+[![CI](https://github.com/Remiverhaeghe/tremplin/actions/workflows/ci.yml/badge.svg)](https://github.com/Remiverhaeghe/tremplin/actions/workflows/ci.yml)
 
-Projet personnel de scraping développé en Python.
+Mon outil de recherche d'emploi, de l'offre à l'embauche. Il rassemble les offres de
+21 sources par leurs API officielles, suit les candidatures et les relances, prépare les
+entretiens et fait réviser les compétences techniques demandées. Le tout tourne sur mon
+PC, sur mon NAS et sur mon téléphone, sans service payant.
 
-L'objectif est de récupérer des données publiques depuis des sites web, de les analyser, de les structurer et de les rendre exploitables.
+![Tableau de bord web, sur des données fictives](docs/captures/tableau-de-bord.png)
 
-Le projet sert également de support d'apprentissage afin de construire progressivement une architecture Python propre, testable et maintenable.
+![Liste des offres, sur des données fictives](docs/captures/offres.png)
 
----
+Le projet s'appelait `scraper-data-python` : il a commencé comme un scraper de pages
+web, avant que toutes les sources passent par des API.
 
-## 🎯 Objectifs
+## Ce qu'il fait
 
-- Comprendre le fonctionnement d'un scraper Python
-- Séparer les responsabilités HTTP / parsing / extraction / métier / stockage
-- Gérer la pagination
-- Structurer les données avec `pandas`
-- Mettre en place des logs
-- Tester progressivement les composants
-- Stocker et exploiter les données extraites
-- Préparer une architecture réutilisable pour plusieurs domaines
-- Préparer une utilisation sécurisée sur un NAS
+- **Offres** : France Travail, La bonne alternance, Adzuna, Jooble et 17 autres sources,
+  dédoublonnées, géolocalisées sur une carte et filtrées selon mon profil.
+- **Candidatures** : suivi par statut avec historique, relances, pièces jointes, agenda
+  des entretiens à s'abonner depuis le téléphone.
+- **Préparation** : simulation d'entretien chronométrée, fiche de préparation par offre,
+  grille d'auto-évaluation des compétences.
+- **Révision** : questions par thème, défis de programmation, bacs à sable Git et SQL,
+  pannes à résoudre, simulateur d'automate.
+- **Trois accès** : application de bureau (PySide6), tableau de bord web sur le NAS
+  (FastAPI, HTMX), application Android de révision (Flutter) qui se synchronise avec le PC.
 
----
+## Qualité
 
-## 🛠️ Stack technique
+95 % de couverture exigée, pylint à 9,8 au moins, analyse de sécurité bandit, tests
+sous Linux et Windows, tests de bout en bout du web dans Chromium, synchronisation
+téléphone-serveur testée en CI, image Docker durcie vérifiée à chaque push.
+
+## Stack technique
 
 - **Langage :** Python 3
 - **Requêtes HTTP :** requests
@@ -38,7 +47,7 @@ Le projet sert également de support d'apprentissage afin de construire progress
 
 ---
 
-## 🚀 Lancement
+## Lancement
 
 ```bash
 pip install -r requirements.txt
@@ -79,7 +88,7 @@ Documents/JobBoard/
 └── argos/            # Modèles de traduction hors ligne (facultatifs)
 ```
 
-## 📚 Documentation
+## Documentation
 
 | Document | Contenu |
 |---|---|
@@ -93,7 +102,7 @@ Documents/JobBoard/
 | [Application mobile](mobile/README.md) | Installation et compilation |
 | [Historique](CHANGELOG.md) | Évolutions par version |
 
-## 📄 Licence
+## Licence
 
 Ce projet est publié sous licence [PolyForm Strict 1.0.0](LICENSE) : le code peut être consulté et utilisé tel quel à des fins non commerciales, mais ni modifié, ni redistribué.
 
