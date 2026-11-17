@@ -19,6 +19,13 @@ dans l'historique git.
   `scraper.db`, préfixe des sauvegardes, identifiant Android, image Docker.
 - Captures du tableau de bord et des offres en tête du README (`docs/captures/`),
   produites par `tools/web_captures.py` sur des données fictives
+  
+  
+### Maintenance
+- Fichiers ramenés sous 1000 lignes, sans changement de comportement :
+  migrations 21 et suivantes dans `storage/migrations_v21.py`, simulation
+  d'entretien et auto-évaluation du téléphone dans `state/interview_skills.dart`
+
 
 ### Captures
 - `tools/web_captures.py` remplit une base fictive, démarre le tableau de bord et en
