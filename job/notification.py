@@ -141,12 +141,22 @@ def describe_follow_up(pApplication):
     return rDetail
 
 
-def build_follow_ups_email(pApplications):
-    """Construit le sujet, le texte et le HTML de l'e-mail des relances à faire."""
+def build_follow_ups_email(pApplications, pWeekly=False):
+    """Construit le sujet, le texte et le HTML de l'e-mail des relances à faire.
+
+    Groupées à la semaine, les relances prévues dans les 7 jours viennent avec celles dues.
+    """
+
+    if pWeekly:
+        vSubject = f"{APPLICATION_NAME} : {len(pApplications)} relance(s) de la semaine"
+        vIntro = "Les relances de la semaine, à faire en une fois :"
+    else:
+        vSubject = f"{APPLICATION_NAME} : {len(pApplications)} relance(s) à faire"
+        vIntro = "Ces candidatures attendent une relance :"
 
     rEmail = build_list_email(
-        f"{APPLICATION_NAME} : {len(pApplications)} relance(s) à faire",
-        "Ces candidatures attendent une relance :",
+        vSubject,
+        vIntro,
         pApplications,
         describe_follow_up,
         "relance(s)",

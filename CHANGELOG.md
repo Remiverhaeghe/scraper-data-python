@@ -5,6 +5,10 @@ dans l'historique git.
 
 ## Non publié
 
+### Relances groupées
+- Réglage « Jour des relances » : le rappel par e-mail ne part que ce jour-là (le lundi
+  avec 1) et regroupe les relances dues et celles des 7 jours suivants, pour les faire
+  en une fois. 0 garde le rappel quotidien.
 
 ### Nouveau nom : Tremplin
 - Le projet s'appelle Tremplin (dépôt, README, bureau, web, téléphone). Il s'appelait
