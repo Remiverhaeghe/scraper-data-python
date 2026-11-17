@@ -42,6 +42,10 @@ CAPTURES = (
 
 VIEWPORT = {"width": 1280, "height": 800}
 
+# Source française : la page du marché ne retient que les salaires des sites français
+# et des pages carrière (job/market.py), pas ceux d'une source inconnue.
+DEMO_SOURCE = "france-travail"
+
 # Entreprises et offres inventées : aucune donnée réelle dans les captures
 OFFERS = (
     ("Développeur Java", "Démo Rail", "Lille", 59, "CDI", 38000, 45000, True),
@@ -151,7 +155,7 @@ def build_offers(pNow):
     ) in enumerate(OFFERS):
         vRows.append(
             {
-                "source": "demo",
+                "source": DEMO_SOURCE,
                 "source_id": str(vIndex),
                 "title": vTitle,
                 "company": vCompany,
@@ -187,7 +191,7 @@ def fill_database(pDatabaseFile, pNow):
     save_offer_positions(
         pDatabaseFile,
         [
-            (*POSITIONS[vOffer[2]], str(vOffer[3]), "demo", str(vIndex))
+            (*POSITIONS[vOffer[2]], str(vOffer[3]), DEMO_SOURCE, str(vIndex))
             for vIndex, vOffer in enumerate(OFFERS)
         ],
     )
@@ -195,7 +199,7 @@ def fill_database(pDatabaseFile, pNow):
     for vIndex, vStatus, vDaysAgo in APPLICATIONS:
         create_application(
             pDatabaseFile,
-            "demo",
+            DEMO_SOURCE,
             str(vIndex),
             pStatus=vStatus,
             pAppliedAt=pNow - timedelta(days=vDaysAgo),
