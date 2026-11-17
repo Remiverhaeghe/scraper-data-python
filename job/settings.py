@@ -73,6 +73,16 @@ SETTING_DEFINITIONS = {
         1,
         "jours",
     ),
+    "follow_up_weekday": SettingDefinition(
+        "Jour des relances",
+        "Rappel des relances groupé un jour de la semaine, avec celles des 7 jours "
+        "suivants, pour les faire en une fois : 1 = lundi, 7 = dimanche. "
+        "0 : rappel chaque jour où une relance est due.",
+        0,
+        7,
+        1,
+        "1 = lundi",
+    ),
     # Jamais nulle : sans attente, on trouverait la réponse par essais successifs.
     "challenge_wait_seconds": SettingDefinition(
         "Attente des défis",
@@ -223,6 +233,7 @@ def get_default_settings():
         "new_offer_days": NEW_OFFER_DAYS,
         "expiry_days": EXPIRY_DAYS,
         "follow_up_days": FOLLOW_UP_DAYS,
+        "follow_up_weekday": 0,
         "challenge_wait_seconds": CHALLENGE_WAIT_SECONDS,
         "weekly_application_goal": 0,
         "target_net_salary": 0,

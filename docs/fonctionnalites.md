@@ -91,6 +91,7 @@ Suivi des fonctionnalités par partie de l'application.
 - [x] Suivi des candidatures
 - [x] Relances
 - [x] Relances de la semaine : brouillon de message par candidature, adapté à l'étape (première relance, relance suivante, après entretien), à copier, et relance notée d'un clic (bureau et web)
+- [x] Relances groupées : un jour choisi (le lundi par exemple), un seul rappel avec les relances dues et celles de la semaine (réglage « Jour des relances »)
 - [x] Statistiques de réponse : taux et délai moyen jusqu'à la première réponse, par source, type de poste, correspondance au profil, contrat et société
 - [x] Purge des offres hors sujet déjà en base, par mots du titre, avec aperçu, sauvegarde préalable et offres suivies protégées (bureau et web)
 - [x] Mots exclus de toutes les recherches, ajoutés lors d'une purge : les offres concernées sont écartées dès leur récupération

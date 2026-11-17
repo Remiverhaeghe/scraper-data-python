@@ -23,6 +23,7 @@ from storage.database import initialize_database
 from storage.job_applications import save_application
 from storage.job_offers import save_offers
 from storage.saved_searches import save_search
+from storage.settings_repository import save_setting_values
 
 NOW = datetime(2026, 10, 10, 12, 0)
 
@@ -210,6 +211,52 @@ def test_notify_follow_ups_once_a_day(database_file, sent_emails):
     assert "Acme · relance prévue le 10/10/2026" in sent_emails[0][2]
     assert runner.notify_follow_ups(database_file, vSchedule, NOW) is False
     assert len(sent_emails) == 1
+
+
+def test_notify_follow_ups_grouped_on_monday(database_file, sent_emails):
+    """Vérifie les relances groupées : rien avant le lundi, puis celles de la semaine."""
+
+    save_offers(
+        database_file,
+        pd.DataFrame(
+            [
+                {
+                    "source": "remotive",
+                    "source_id": vId,
+                    "title": "Java",
+                    "company": vCompany,
+                    "url": f"https://{vId}.example",
+                }
+                for vId, vCompany in (("1", "Acme"), ("2", "Globex"))
+            ]
+        ),
+        NOW,
+    )
+    # Une relance due le samedi, une autre prévue le jeudi suivant
+    save_application(
+        database_file, "remotive", "1", "APPLIED", pFollowUpDate=NOW, pNow=NOW
+    )
+    save_application(
+        database_file,
+        "remotive",
+        "2",
+        "APPLIED",
+        pFollowUpDate=datetime(2026, 10, 15, 12, 0),
+        pNow=NOW,
+    )
+    save_setting_values(database_file, {"follow_up_weekday": "1"})
+    vSchedule = load_schedule(database_file)
+
+    assert runner.notify_follow_ups(database_file, vSchedule, NOW) is False
+    assert not sent_emails
+
+    vMonday = datetime(2026, 10, 12, 8, 0)
+
+    assert runner.notify_follow_ups(database_file, vSchedule, vMonday) is True
+    assert sent_emails[0][1] == "Tremplin : 2 relance(s) de la semaine"
+    assert "Acme" in sent_emails[0][2]
+    assert "Globex · relance prévue le 15/10/2026" in sent_emails[0][2]
+    assert runner.notify_follow_ups(database_file, vSchedule, vMonday) is False
 
 
 def build_scored_items():

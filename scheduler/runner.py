@@ -17,7 +17,7 @@ from job.skill_cache import refresh_detected_skills
 from job.application_replies import run_due_reply_check
 from job.daily_digest import send_daily_digest_if_due
 from job.restore_check import run_due_restore_check
-from job.application_tracking import get_due_follow_ups
+from job.application_tracking import get_due_follow_ups, get_week_follow_ups
 from job.followed_availability import (
     build_expired_offers_email,
     run_due_followed_check,
@@ -45,6 +45,7 @@ from job.schedule import (
     mark_schedule_run,
     mark_scheduler_alive,
 )
+from job.settings import load_settings
 from job.sources.aggregator import ScrapingCancelled
 from job.sources.configuration import build_job_config, build_search_arguments
 from job.weekly_digest import (
@@ -152,11 +153,16 @@ def notify_new_offers(pDatabaseFile, pSchedule, pItems):
 
 
 def notify_follow_ups(pDatabaseFile, pSchedule, pNow):
-    """Envoie le rappel des relances dues, une fois par jour ; retourne True s'il est parti."""
+    """Envoie le rappel des relances, une fois par jour ; retourne True s'il est parti.
+
+    Avec un jour des relances réglé, le rappel ne part que ce jour-là et regroupe les
+    relances de la semaine : on les fait toutes en une fois.
+    """
 
     rSent = False
 
     vToday = pNow.date().isoformat()
+    vWeekday = load_settings(pDatabaseFile)["follow_up_weekday"]
 
     if not pSchedule["email"]:
         logger.info("Aucune adresse de notification : pas de rappel de relances")
@@ -164,15 +170,24 @@ def notify_follow_ups(pDatabaseFile, pSchedule, pNow):
     elif get_setting_values(pDatabaseFile).get(FOLLOW_UP_REMINDER_KEY) == vToday:
         logger.info("Rappel des relances déjà envoyé aujourd'hui")
 
+    elif vWeekday and pNow.isoweekday() != vWeekday:
+        logger.info("Relances groupées : rappel attendu le jour %s", vWeekday)
+
     else:
-        vFollowUps = get_due_follow_ups(pDatabaseFile, pNow)
+        if vWeekday:
+            vFollowUps = get_week_follow_ups(pDatabaseFile, pNow)
+        else:
+            vFollowUps = get_due_follow_ups(pDatabaseFile, pNow)
 
         if not vFollowUps:
             logger.info("Aucune relance due : pas de rappel envoyé")
 
         else:
             try:
-                send_email(pSchedule["email"], *build_follow_ups_email(vFollowUps))
+                send_email(
+                    pSchedule["email"],
+                    *build_follow_ups_email(vFollowUps, pWeekly=bool(vWeekday)),
+                )
 
             except (OSError, smtplib.SMTPException, ValueError) as vException:
                 logger.error("Échec de l'envoi du rappel des relances : %s", vException)
