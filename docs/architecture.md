@@ -668,7 +668,8 @@ scraper-data-python/
 ├── storage/                                   # Persistance technique des données communes
 │   ├── __init__.py                            # Initialise le package Storage
 │   ├── database.py                            # Connexion SQLite, décomptes et application des migrations
-│   ├── migrations.py                          # Migrations successives du schéma, une par version
+│   ├── migrations.py                          # Migrations successives du schéma (v1 à v20) et leur ordre
+│   ├── migrations_v21.py                      # Migrations à partir de la version 21
 │   ├── history_repository.py                  # Persiste et récupère l'historique
 │   ├── job_applications.py                    # Suit les candidatures et les relances
 │   ├── interview_notes.py                     # Persiste le journal d'entretien

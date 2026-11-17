@@ -5,6 +5,11 @@ dans l'historique git.
 
 ## Non publié
 
+### Maintenance
+- Fichiers ramenés sous 1000 lignes, sans changement de comportement :
+  migrations 21 et suivantes dans `storage/migrations_v21.py`, simulation
+  d'entretien et auto-évaluation du téléphone dans `state/interview_skills.dart`
+
 ### Captures
 - `tools/web_captures.py` remplit une base fictive, démarre le tableau de bord et en
   capture quatre pages ; le workflow « Captures » les joint au passage
