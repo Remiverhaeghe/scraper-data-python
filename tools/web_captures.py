@@ -211,9 +211,8 @@ def take_captures(pBaseUrl, pPassword, pOutput):
     """Se connecte au tableau de bord et enregistre une capture par page."""
 
     # Importé ici : Playwright ne sert qu'à cet outil, pas à l'application
-    from playwright.sync_api import (
-        sync_playwright,
-    )  # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
+    from playwright.sync_api import sync_playwright
 
     rFiles = []
 
