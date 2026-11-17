@@ -147,6 +147,11 @@ def browser():
         rBrowser.close()
 
 
+# Erreurs de la pile réseau de la machine de CI, pas de la page : sous Windows,
+# Chromium manque parfois de tampons de socket et l'écrit dans la console
+NETWORK_NOISE = ("net::ERR_NO_BUFFER_SPACE",)
+
+
 @pytest.fixture
 def page(browser, server_url):
     """Ouvre une page connectée ; les erreurs de la console sont relevées."""
@@ -159,6 +164,7 @@ def page(browser, server_url):
         lambda pMessage: (
             rPage.console_errors.append(pMessage.text)
             if pMessage.type == "error"
+            and not any(vNoise in pMessage.text for vNoise in NETWORK_NOISE)
             else None
         ),
     )
