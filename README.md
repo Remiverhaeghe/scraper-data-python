@@ -11,6 +11,8 @@ PC, sur mon NAS et sur mon téléphone, sans service payant.
 
 ![Liste des offres, sur des données fictives](docs/captures/offres.png)
 
+![Page Mon marché : salaire médian et compétences à travailler, sur des données fictives](docs/captures/marche.png)
+
 Le projet s'appelait `scraper-data-python` : il a commencé comme un scraper de pages
 web, avant que toutes les sources passent par des API.
 

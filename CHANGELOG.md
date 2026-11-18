@@ -5,6 +5,9 @@ dans l'historique git.
 
 ## Non publié
 
+### Captures
+- Offres fictives des captures sur une source française : la page Mon marché montre son salaire médian, capture ajoutée au README
+
 ### Récapitulatif pour France Travail
 - Page « Récapitulatif du mois » à imprimer ou enregistrer en PDF : nombre de
   candidatures, candidatures spontanées, relances, entretiens et réponses, puis la
