@@ -5,6 +5,8 @@ dans l'historique git.
 
 ## Non publié
 
+### Captures
+- Offres fictives des captures sur une source française : la page Mon marché montre son salaire médian, capture ajoutée au README
 ### Installation de l'appli mobile
 - Chaque fusion sur main qui touche `mobile/` publie l'APK signée dans une préversion `mobile-build-N`, à suivre avec Obtainium ; numéro de construction croissant pour que chaque APK remplace la précédente
 
