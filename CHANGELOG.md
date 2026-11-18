@@ -5,6 +5,9 @@ dans l'historique git.
 
 ## Non publié
 
+### Installation de l'appli mobile
+- Chaque fusion sur main qui touche `mobile/` publie l'APK signée dans une préversion `mobile-build-N`, à suivre avec Obtainium ; numéro de construction croissant pour que chaque APK remplace la précédente
+
 ### Récapitulatif pour France Travail
 - Page « Récapitulatif du mois » à imprimer ou enregistrer en PDF : nombre de
   candidatures, candidatures spontanées, relances, entretiens et réponses, puis la

@@ -1,10 +1,12 @@
 name: APK
 
-# Construit l'application mobile à chaque version publiée (étiquette v1.2.0),
-# ou à la demande depuis l'onglet Actions.
+# Construit l'application mobile à chaque version publiée (étiquette v1.2.0), à chaque
+# fusion sur main qui touche mobile/, ou à la demande depuis l'onglet Actions.
 on:
   push:
     tags: ["v*"]
+    branches: [main]
+    paths: ["mobile/**", ".github/workflows/apk.yml"]
   workflow_dispatch:
 
 permissions:
@@ -14,6 +16,8 @@ jobs:
   apk:
     name: APK par type de processeur
     runs-on: ubuntu-latest
+    outputs:
+      signed: ${{ steps.signature.outputs.signed }}
 
     defaults:
       run:
@@ -36,6 +40,7 @@ jobs:
       # remplace alors celui installé. Sans eux, la clé de débogage est utilisée
       # et l'application installée doit d'abord être désinstallée.
       - name: Clé de signature
+        id: signature
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
@@ -51,6 +56,7 @@ jobs:
               echo "storeFile=upload-keystore.jks"
             } > android/key.properties
             echo "Signature avec la clé personnelle"
+            echo "signed=true" >> "$GITHUB_OUTPUT"
           else
             echo "Secrets absents : signature avec la clé de débogage"
           fi
@@ -59,10 +65,48 @@ jobs:
         run: flutter pub get
 
       - name: Construction
-        run: flutter build apk --release --split-per-abi
+        # Numéro de construction croissant : Android refuse une mise à jour dont le
+        # versionCode n'augmente pas
+        run: flutter build apk --release --split-per-abi --build-number="$GITHUB_RUN_NUMBER"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: jobboard-revision-apk
           path: mobile/build/app/outputs/flutter-apk/*-release.apk
           if-no-files-found: error
+
+  # Chaque fusion sur main publie l'APK dans une préversion « mobile-build-N » : Obtainium,
+  # sur le téléphone, la voit et propose la mise à jour. Seulement avec la clé personnelle,
+  # sinon chaque APK aurait une signature différente et ne remplacerait pas la précédente.
+  preversion:
+    name: Préversion pour Obtainium
+    runs-on: ubuntu-latest
+    needs: apk
+    if: github.ref == 'refs/heads/main' && needs.apk.outputs.signed == 'true'
+    permissions:
+      contents: write
+    concurrency:
+      group: preversion
+      cancel-in-progress: false
+
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: jobboard-revision-apk
+          path: apk
+
+      - name: Publication et ménage
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: mobile-build-${{ github.run_number }}
+        run: |
+          gh release create "$TAG" apk/*.apk --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --prerelease --title "Appli mobile, construction ${{ github.run_number }}" \
+            --notes "APK construite depuis main ($GITHUB_SHA). Installation et mises à jour : mobile/README.md."
+          # Les trois dernières préversions suffisent : les plus anciennes et leur tag sont supprimés
+          gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName,isPrerelease \
+            --jq '[.[] | select(.isPrerelease and (.tagName | startswith("mobile-build-")))] | .[3:] | .[].tagName' |
+            while read -r vTag; do
+              gh release delete "$vTag" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag
+            done
+

@@ -105,6 +105,21 @@ flutter run          # téléphone branché en USB, débogage USB activé
 
 ## Installation sur le téléphone
 
+Le plus simple : [Obtainium](https://github.com/ImranR98/Obtainium), une appli Android
+gratuite qui suit les releases GitHub. Chaque fusion sur `main` qui touche `mobile/`
+publie l'APK signée dans une préversion `mobile-build-N` (les trois dernières sont
+gardées).
+
+1. Installer Obtainium depuis sa page GitHub ou F-Droid.
+2. « Ajouter une appli », coller `https://github.com/Remiverhaeghe/tremplin`.
+3. Cocher « Inclure les préversions », puis « Ajouter ».
+4. « Installer » ; Obtainium signale ensuite chaque nouvelle construction.
+
+Le numéro de construction sert de `versionCode` : chaque APK remplace la précédente,
+données gardées. Pas de préversion sans les secrets de signature ci-dessous.
+
+Construction à la main :
+
 ```powershell
 flutter build apk --release --split-per-abi
 ```
