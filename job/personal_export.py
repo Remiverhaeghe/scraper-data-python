@@ -34,6 +34,7 @@ EXPORTED_SETTINGS = (
     "quiz_exam_results",
     "certifications_owned",
     "certifications_details",
+    "training_goals",
     "troubleshooting_results",
     "ladder_progress",
     "sql_progress",
@@ -53,7 +54,7 @@ Chaque fichier .json se lit avec un éditeur de texte ou un navigateur :
 - historique_des_statuts.json, relances.json : le suivi de chaque candidature
 - journal_entretien.json : les questions posées et vos impressions
 - reglages.json : profil, CV, réponses STAR, domicile, e-mail, règles personnelles
-  et certifications obtenues
+  certifications obtenues et formations visées
 - recherches_enregistrees.json, historique_recherches.json : vos recherches
 - reponses_revision.json, defis.json, niveaux_git.json : votre révision
 - tests_recrutement.json : vos parties de tests de recrutement ; les pannes

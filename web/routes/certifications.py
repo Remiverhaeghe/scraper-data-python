@@ -14,7 +14,11 @@ from job.certifications import (
     save_details,
     save_owned,
 )
+from job.quiz import load_active_quiz
+from job.skills_dashboard import get_known_skills
 from job.statistics import load_scored_offers
+from job.training_goals import STATUSES as GOAL_STATUSES
+from job.training_goals import build_goals_overview, load_goals
 from storage.attachments import (
     ALLOWED_EXTENSIONS,
     MAX_ATTACHMENT_BYTES,
@@ -43,9 +47,9 @@ def show_certifications(
 ):
     """Affiche les certifications citées par les offres et celles du candidat."""
 
-    vOverview = build_overview(
-        pDatabaseFile, load_scored_offers(pDatabaseFile, datetime.now()), date.today()
-    )
+    vOffers = load_scored_offers(pDatabaseFile, datetime.now())
+    vOverview = build_overview(pDatabaseFile, vOffers, date.today())
+    vKnownSkills = get_known_skills(load_active_quiz(pDatabaseFile))
 
     rResponse = templates.TemplateResponse(
         request,
@@ -61,6 +65,14 @@ def show_certifications(
             },
             "attachment_extensions": ALLOWED_EXTENSIONS,
             "today": date.today().isoformat(),
+            "goals": build_goals_overview(
+                load_goals(pDatabaseFile),
+                vOffers,
+                vKnownSkills,
+                date.today(),
+            ),
+            "goal_statuses": GOAL_STATUSES,
+            "known_skills": sorted(set(vKnownSkills.values())),
         },
     )
 

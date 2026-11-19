@@ -1,0 +1,74 @@
+{# Formations et certifications visées (job/training_goals.py), incluses dans la page
+   Certifications. Un même formulaire ajoute un objectif ou modifie celui dont il porte l'id. #}
+{% macro goal_form(goal, submit_label) %}
+<form class="profile-form" method="post" action="{{ url_for('save_training_goal').path }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+    <input type="hidden" name="id" value="{{ goal.id or '' }}">
+    <label>Certification du catalogue
+        <select name="certification">
+            <option value="">Formation libre (cours, titre professionnel…)</option>
+            {% for row in overview.rows %}<option value="{{ row.id }}"{% if goal.certification == row.id %} selected{% endif %}>{{ row.label }}</option>{% endfor %}
+        </select>
+    </label>
+    <label>Intitulé <input type="text" name="title" value="{{ goal.title or '' }}" maxlength="300" placeholder="Laissé vide pour une certification du catalogue"></label>
+    <label>Organisme <input type="text" name="organism" value="{{ goal.organism or '' }}" maxlength="300" placeholder="AFPA, OpenClassrooms, Microsoft Learn…"></label>
+    <label>État
+        <select name="status">
+            {% for key, status in goal_statuses.items() %}<option value="{{ key }}"{% if (goal.status or 'planned') == key %} selected{% endif %}>{{ status[0] }}</option>{% endfor %}
+        </select>
+    </label>
+    <label>Date visée <input type="date" name="target" value="{{ goal.target or '' }}"></label>
+    <label>Lien vers la formation <input type="url" name="link" value="{{ goal.link or '' }}" maxlength="300" placeholder="https://…"></label>
+    <label>Compétences apportées, séparées par des virgules <input type="text" name="skills" value="{{ (goal.skills or []) | join(', ') }}" list="goal-skills" maxlength="1000" placeholder="Python, SQL, Docker…"></label>
+    <button class="button button-primary" type="submit">{{ submit_label }}</button>
+</form>
+{% endmacro %}
+
+<article class="card section-gap" id="objectifs">
+    <h2>Formations et certifications visées</h2>
+    <p class="card-subtitle">Vos objectifs, rattachés aux compétences que demandent les {{ goals.offers }} offres des 30 derniers jours. Une certification du catalogue passée à « Obtenue » est aussi cochée plus bas.</p>
+    <datalist id="goal-skills">{% for skill in known_skills %}<option value="{{ skill }}">{% endfor %}</datalist>
+
+    {% if goals.rows %}
+    <div class="table-wrapper">
+        <table class="table">
+            <thead><tr><th scope="col">Objectif</th><th scope="col">État</th><th scope="col">Compétences et offres</th><th scope="col">Date visée</th></tr></thead>
+            <tbody>
+                {% for goal in goals.rows %}
+                <tr>
+                    <td>
+                        <details class="certification">
+                            <summary><strong>{{ goal.title }}</strong>{% if goal.organism %} <span class="muted">· {{ goal.organism }}</span>{% endif %}</summary>
+                            {% if goal.link %}<p><a href="{{ goal.link }}" target="_blank" rel="noopener noreferrer">Page de la formation</a></p>{% endif %}
+                            {{ goal_form(goal, "Enregistrer") }}
+                            <form method="post" action="{{ url_for('delete_training_goal').path }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                                <input type="hidden" name="id" value="{{ goal.id }}">
+                                <button class="link-button" type="submit" aria-label="Retirer {{ goal.title }}">Retirer</button>
+                            </form>
+                        </details>
+                    </td>
+                    <td><span class="badge badge-{{ goal.status_label[1] }}">{{ goal.status_label[0] }}</span>{% if goal.late %} <span class="badge badge-danger">En retard</span>{% endif %}</td>
+                    <td>
+                        {% if goal.skill_counts %}{% for skill, count in goal.skill_counts %}{{ skill }} ({{ count }}){% if not loop.last %}, {% endif %}{% endfor %}<br><small class="muted">{{ goal.skill_offers }} offre{{ "s" if goal.skill_offers > 1 }} demande{{ "nt" if goal.skill_offers > 1 }} l'une d'elles</small>{% else %}<span class="muted">Aucune compétence rattachée</span>{% endif %}
+                        {% if goal.certification_offers is not none %}<br><small class="muted">Certification citée par {{ goal.certification_offers }} offre{{ "s" if goal.certification_offers > 1 }}</small>{% endif %}
+                    </td>
+                    <td class="nowrap">{{ goal.target | date_fr if goal.target else "—" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="muted">Aucun objectif pour le moment.</p>
+    {% endif %}
+
+    {% if goals.uncovered %}
+    <p>Compétences demandées sans formation prévue : {% for skill, count in goals.uncovered %}{{ skill }} ({{ count }} offre{{ "s" if count > 1 }}){% if not loop.last %}, {% endif %}{% endfor %}.</p>
+    {% endif %}
+
+    <details class="certification">
+        <summary><strong>{{ icon("target", 16) }} Ajouter un objectif</strong></summary>
+        {{ goal_form({}, "Ajouter") }}
+    </details>
+</article>

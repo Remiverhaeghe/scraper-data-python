@@ -38,6 +38,8 @@ from web.routes.applications import router as applications_router
 from web.routes.quiz import router as quiz_router
 from web.routes.skills import router as skills_router
 from web.routes.certifications import router as certifications_router
+from web.routes.portfolio import router as portfolio_router
+from web.routes.training_goals import router as training_goals_router
 from web.routes.aptitude import router as aptitude_router
 from web.routes.troubleshooting import router as troubleshooting_router
 from web.routes.ladder import router as ladder_router
@@ -256,6 +258,8 @@ app.include_router(applications_router)
 app.include_router(quiz_router)
 app.include_router(skills_router)
 app.include_router(certifications_router)
+app.include_router(training_goals_router)
+app.include_router(portfolio_router)
 app.include_router(aptitude_router)
 app.include_router(troubleshooting_router)
 app.include_router(ladder_router)

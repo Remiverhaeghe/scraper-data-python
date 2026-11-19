@@ -23,7 +23,10 @@ web, avant que toutes les sources passent par des API.
 - **Candidatures** : suivi par statut avec historique, relances, pièces jointes, agenda
   des entretiens à s'abonner depuis le téléphone.
 - **Préparation** : simulation d'entretien chronométrée, fiche de préparation par offre,
-  grille d'auto-évaluation des compétences.
+  grille d'auto-évaluation des compétences, fiche de mes projets publics (Atelier,
+  Kalkul, Tremplin) à reprendre dans une candidature et questions probables sur chacun.
+- **Formations** : certifications citées par les offres, formations et certifications
+  visées rattachées aux compétences demandées.
 - **Révision** : questions par thème, défis de programmation, bacs à sable Git et SQL,
   pannes à résoudre, simulateur d'automate.
 - **Trois accès** : application de bureau (PySide6), tableau de bord web sur le NAS

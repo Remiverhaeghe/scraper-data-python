@@ -1,0 +1,59 @@
+{# Projets (route /portfolio) : fiche tirée des README publics (job/portfolio_projects.py)
+   et questions d'entretien sur le projet (job/project_interview.py). #}
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+
+{% block title %}Projets{% endblock %}
+
+{% block content %}
+{{ ui.page_header("Projets", "Une fiche par projet public, à reprendre dans vos candidatures, et l'entretien qui s'y prépare", "code") }}
+
+<nav class="filters-row" aria-label="Choix du projet">
+    {% for item in projects %}
+    <a class="button{% if item.id == project.id %} button-primary{% endif %}" href="{{ url_for('show_portfolio').path }}?project={{ item.id | urlencode }}"{% if item.id == project.id %} aria-current="page"{% endif %}>{{ item.name }}</a>
+    {% endfor %}
+</nav>
+
+<article class="card section-gap">
+    <h2>{{ sheet.title }} · {{ sheet.subtitle }}</h2>
+    <p class="card-subtitle"><a href="{{ sheet.url }}" target="_blank" rel="noopener noreferrer">{{ sheet.url }}</a></p>
+    {% for heading, items in sheet.sections %}
+    <h3>{{ heading }}</h3>
+    <ul>{% for item in items %}<li>{{ item }}</li>{% endfor %}</ul>
+    {% endfor %}
+    <p class="muted">{{ sheet.source }}</p>
+    <p>
+        <a class="button" href="{{ url_for('download_portfolio_pdf').path }}?project={{ project.id | urlencode }}">{{ icon("file-text", 16) }} Fiche en PDF</a>
+        <a class="button" href="{{ url_for('download_portfolio_text').path }}?project={{ project.id | urlencode }}">{{ icon("download", 16) }} Fiche en texte</a>
+    </p>
+</article>
+
+<article class="card section-gap">
+    <h2>À reprendre dans une candidature</h2>
+    <p class="card-subtitle">Textes construits à partir des seuls faits de la fiche ; relisez-les avant envoi.</p>
+    <h3>Ligne pour la rubrique Projets du CV</h3>
+    <div class="copy-field" id="portfolio-cv">
+        <textarea rows="3" readonly aria-label="Ligne pour le CV">{{ sheet.cv_line }}</textarea>
+        <button class="button button-primary" type="button" data-copy="portfolio-cv" data-copied="Copié">{{ icon("copy", 16) }} Copier</button>
+    </div>
+    <h3>Paragraphe pour la lettre de motivation</h3>
+    <div class="copy-field" id="portfolio-letter">
+        <textarea rows="4" readonly aria-label="Paragraphe pour la lettre">{{ sheet.letter_paragraph }}</textarea>
+        <button class="button button-primary" type="button" data-copy="portfolio-letter" data-copied="Copié">{{ icon("copy", 16) }} Copier</button>
+    </div>
+</article>
+
+<article class="card section-gap" id="entretien">
+    <h2>Préparer l'entretien sur {{ project.name }}</h2>
+    <p class="card-subtitle">Questions qu'un recruteur pose souvent sur un projet du CV, avec des pistes tirées du README et du code. {{ numbers_notice }}</p>
+    {% for item in questions %}
+    <details class="certification">
+        <summary><strong>{{ item.question }}</strong></summary>
+        <p class="muted">Pourquoi on la pose : {{ item.reason }}</p>
+        <ul>{% for hint in item.hints %}<li>{{ hint }}</li>{% endfor %}</ul>
+        <p>Conseil : {{ item.advice }}</p>
+    </details>
+    {% endfor %}
+    <p class="section-gap"><a class="button" href="{{ url_for('download_portfolio_text').path }}?project={{ project.id | urlencode }}&kind=questions">{{ icon("download", 16) }} Questions en texte</a></p>
+</article>
+{% endblock %}

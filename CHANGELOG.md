@@ -5,6 +5,20 @@ dans l'historique git.
 
 ## Non publié
 
+### Projets et formations
+- Page Projets (web) : une fiche par projet public (Atelier, Kalkul, Tremplin) faite
+  des seuls faits de son README, avec une ligne pour le CV, un paragraphe pour la
+  lettre, l'export en PDF ou en texte. La fiche d'une offre propose les projets qui
+  partagent ses compétences.
+- Préparer l'entretien sur un projet : questions qu'un recruteur pose souvent, avec
+  des pistes tirées du README et les fichiers à montrer dans le code ; une question
+  sans fait pour y répondre n'est pas proposée
+- Formations et certifications visées (page Certifications) : état, date visée,
+  organisme, compétences apportées et nombre d'offres récentes qui les demandent ;
+  retard signalé, compétences demandées sans formation prévue listées ; une
+  certification du catalogue obtenue est cochée dans le suivi. Comprises dans
+  l'export des données personnelles.
+
 ### Captures
 - Offres fictives des captures sur une source française : la page Mon marché montre son salaire médian, capture ajoutée au README
 ### Installation de l'appli mobile

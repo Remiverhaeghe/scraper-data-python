@@ -38,6 +38,8 @@ PAGES = (
     "/market",
     "/skills",
     "/certifications",
+    "/portfolio",
+    "/portfolio?project=kalkul",
     "/aptitude",
     "/aptitude/play?category=calcul",
     "/troubleshooting",
