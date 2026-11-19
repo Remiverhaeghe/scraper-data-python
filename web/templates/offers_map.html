@@ -35,6 +35,10 @@
     <span>Pastille d'autant plus grande que le score est élevé</span>
 </div>
 
+{% if home %}
+<p class="muted">Trajets estimés hors ligne d'après la distance à vol d'oiseau, avec 30 % de détour : {{ speeds.car_city_speed_kmh }} km/h en ville sur les 20 premiers kilomètres puis {{ speeds.car_road_speed_kmh }} km/h en voiture, {{ speeds.bike_speed_kmh }} km/h à vélo. Ce sont des estimations, sans trafic ni relief ; les vitesses se règlent dans les <a href="{{ url_for('show_settings').path }}">Paramètres</a>.</p>
+{% endif %}
+
 <div id="offers-map" class="offers-map" aria-label="Carte des offres"></div>
 
 <script type="application/json" id="map-data">{{ {"points": map_points, "home": map_home, "radius": filters.distance} | tojson }}</script>

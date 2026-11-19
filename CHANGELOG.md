@@ -5,6 +5,19 @@ dans l'historique git.
 
 ## Non publié
 
+### Trajets, relecture et bilan du mois
+- Carte des offres : trajet estimé en voiture et à vélo dans chaque pastille, calculé
+  hors ligne d'après la distance à vol d'oiseau ; vitesses moyennes réglables dans les
+  Paramètres (ville, route, vélo) et rappelées sous la carte comme des estimations.
+  Le trajet à vélo s'affiche aussi au survol de la distance dans la liste.
+- Relecture de la lettre depuis la fiche de l'offre : nombre de mots, mots-clés de
+  l'annonce (intitulé, entreprise, compétences, qualités) présents ou absents, fautes
+  courantes, restes du modèle, espaces avant la ponctuation, phrases trop longues
+- Bilan mensuel par e-mail au premier passage du planificateur du mois : candidatures,
+  candidatures spontanées, relances, réponses et entretiens comparés au mois
+  précédent, délai moyen de réponse. Le délai moyen s'affiche aussi sur le
+  récapitulatif du mois.
+
 ### Projets et formations
 - Page Projets (web) : une fiche par projet public (Atelier, Kalkul, Tremplin) faite
   des seuls faits de son README, avec une ligne pour le CV, un paragraphe pour la

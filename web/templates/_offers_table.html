@@ -47,7 +47,7 @@
                 </td>
                 <td>{% if offer.company_preferred %}<span class="tone-primary" title="Entreprise privilégiée">★</span> {% endif %}{{ offer.company or "" }}</td>
                 <td class="muted">{{ offer.location or "" }}</td>
-                <td class="amount nowrap"{% if offer.drive_minutes %} title="Trajet en voiture estimé d'après la distance à vol d'oiseau"{% endif %}>{% if offer.distance_km is not none %}{{ offer.distance_km }} km{% if offer.drive_minutes %}<br><small class="muted">≈ {{ offer.drive_minutes }} min</small>{% endif %}{% endif %}</td>
+                <td class="amount nowrap"{% if offer.drive_minutes %} title="Estimé d'après la distance à vol d'oiseau : {{ offer.drive_minutes }} min en voiture{% if offer.bike_minutes %}, {{ offer.bike_minutes }} min à vélo{% endif %}"{% endif %}>{% if offer.distance_km is not none %}{{ offer.distance_km }} km{% if offer.drive_minutes %}<br><small class="muted">≈ {{ offer.drive_minutes }} min</small>{% endif %}{% endif %}</td>
                 <td>{% if offer.contract %}<span class="badge badge-first badge-{{ contract_tones.get(offer.contract, 'muted') }}">{{ offer.contract }}</span>{% endif %}</td>
                 <td class="amount">{% if offer.net_salary %}{{ offer.net_salary }}{% elif offer.estimated_salary %}<span class="muted" title="Estimation : médiane des offres comparables qui annoncent un salaire">≈ {{ offer.estimated_salary }}</span>{% endif %}</td>
                 <td class="amount">{% if offer.global_score is not none %}<span class="badge badge-first badge-{{ offer.global_score | score_tone }}">{{ offer.global_score }}</span>{% endif %}</td>

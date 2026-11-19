@@ -52,6 +52,7 @@ Suivi des fonctionnalités par partie de l'application.
 - [x] Compétences de l'industrie reconnues (automates, TIA Portal, habilitation électrique, GMAO, maintenance préventive…), compétence saisie librement dans le profil rapprochée de son libellé reconnu
 - [x] Distance au domicile dans la liste, la fiche, les e-mails et sur le téléphone, tri « Les plus proches » (web)
 - [x] Carte des offres sur le web (Leaflet et OpenStreetMap), avec les filtres de la liste et le rayon choisi
+- [x] Trajet estimé en voiture et à vélo sur la carte, hors ligne d'après la distance, vitesses moyennes réglables dans les Paramètres
 - [x] Rayon des alertes : le téléphone et le récapitulatif par e-mail ne signalent que les offres proches, et le télétravail
 - [x] Liste des agences d'intérim modifiable dans Paramètres, badge « Intérim » dans la liste des offres
 - [x] Sources sans offre utile sur 30 jours signalées dans la comparaison des sources
@@ -102,6 +103,8 @@ Suivi des fonctionnalités par partie de l'application.
 - [x] Objectif de candidatures par semaine, réglable dans les règles de calcul, et sa progression sur l'accueil
 - [x] Alertes dans le menu : relances dues et offres suivies retirées, à côté de « Candidatures » (bureau et web)
 - [x] Récapitulatif hebdomadaire par e-mail : offres de la semaine les mieux notées, relances, entretiens à venir et préparation
+- [x] Bilan mensuel par e-mail : candidatures, réponses, entretiens comparés au mois précédent et délai moyen de réponse
+- [x] Relecture de la lettre avant envoi : longueur, mots-clés de l'annonce présents ou absents, fautes courantes (web)
 - [x] Rappel par e-mail la veille d'un entretien : questions probables, réponses STAR, questions déjà posées et thèmes à revoir
 - [x] Recherche planifiée complétée par des recherches enregistrées, lancées à la suite avec un seul e-mail récapitulatif
 

@@ -27,6 +27,7 @@ from job.geocoding import (
     DISTANCE_FILTERS,
     add_distances,
     describe_location,
+    describe_travel,
     load_home,
     read_position,
 )
@@ -140,7 +141,7 @@ def list_offers(
     ]
     mark_preferred_companies(vPrepared, vCompanyRules)
     score_offers(vPrepared, load_profile(pDatabaseFile))
-    add_distances(vPrepared, vHome)
+    add_distances(vPrepared, vHome, vSettings)
     mark_agency_offers(vPrepared, vAgencies)
     mark_experience_fit(vPrepared, vSettings["experience_years"])
     mark_hybrid_offers(vPrepared)
@@ -267,6 +268,10 @@ def list_offers(
             else None
         )
         vContext["score_levels"] = (SCORE_GOOD, SCORE_FAIR)
+        vContext["speeds"] = {
+            vKey: vSettings[vKey]
+            for vKey in ("car_city_speed_kmh", "car_road_speed_kmh", "bike_speed_kmh")
+        }
         vContext["list_query"] = urlencode(
             [
                 (vKey, vValue)
@@ -314,6 +319,7 @@ def build_map_points(pOffers):
                 for vPart in (vOffer.get("company"), describe_location(vOffer))
                 if vPart
             ),
+            "travel": describe_travel(vOffer),
             "score": vOffer.get("match_score"),
             "tone": (
                 None

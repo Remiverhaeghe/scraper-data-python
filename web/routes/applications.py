@@ -23,6 +23,7 @@ from job.application_tracking import (
 )
 from job.calendar import build_calendar
 from job.manual_offers import add_spontaneous_application
+from job.monthly_review import compute_average_delay
 from job.search_journal import (
     DEFAULT_JOURNAL_DAYS,
     build_journal_file_name,
@@ -176,7 +177,10 @@ def show_monthly_report(
     rResponse = templates.TemplateResponse(
         request,
         "france_travail.html",
-        {"report": build_monthly_report(pDatabaseFile, vMonth)},
+        {
+            "report": build_monthly_report(pDatabaseFile, vMonth),
+            "average_delay": compute_average_delay(pDatabaseFile, vMonth),
+        },
     )
 
     return rResponse

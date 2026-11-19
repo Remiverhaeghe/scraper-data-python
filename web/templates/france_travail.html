@@ -29,6 +29,7 @@
     <ul class="counts">
         {% for step, count in report.counts %}<li><strong>{{ count }}</strong>{{ step }}</li>{% endfor %}
     </ul>
+    <p>Délai moyen de réponse des recruteurs ce mois-ci : {{ "aucune réponse reçue" if average_delay is none else average_delay ~ " jour" ~ ("s" if average_delay > 1 else "") }}.</p>
 
     <h2>Démarches</h2>
     {% if report.rows %}

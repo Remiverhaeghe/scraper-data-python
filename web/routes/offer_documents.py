@@ -4,11 +4,12 @@ from typing import Literal
 from urllib.parse import quote
 
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Query
-from fastapi.responses import Response
+from fastapi import APIRouter, Depends, Form, HTTPException, Query, Request
+from fastapi.responses import HTMLResponse, Response
 
 
 from job.application_dossier import write_dossier_pdf
+from job.application_review import review_letter
 from job.cv_export import (
     build_file_name,
     build_tailored_cv,
@@ -20,6 +21,7 @@ from job.cv_export import (
 from job.geocoding import load_home
 from job.profile import is_profile_empty, load_profile
 from web.dependencies import get_database_file, require_csrf
+from web.rendering import templates
 from web.routes.offer_detail import get_existing_offer
 
 router = APIRouter()
@@ -116,6 +118,31 @@ def download_letter(
     rResponse = build_document_response(
         write_letter_pdf(vLetter) if pFormat == "pdf" else write_letter_docx(vLetter),
         build_file_name(vOffer, "Lettre", f".{pFormat}"),
+    )
+
+    return rResponse
+
+
+@router.post(
+    "/offer/letter/review",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def review_offer_letter(
+    request: Request,
+    pSource: str = Form(alias="source"),
+    pSourceId: str = Form(alias="id"),
+    pLetter: str = Form("", alias="letter"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Relit la lettre telle que modifiée dans la page : longueur, mots-clés, fautes."""
+
+    vOffer = get_existing_offer(pDatabaseFile, pSource, pSourceId)
+
+    rResponse = templates.TemplateResponse(
+        request,
+        "_letter_review.html",
+        {"review": review_letter(pLetter[:MAX_LETTER_LENGTH], vOffer)},
     )
 
     return rResponse

@@ -409,3 +409,13 @@ def test_web_certificate_is_renewed_only_in_https(monkeypatch):
     runner.renew_web_certificate("scraper.db", datetime(2026, 10, 23))
 
     assert vCalls[0][0] == "serveur.chat-tigre.ts.net"
+
+
+def test_monthly_review_is_sent_by_the_scheduler(database_file, sent_emails):
+    """Vérifie que le planificateur envoie le bilan du mois écoulé une seule fois."""
+
+    assert runner.send_monthly_review(database_file, datetime(2026, 11, 2)) is True
+    assert runner.send_monthly_review(database_file, datetime(2026, 11, 20)) is False
+    assert len(sent_emails) == 1
+    assert sent_emails[0][0] == "moi@example.com"
+    assert "bilan d'octobre 2026" in sent_emails[0][1]

@@ -1,0 +1,16 @@
+{# Relecture de la lettre (route /offer/letter/review, job/application_review.py),
+   insérée sous le brouillon par HTMX. #}
+<div class="letter-review section-gap">
+    <h3>Relecture</h3>
+    <p class="tone-{{ review.length[1] }}">{{ review.length[0] }}{% if review.long_sentences %} {{ review.long_sentences }} phrase{{ "s" if review.long_sentences > 1 }} de plus de 40 mots, à couper.{% endif %}</p>
+    {% if review.keywords %}
+    <p>Mots-clés de l'annonce repris : {{ review.found_share }} %</p>
+    <ul>{% for item in review.keywords %}<li>{{ item.kind }} : {{ item.term }}, {% if item.found %}<span class="muted">présent</span>{% else %}<strong>absent</strong>{% endif %}</li>{% endfor %}</ul>
+    {% endif %}
+    {% if review.mistakes %}
+    <p>À corriger ou à revoir :</p>
+    <ul>{% for item in review.mistakes %}<li><q>{{ item.excerpt }}</q> : {{ item.advice }}</li>{% endfor %}</ul>
+    {% elif review.words %}
+    <p class="tone-success">Aucune faute courante repérée. Une relecture à voix haute reste utile.</p>
+    {% endif %}
+</div>
