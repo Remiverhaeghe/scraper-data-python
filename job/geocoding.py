@@ -47,6 +47,10 @@ CITY_DISTANCE_KM = 20
 CITY_SPEED_KMH = 40
 ROAD_SPEED_KMH = 70
 
+# À vélo, le même détour à vitesse constante : 15 km/h est une allure de ville
+# sans forcer, à régler dans les Paramètres (vélo électrique : 20 à 25).
+BIKE_SPEED_KMH = 15
+
 # Code postal suivi de la commune, en fin d'adresse
 POSTAL_ADDRESS_PATTERN = re.compile(r"\b\d{5}\s+[^\d,;]+$")
 
@@ -441,18 +445,68 @@ def read_position(pOffer):
     return rPosition
 
 
-def estimate_drive_minutes(pDistanceKm):
+def round_minutes(pHours):
+    """Retourne une durée en minutes arrondie à 5, de 5 minutes au moins."""
+
+    rMinutes = max(5, round(pHours * 60 / 5) * 5)
+
+    return rMinutes
+
+
+def estimate_drive_minutes(
+    pDistanceKm, pCitySpeed=CITY_SPEED_KMH, pRoadSpeed=ROAD_SPEED_KMH
+):
     """Estime le trajet en voiture, en minutes, d'après la distance à vol d'oiseau."""
 
     # Les premiers kilomètres en ville, le reste sur route : le temps croît
     # toujours avec la distance.
     vCityKm = min(pDistanceKm, CITY_DISTANCE_KM) * ROAD_DETOUR_FACTOR
     vRoadKm = max(pDistanceKm - CITY_DISTANCE_KM, 0) * ROAD_DETOUR_FACTOR
-    vHours = vCityKm / CITY_SPEED_KMH + vRoadKm / ROAD_SPEED_KMH
+    vHours = vCityKm / pCitySpeed + vRoadKm / pRoadSpeed
 
-    rMinutes = max(5, round(vHours * 60 / 5) * 5)
+    rMinutes = round_minutes(vHours)
 
     return rMinutes
+
+
+def estimate_bike_minutes(pDistanceKm, pSpeed=BIKE_SPEED_KMH):
+    """Estime le trajet à vélo, en minutes, d'après la distance à vol d'oiseau."""
+
+    rMinutes = round_minutes(pDistanceKm * ROAD_DETOUR_FACTOR / pSpeed)
+
+    return rMinutes
+
+
+def format_minutes(pMinutes):
+    """Retourne une durée lisible : « 25 min », « 1 h », « 1 h 05 »."""
+
+    vHours, vMinutes = divmod(pMinutes, 60)
+
+    if not vHours:
+        rText = f"{vMinutes} min"
+    elif not vMinutes:
+        rText = f"{vHours} h"
+    else:
+        rText = f"{vHours} h {vMinutes:02d}"
+
+    return rText
+
+
+def describe_travel(pOffer):
+    """Retourne les trajets estimés en voiture et à vélo, ou une chaîne vide."""
+
+    vParts = [
+        f"≈ {format_minutes(pOffer[vKey])} {vLabel}"
+        for vKey, vLabel in (
+            ("drive_minutes", "en voiture"),
+            ("bike_minutes", "à vélo"),
+        )
+        if pOffer.get(vKey)
+    ]
+
+    rText = " · ".join(vParts)
+
+    return rText
 
 
 def describe_distance(pOffer):
@@ -469,12 +523,19 @@ def describe_distance(pOffer):
     return rText
 
 
-def add_distances(pOffers, pHome):
-    """Ajoute à chaque offre sa distance au domicile en km et le trajet estimé en
-    voiture, ou None si la position est inconnue.
+def add_distances(pOffers, pHome, pSettings=None):
+    """Ajoute à chaque offre sa distance au domicile en km et les trajets estimés en
+    voiture et à vélo, ou None si la position est inconnue.
+
+    pSettings donne les vitesses moyennes réglées (job/settings.py) ; sans lui,
+    les vitesses par défaut servent.
     """
 
     vHome = (pHome["latitude"], pHome["longitude"]) if pHome else None
+    vSettings = pSettings or {}
+    vCitySpeed = vSettings.get("car_city_speed_kmh") or CITY_SPEED_KMH
+    vRoadSpeed = vSettings.get("car_road_speed_kmh") or ROAD_SPEED_KMH
+    vBikeSpeed = vSettings.get("bike_speed_kmh") or BIKE_SPEED_KMH
 
     for vOffer in pOffers:
         vPosition = read_position(vOffer)
@@ -483,10 +544,14 @@ def add_distances(pOffers, pHome):
             if vHome and vPosition
             else None
         )
+        vKnown = vOffer["distance_km"] is not None
         vOffer["drive_minutes"] = (
-            estimate_drive_minutes(vOffer["distance_km"])
-            if vOffer["distance_km"] is not None
+            estimate_drive_minutes(vOffer["distance_km"], vCitySpeed, vRoadSpeed)
+            if vKnown
             else None
+        )
+        vOffer["bike_minutes"] = (
+            estimate_bike_minutes(vOffer["distance_km"], vBikeSpeed) if vKnown else None
         )
 
 

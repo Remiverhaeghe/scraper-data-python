@@ -10,6 +10,7 @@ from config import (
     NEW_OFFER_DAYS,
 )
 from job.exchange_rates import load_stored_rates
+from job.geocoding import BIKE_SPEED_KMH, CITY_SPEED_KMH, ROAD_SPEED_KMH
 from job.salary import add_net_salary, get_income_tax_rate
 from storage.job_offers import get_salaries, update_net_salaries
 from storage.settings_repository import get_setting_values, save_setting_values
@@ -127,6 +128,31 @@ SETTING_DEFINITIONS = {
         "€/km",
         False,
     ),
+    "car_city_speed_kmh": SettingDefinition(
+        "Vitesse en ville",
+        "Vitesse moyenne en voiture sur les 20 premiers kilomètres, pour estimer "
+        "le trajet sans service d'itinéraire.",
+        10,
+        90,
+        1,
+        "km/h",
+    ),
+    "car_road_speed_kmh": SettingDefinition(
+        "Vitesse sur route",
+        "Vitesse moyenne en voiture au-delà de 20 km.",
+        20,
+        130,
+        1,
+        "km/h",
+    ),
+    "bike_speed_kmh": SettingDefinition(
+        "Vitesse à vélo",
+        "Vitesse moyenne à vélo : 15 km/h sans forcer, 20 à 25 en vélo électrique.",
+        5,
+        35,
+        1,
+        "km/h",
+    ),
     "experience_years": SettingDefinition(
         "Expérience",
         "Vos années d'expérience professionnelle, comparées à celles demandées "
@@ -239,6 +265,9 @@ def get_default_settings():
         "target_net_salary": 0,
         "archive_after_days": 0,
         "commute_cost_per_km": 0.25,
+        "car_city_speed_kmh": CITY_SPEED_KMH,
+        "car_road_speed_kmh": ROAD_SPEED_KMH,
+        "bike_speed_kmh": BIKE_SPEED_KMH,
         "experience_years": 0,
         "daily_digest_hour": 0,
         "notification_daily_limit": 3,

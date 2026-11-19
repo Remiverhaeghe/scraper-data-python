@@ -12,7 +12,10 @@ from job.geocoding import (
     compute_distance_km,
     describe_distance,
     describe_location,
+    describe_travel,
+    estimate_bike_minutes,
     estimate_drive_minutes,
+    format_minutes,
     get_home_department,
     read_postcode_department,
     is_locatable,
@@ -354,6 +357,56 @@ def test_drive_time_is_estimated_and_grows_with_distance():
         "20 km · ≈ 40 min"
     )
     assert describe_distance({"distance_km": None}) == ""
+
+
+def test_bike_time_and_adjustable_speeds():
+    """Vérifie le trajet à vélo et les vitesses réglées dans les Paramètres."""
+
+    assert estimate_bike_minutes(10) == 50
+    assert estimate_bike_minutes(10, 20) == 40
+    assert estimate_bike_minutes(0) == 5
+    assert estimate_drive_minutes(20, 20, 70) == 80
+    assert estimate_drive_minutes(40, 40, 130) == 50
+
+    vHome = {"latitude": 50.63, "longitude": 3.06}
+    vOffers = [
+        {"latitude": 50.63, "longitude": 3.20},
+        {"latitude": None, "longitude": None},
+    ]
+
+    add_distances(vOffers, vHome, {"car_city_speed_kmh": 20, "bike_speed_kmh": 20})
+
+    assert vOffers[0]["distance_km"] == 10
+    assert vOffers[0]["drive_minutes"] == 40
+    assert vOffers[0]["bike_minutes"] == 40
+    assert vOffers[1]["bike_minutes"] is None
+
+    add_distances(vOffers, vHome)
+
+    assert vOffers[0]["drive_minutes"] == 20
+    assert vOffers[0]["bike_minutes"] == 50
+
+
+@pytest.mark.parametrize(
+    ("pMinutes", "pText"),
+    [(25, "25 min"), (60, "1 h"), (65, "1 h 05"), (130, "2 h 10")],
+)
+def test_format_minutes(pMinutes, pText):
+    """Vérifie l'écriture des durées."""
+
+    assert format_minutes(pMinutes) == pText
+
+
+def test_describe_travel():
+    """Vérifie le résumé des trajets estimés, voiture puis vélo."""
+
+    assert describe_travel({"drive_minutes": 20, "bike_minutes": 65}) == (
+        "≈ 20 min en voiture · ≈ 1 h 05 à vélo"
+    )
+    assert describe_travel({"drive_minutes": 20, "bike_minutes": None}) == (
+        "≈ 20 min en voiture"
+    )
+    assert describe_travel({}) == ""
 
 
 def test_home_department_is_kept_or_read_in_the_postcode(tmp_path, geocoder):

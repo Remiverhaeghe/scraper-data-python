@@ -16,6 +16,7 @@ from job.statistics import run_due_source_review
 from job.skill_cache import refresh_detected_skills
 from job.application_replies import run_due_reply_check
 from job.daily_digest import send_daily_digest_if_due
+from job.monthly_review import send_monthly_review_if_due
 from job.restore_check import run_due_restore_check
 from job.application_tracking import get_due_follow_ups, get_week_follow_ups
 from job.followed_availability import (
@@ -330,6 +331,16 @@ def send_daily_digest(pDatabaseFile, pNow):
     return rSent
 
 
+def send_monthly_review(pDatabaseFile, pNow):
+    """Envoie le bilan du mois écoulé, s'il n'est pas encore parti."""
+
+    rSent = send_monthly_review_if_due(
+        pDatabaseFile, pNow, load_schedule(pDatabaseFile)["email"], send_email
+    )
+
+    return rSent
+
+
 def send_interview_reminders(pDatabaseFile, pNow):
     """Envoie le rappel de chaque entretien des prochaines 24 heures ; retourne leur nombre."""
 
@@ -367,6 +378,7 @@ BACKGROUND_TASKS = (
     ("vérification des offres suivies", check_followed_offers_daily),
     ("récapitulatif hebdomadaire", send_weekly_digest),
     ("récapitulatif quotidien", send_daily_digest),
+    ("bilan mensuel", send_monthly_review),
     ("rappels d'entretien", send_interview_reminders),
     ("certificat du tableau de bord", renew_web_certificate),
     ("archivage des offres expirées", archive_expired_offers),

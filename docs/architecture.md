@@ -110,6 +110,7 @@ tremplin/
 │   ├── page_timings.py                        # Pages lentes du bureau et du site, gardées une semaine
 │   ├── offer_comparison.py                    # Comparaison des offres côte à côte
 │   ├── weekly_digest.py                       # Récapitulatif hebdomadaire par e-mail
+│   ├── monthly_review.py                      # Bilan mensuel par e-mail et délai moyen de réponse
 │   ├── interview_reminder.py                  # Rappel la veille d'un entretien
 │   ├── interview_drill.py                     # Entraînement à l'oral, répétition espacée
 │   ├── interview_simulation.py                # Simulation d'entretien technique, points clés cochés
@@ -119,6 +120,7 @@ tremplin/
 │   ├── application_replies.py                 # Réponses des recruteurs repérées dans Gmail, statut proposé
 │   ├── cv_export.py                           # CV réordonné pour une offre et lettre, en Word ou en PDF
 │   ├── cv_keywords.py                         # Mots de l'annonce à reprendre dans le CV et la lettre
+│   ├── application_review.py                  # Relecture de la lettre : longueur, mots-clés, fautes
 │   ├── pdf_document.py                        # PDF A4 simple écrit sans bibliothèque
 │   ├── application_dossier.py                 # Dossier de candidature : offre, CV, lettre, entreprise, questions
 │   ├── search_journal.py                      # Journal des démarches datées, exporté pour un tableur

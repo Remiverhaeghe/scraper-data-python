@@ -19,9 +19,11 @@ web, avant que toutes les sources passent par des API.
 ## Ce qu'il fait
 
 - **Offres** : France Travail, La bonne alternance, Adzuna, Jooble et 17 autres sources,
-  dédoublonnées, géolocalisées sur une carte et filtrées selon mon profil.
+  dédoublonnées, géolocalisées sur une carte avec le trajet estimé en voiture et à
+  vélo, et filtrées selon mon profil.
 - **Candidatures** : suivi par statut avec historique, relances, pièces jointes, agenda
-  des entretiens à s'abonner depuis le téléphone.
+  des entretiens à s'abonner depuis le téléphone, relecture de la lettre avant envoi,
+  bilan mensuel par e-mail.
 - **Préparation** : simulation d'entretien chronométrée, fiche de préparation par offre,
   grille d'auto-évaluation des compétences, fiche de mes projets publics (Atelier,
   Kalkul, Tremplin) à reprendre dans une candidature et questions probables sur chacun.

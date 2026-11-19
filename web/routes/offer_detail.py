@@ -109,7 +109,7 @@ def show_offer(
         return rOffer
 
     vPrepared = prepare(vOffer)
-    add_distances([vPrepared], load_home(pDatabaseFile))
+    add_distances([vPrepared], load_home(pDatabaseFile), vSettings)
     vPrepared["education_status"] = compare_education(
         vPrepared.get("education_level"),
         get_profile_level(load_profile(pDatabaseFile)),
