@@ -220,6 +220,8 @@ Suivi des fonctionnalités par partie de l'application.
 - [x] Bilan hebdomadaire « saison » : la semaine écoulée (lundi à dimanche) avec XP, jours actifs, quêtes, candidatures, révisions et entretiens comparés à la semaine précédente, meilleur jour, record des huit dernières semaines et médaille selon les quêtes réussies ; page Progression (bureau, web), notification le lundi sur le bureau et une fois par semaine sur le téléphone
 - [x] Mascotte Boulon, robot de maintenance dessiné en SVG : content, concentré, endormi ou fier selon la progression, phrases écrites à l'avance qui saluent, commentent les quêtes du jour et fêtent les réussites, endormie sans reproche après trois jours d'absence (accueil du bureau, tableau de bord web, carte de jeu du téléphone)
 - [x] Certifications citées par les offres (37 suivies : habilitation électrique, CACES, SST, ISO 9001, ITIL, Azure…), plan des trois qui couvriraient le plus d'offres proches, suivi de celles obtenues : organisme, numéro, niveau, fin de validité, rappel de renouvellement et documents joints (bureau, web)
+- [x] Formations et certifications visées : état (visée, en cours, obtenue, abandonnée), date visée, compétences apportées comptées dans les offres des 30 derniers jours, retard signalé et compétences demandées sans formation prévue (web)
+- [x] Page Projets : fiche de chaque projet public tirée de son README (ligne de CV, paragraphe de lettre, PDF, texte), questions d'entretien probables sur le projet avec leurs pistes, projets à citer sur la fiche d'une offre (web)
 - [x] Animations : « +XP » qui s'envole, quête réussie, confettis au passage de niveau ; réglage « Jeu et animations » Complet, Discret ou Désactivé
 
 ## Tableau de bord web

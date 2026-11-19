@@ -253,6 +253,10 @@
             {% endfor %}
             {% if keywords.conditions %}<p>Conditions à aborder dans la lettre : {{ keywords.conditions | join(", ") }}</p>{% endif %}
             {% if keywords.missing_required %}<p>Exigées mais absentes du profil, à préparer pour l'entretien sans les ajouter au CV : {{ keywords.missing_required | join(", ") }}</p>{% endif %}
+            {% if portfolio_projects %}
+            <h3>Projets à citer</h3>
+            <ul>{% for item in portfolio_projects %}<li><a href="{{ url_for('show_portfolio').path }}?project={{ item.project.id | urlencode }}">{{ item.project.name }}</a> : {{ item.common | join(", ") }} en commun avec l'offre</li>{% endfor %}</ul>
+            {% endif %}
             <h3>CV adapté à cette offre</h3>
             <p>
                 <a class="button" href="{{ url_for('download_tailored_cv').path }}?source={{ offer.source | urlencode }}&id={{ offer.source_id | urlencode }}">{{ icon("download", 16) }} CV en Word</a>

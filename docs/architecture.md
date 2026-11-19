@@ -92,6 +92,10 @@ tremplin/
 │   ├── ladder.py                              # Langage du simulateur d'automate et dessin ladder
 │   ├── ladder_game.py                         # Niveaux, machines simulées, tests et chronogramme
 │   ├── certifications.py                      # Certifications citées par les offres, obtenues, validité
+│   ├── training_goals.py                      # Formations et certifications visées, compétences servies
+│   ├── portfolio_projects.py                  # Projets publics : faits relevés dans leur README
+│   ├── portfolio_sheet.py                     # Fiche projet : CV, lettre, texte et PDF
+│   ├── project_interview.py                   # Questions d'entretien sur un projet et pistes
 │   ├── hybrid.py                              # Offres à double profil maintenance et informatique
 │   ├── preparation.py                         # Correspondance, CV conseillé, entretien et lettre
 │   ├── star_answers.py                        # Réponses STAR aux questions comportementales

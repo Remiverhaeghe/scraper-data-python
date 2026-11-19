@@ -25,6 +25,7 @@ from job.experience_fit import describe_experience_fit
 from job.hybrid import describe_offer_hybrid
 from job.suspicious_offers import find_suspicious_signs, load_market_median
 from job.geocoding import add_distances, load_home
+from job.portfolio_projects import rank_projects
 from job.interview_journal import collect_asked_questions, collect_company_questions
 from job.interview_mission import build_mission
 from job.salary_negotiation import build_negotiation_view
@@ -32,7 +33,7 @@ from job.interview_revision import build_offer_revision
 from job.offer_comparison import load_comparison_keys
 from job.offer_details import fetch_missing_description
 from job.offer_summary import build_offer_summary
-from job.preparation import prepare_application
+from job.preparation import get_offer_skills, prepare_application
 from job.presentation import (
     AVAILABILITY_HELP,
     AVAILABILITY_LABELS,
@@ -157,6 +158,7 @@ def show_offer(
                 vPrepared, load_owned(pDatabaseFile)
             ),
             "hybrid": describe_offer_hybrid(vPrepared),
+            "portfolio_projects": rank_projects(get_offer_skills(vPrepared)),
             "experience_fit": describe_experience_fit(
                 vPrepared, vSettings["experience_years"]
             ),
