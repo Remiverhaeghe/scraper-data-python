@@ -886,5 +886,63 @@
     }
   },
   "quickRemove": "Retirer cette candidature",
-  "quickOpen": "Noter une candidature envoyée ailleurs"
+  "quickOpen": "Noter une candidature envoyée ailleurs",
+  "voiceTitle": "Révision à la voix",
+  "voiceHelp": "La question et ses choix sont lus. Touchez le micro et dites la lettre (« B »), le rang (« la deux ») ou le texte du choix. La reconnaissance vocale du téléphone écoute ; Tremplin n'enregistre rien.",
+  "voiceChoice": "Réponse {letter} : {choice}.",
+  "@voiceChoice": {
+    "placeholders": {
+      "letter": {
+        "type": "String"
+      },
+      "choice": {
+        "type": "String"
+      }
+    }
+  },
+  "voiceAnswer": "Répondre à voix haute",
+  "voiceNext": "Question suivante",
+  "voiceReadAgain": "Relire la question",
+  "voiceNothing": "Rien entendu. Touchez le micro et parlez après le signal.",
+  "voiceNotUnderstood": "Compris « {heard} », sans y trouver de choix.",
+  "@voiceNotUnderstood": {
+    "placeholders": {
+      "heard": {
+        "type": "String"
+      }
+    }
+  },
+  "voiceRepeat": "Je n'ai pas compris. Dites la lettre de votre réponse.",
+  "voiceHeard": "Réponse {letter}.",
+  "@voiceHeard": {
+    "placeholders": {
+      "letter": {
+        "type": "String"
+      }
+    }
+  },
+  "voiceRight": "Bonne réponse.",
+  "voiceWrong": "Raté. La bonne réponse était {letter} : {answer}.",
+  "@voiceWrong": {
+    "placeholders": {
+      "letter": {
+        "type": "String"
+      },
+      "answer": {
+        "type": "String"
+      }
+    }
+  },
+  "voiceScore": "{answered, plural, =1{1 réponse} other{{answered} réponses}}, {correct} juste(s)",
+  "@voiceScore": {
+    "placeholders": {
+      "answered": {
+        "type": "int"
+      },
+      "correct": {
+        "type": "int"
+      }
+    }
+  },
+  "voiceEmpty": "Aucune question à choix à revoir pour l'instant."
 }

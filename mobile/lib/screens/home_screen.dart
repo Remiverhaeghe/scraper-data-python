@@ -24,6 +24,7 @@ import 'hub_tabs.dart';
 import 'offers_screen.dart';
 import 'question_screen.dart';
 import 'tracking_screen.dart';
+import 'voice_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.state});
@@ -504,6 +505,19 @@ class TodayCard extends StatelessWidget {
                   ),
                   icon: const Icon(Icons.bolt),
                   label: Text(context.texts.home5Min),
+                ),
+                const SizedBox(width: 8),
+                IconButton.outlined(
+                  tooltip: context.texts.voiceTitle,
+                  style: IconButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Colors.white54),
+                    minimumSize: const Size(52, 52),
+                  ),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(builder: (_) => VoiceScreen(state: state)),
+                  ),
+                  icon: const Icon(Icons.mic_none),
                 ),
               ],
             ),
