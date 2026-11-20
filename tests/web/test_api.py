@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 
+from job.mobile_pairing import create_pairing_code
 from job.mobile_sync import renew_mobile_token
 from job.quiz import load_active_quiz
 from job.quiz_exam import load_exam_results
@@ -96,6 +97,24 @@ def test_api_ping_answers_without_token(api):
 
     assert vResponse.status_code == 200
     assert vResponse.json() == {"application": "JobBoard Perso", "api_version": 1}
+
+
+def test_api_pairing_gives_the_token_for_the_right_code(api, tmp_path):
+    """Vérifie l'échange du code affiché sur le PC contre le jeton, une seule fois."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    vToken = api.headers["Authorization"].removeprefix("Bearer ")
+    del api.headers["Authorization"]
+    vCode = create_pairing_code(vDatabaseFile)
+
+    vWrong = api.post("/api/v1/pairing", json={"code": "abc"})
+    vRight = api.post("/api/v1/pairing", json={"code": vCode})
+    vAgain = api.post("/api/v1/pairing", json={"code": vCode})
+
+    assert vWrong.status_code == 403
+    assert vRight.status_code == 200
+    assert vRight.json() == {"token": vToken, "certificate_sha256": None}
+    assert vAgain.status_code == 403
 
 
 def test_exams_and_flags_from_the_phone(api, tmp_path):

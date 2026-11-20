@@ -421,6 +421,15 @@ def test_settings_mobile_token(client):
     assert 'id="mobile-token"' in vCreated
 
 
+def test_settings_mobile_pairing_code(client):
+    """Vérifie le code à 6 chiffres affiché pour connecter un téléphone."""
+
+    vPage = client.post("/settings/mobile/code").text
+
+    assert re.search(r'class="pairing-code"[^>]*><strong>\d{3} \d{3}</strong>', vPage)
+    assert "dans les 10 minutes" in vPage
+
+
 def test_settings_messages_are_colored(client):
     """Vérifie un message d'erreur de saisie en orange et un succès en vert."""
 

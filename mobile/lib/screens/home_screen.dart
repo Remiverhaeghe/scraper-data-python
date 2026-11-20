@@ -9,16 +9,12 @@ import '../revision_state.dart';
 import '../services/api_client.dart';
 import '../theme.dart';
 import '../widgets/celebration.dart';
+import '../widgets/brand.dart';
 import '../widgets/game_card.dart';
 import 'exam_screen.dart';
-import 'interview_screen.dart';
-import 'labs_screen.dart';
-import 'library_screen.dart';
+import 'hub_tabs.dart';
 import 'offers_screen.dart';
 import 'question_screen.dart';
-import 'setup_screen.dart';
-import 'skills_screen.dart';
-import 'statistics_screen.dart';
 import 'tracking_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -104,107 +100,100 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
+  /// Onglet ouvert, et onglets déjà ouverts : un onglet n'est construit qu'à sa
+  /// première visite, puis gardé tel quel (défilement, filtres).
+  int tab = 0;
+  final visited = <int>{0};
+
+  void openTab(int pIndex) => setState(() {
+        tab = pIndex;
+        visited.add(pIndex);
+      });
+
+  Widget buildTab(int pIndex) {
+    final rTab = switch (pIndex) {
+      0 => buildRevision(),
+      1 => OffersScreen(state: state),
+      2 => TrackingScreen(state: state),
+      3 => InterviewHub(state: state),
+      _ => MoreTab(state: state, onExam: state.package == null ? null : openExam),
+    };
+
+    return rTab;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final rScreen = ListenableBuilder(
+    final rScreen = Scaffold(
+      body: IndexedStack(
+        index: tab,
+        children: [
+          for (var vIndex = 0; vIndex < 5; vIndex++)
+            visited.contains(vIndex) ? buildTab(vIndex) : const SizedBox.shrink(),
+        ],
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: tab,
+        onDestinationSelected: openTab,
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.school_outlined),
+            selectedIcon: Icon(Icons.school),
+            label: 'Réviser',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.work_outline),
+            selectedIcon: Icon(Icons.work),
+            label: 'Offres',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.assignment_outlined),
+            selectedIcon: Icon(Icons.assignment),
+            label: 'Candidatures',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.record_voice_over_outlined),
+            selectedIcon: Icon(Icons.record_voice_over),
+            label: 'Entretien',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.more_horiz),
+            label: 'Plus',
+          ),
+        ],
+      ),
+    );
+
+    return rScreen;
+  }
+
+  /// Onglet Réviser : la journée en grand, puis les candidatures et les thèmes.
+  Widget buildRevision() {
+    final rTab = ListenableBuilder(
       listenable: state,
       builder: (pContext, _) => Scaffold(
         appBar: AppBar(
-          title: const Text('Révision'),
+          title: const Text('Réviser'),
           actions: [
-            IconButton(
-              tooltip: 'Offres',
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(builder: (_) => OffersScreen(state: state)),
-              ),
-              icon: const Icon(Icons.work_outline),
-            ),
-            IconButton(
-              tooltip: 'Mes candidatures',
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(builder: (_) => TrackingScreen(state: state)),
-              ),
-              icon: const Icon(Icons.assignment_outlined),
-            ),
-            IconButton(
-              tooltip: 'Statistiques',
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(builder: (_) => StatisticsScreen(state: state)),
-              ),
-              icon: const Icon(Icons.insights),
-            ),
-            IconButton(
-              tooltip: 'Examen blanc, tous thèmes',
-              onPressed: state.package == null ? null : openExam,
-              icon: const Icon(Icons.timer_outlined),
-            ),
             IconButton(
               tooltip: 'Synchroniser',
               onPressed: state.syncing ? null : synchronize,
               icon: const Icon(Icons.sync),
-            ),
-            PopupMenuButton<Widget Function()>(
-              tooltip: 'Entretien',
-              icon: const Icon(Icons.record_voice_over_outlined),
-              onSelected: (pBuild) => Navigator.of(context).push(
-                MaterialPageRoute<void>(builder: (_) => pBuild()),
-              ),
-              itemBuilder: (_) => [
-                PopupMenuItem(
-                  value: () => InterviewScreen(state: state),
-                  child: const Text("Simulation d'entretien"),
-                ),
-                PopupMenuItem(
-                  value: () => SkillsScreen(state: state),
-                  child: const Text('Auto-évaluation'),
-                ),
-              ],
-            ),
-            IconButton(
-              tooltip: 'Paramètres',
-              onPressed: () => Navigator.of(pContext).push(
-                MaterialPageRoute<void>(builder: (_) => SetupScreen(state: state)),
-              ),
-              icon: const Icon(Icons.settings_outlined),
             ),
           ],
         ),
         body: RefreshIndicator(
           onRefresh: synchronize,
           child: ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             children: [
               if (state.syncing) const LinearProgressIndicator(),
+              TodayCard(state: state),
+              const SizedBox(height: 12),
               SummaryCard(state: state),
-              GameCard(state: state),
-              Card(
-                child: ListTile(
-                  leading: const Icon(Icons.build_circle_outlined),
-                  title: const Text('Simulations'),
-                  subtitle: const Text(
-                      'Pannes, automate, schémas, Git, SQL, Maven et Docker, sans réseau'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(builder: (_) => LabsScreen(state: state)),
-                  ),
-                ),
-              ),
-              if (state.package case final vPackage?)
-                Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.local_library_outlined),
-                    title: const Text('Guides et schémas'),
-                    subtitle:
-                        const Text('Guides pratiques et schémas de chaque thème, sans réseau'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(builder: (_) => LibraryScreen(package: vPackage)),
-                    ),
-                  ),
-                ),
-              DailyGoalCard(state: state),
               if (state.nextInterview(DateTime.now()) case final vInterview?)
                 Card(
+                  color: Theme.of(pContext).colorScheme.tertiaryContainer,
                   child: ListTile(
                     leading: const Icon(Icons.event_available),
                     title: Text(
@@ -219,19 +208,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     ),
                   ),
                 ),
-              if (state.package != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: FilledButton.tonalIcon(
-                    onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => QuestionScreen(state: state, timeLimit: sprintDuration),
-                      ),
-                    ),
-                    icon: const Icon(Icons.bolt),
-                    label: const Text('Révision express · 5 minutes'),
-                  ),
-                ),
+              GameCard(state: state),
               if (state.package != null && state.applications.isNotEmpty)
                 ApplicationsCard(state: state),
               if (state.package == null)
@@ -256,7 +233,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       ),
     );
 
-    return rScreen;
+    return rTab;
   }
 }
 
@@ -282,10 +259,6 @@ class SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final vStatistics = state.statistics;
     final vLastSync = state.lastSync;
-    final vToday = DateTime.now();
-    final vDue =
-        state.package == null ? 0 : countDue(state.package!.questions, state.schedule, vToday);
-
     final rCard = Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -297,7 +270,6 @@ class SummaryCard extends StatelessWidget {
               value: '${vStatistics['acquired'] ?? 0} / ${vStatistics['total'] ?? 0}',
               label: 'acquises',
             ),
-            Statistic(value: '$vDue', label: "à revoir aujourd'hui"),
             Statistic(value: '${vStatistics['streak'] ?? 0} j', label: 'de suite'),
             Statistic(value: '${state.pending.length}', label: 'réponse(s) à envoyer'),
             if (state.examResults.isNotEmpty)
@@ -378,8 +350,20 @@ class DomainCard extends StatelessWidget {
 
                 return ListTile(
                   title: Text(vTheme.label),
-                  subtitle: Text(
-                    '$vDue à revoir · $vNew nouvelle(s) · ${vQuestions.length} question(s)',
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '$vDue à revoir · $vNew nouvelle(s) · ${vQuestions.length} question(s)',
+                      ),
+                      const SizedBox(height: 6),
+                      AnimatedBar(
+                        value: vQuestions.isEmpty
+                            ? 0
+                            : (vQuestions.length - vNew) / vQuestions.length,
+                        color: sunriseColor,
+                      ),
+                    ],
                   ),
                   trailing: vDue > 0
                       ? Badge(label: Text('$vDue'), child: const Icon(Icons.chevron_right))
@@ -400,9 +384,10 @@ class DomainCard extends StatelessWidget {
   }
 }
 
-/// Objectif du jour : réponses données aujourd'hui sur l'objectif choisi.
-class DailyGoalCard extends StatelessWidget {
-  const DailyGoalCard({super.key, required this.state});
+/// La journée en grand : questions à revoir, objectif du jour en anneau, et de
+/// quoi commencer d'un toucher.
+class TodayCard extends StatelessWidget {
+  const TodayCard({super.key, required this.state});
 
   final RevisionState state;
 
@@ -410,29 +395,82 @@ class DailyGoalCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final vDone = state.answersToday;
     final vGoal = state.dailyGoal;
-    final vReached = vDone >= vGoal;
+    final vPackage = state.package;
+    final vDue = vPackage == null ? 0 : countDue(vPackage.questions, state.schedule, DateTime.now());
+    final vTitle = Theme.of(context).textTheme.headlineSmall!.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.w700,
+        );
 
-    final rCard = Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              vReached
-                  ? 'Objectif du jour atteint : $vDone réponses'
-                  : 'Objectif du jour : $vDone / $vGoal réponses',
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-            const SizedBox(height: 8),
-            LinearProgressIndicator(
-              value: vGoal == 0 ? 0 : (vDone / vGoal).clamp(0, 1).toDouble(),
-              minHeight: 8,
-              borderRadius: BorderRadius.circular(4),
-              color: vReached ? successColorOf(context) : null,
+    final rCard = ElanCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text("Aujourd'hui"),
+                    const SizedBox(height: 4),
+                    TweenAnimationBuilder<int>(
+                      tween: IntTween(begin: 0, end: vDue),
+                      duration: motionOf(context, const Duration(milliseconds: 800)),
+                      builder: (_, pValue, __) => Text(
+                        vDue == 0 ? 'Tout est à jour' : '$pValue à revoir',
+                        style: vTitle,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      vDone >= vGoal
+                          ? 'Objectif du jour atteint : bravo.'
+                          : 'Objectif : $vGoal réponses aujourd\'hui',
+                      style: const TextStyle(color: Colors.white70),
+                    ),
+                  ],
+                ),
+              ),
+              GoalRing(done: vDone, goal: vGoal),
+            ],
+          ),
+          if (vPackage != null) ...[
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: sunriseColor,
+                      foregroundColor: nightColor,
+                    ),
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(builder: (_) => QuestionScreen(state: state)),
+                    ),
+                    icon: const Icon(Icons.play_arrow_rounded),
+                    label: const Text('Réviser'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Colors.white54),
+                    minimumSize: const Size(48, 52),
+                  ),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => QuestionScreen(state: state, timeLimit: sprintDuration),
+                    ),
+                  ),
+                  icon: const Icon(Icons.bolt),
+                  label: const Text('5 min'),
+                ),
+              ],
             ),
           ],
-        ),
+        ],
       ),
     );
 

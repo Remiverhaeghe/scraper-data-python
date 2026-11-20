@@ -8,6 +8,8 @@ import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 
 import '../models/quiz_package.dart';
+import 'api_client.dart';
+import 'revision_store.dart';
 
 /// Port du tableau de bord sur le PC (WEB_PORT de config.py).
 const serverPort = 8000;
@@ -18,6 +20,9 @@ const probeTimeout = Duration(milliseconds: 800);
 
 /// Adresses interrogées en même temps.
 const probeBatch = 32;
+
+/// Échange du code : une seule requête, le PC répond vite ou pas du tout.
+const pairingTimeout = Duration(seconds: 10);
 
 /// Identifiant renvoyé par le ping du serveur (SERVER_IDENTIFIER côté PC) : l'ancien
 /// nom de l'application, gardé pour que téléphones et serveurs de versions différentes
@@ -129,5 +134,48 @@ class ServerDiscovery {
     }
 
     return rAddress;
+  }
+
+  /// Échange le code à 6 chiffres affiché par le PC contre le jeton de l'appli.
+  ///
+  /// La demande passe par le même client que le ping : le certificat n'est pas
+  /// encore connu, il arrive dans la réponse avec le jeton.
+  Future<ServerSettings> pair(String pAddress, String pCode) async {
+    final http.Response vResponse;
+
+    try {
+      vResponse = await client
+          .post(
+            Uri.parse('$pAddress/pairing'),
+            headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+            body: jsonEncode({'code': pCode.replaceAll(RegExp(r'\D'), '')}),
+          )
+          .timeout(pairingTimeout);
+    } on Exception {
+      throw const ApiException(
+        'Le PC ne répond plus : vérifiez que le téléphone est sur le même Wi-Fi.',
+        unreachable: true,
+      );
+    }
+
+    if (vResponse.statusCode == 403) {
+      // Le code tapé n'est pas journalisé : il pourrait être presque juste.
+      throw const ApiException(
+        'Code refusé : affichez un nouveau code sur le PC et recommencez.',
+      );
+    }
+
+    if (vResponse.statusCode != 200) {
+      throw ApiException('Erreur du serveur (${vResponse.statusCode}).');
+    }
+
+    final vData = jsonDecode(utf8.decode(vResponse.bodyBytes)) as Map<String, dynamic>;
+    final rSettings = ServerSettings(
+      address: pAddress,
+      token: vData['token'] as String,
+      certificateSha256: vData['certificate_sha256'] as String?,
+    );
+
+    return rSettings;
   }
 }

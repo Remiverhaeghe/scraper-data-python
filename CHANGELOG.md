@@ -5,6 +5,25 @@ dans l'historique git.
 
 ## Non publié
 
+### Appli mobile : connexion par code, onglets et nouvelle identité
+- Connexion par code : le téléphone cherche le PC sur le Wi-Fi dès l'ouverture ; sur
+  le PC (Paramètres de l'application de bureau ou de la page web), « Connecter un
+  téléphone » affiche un code à 6 chiffres, valable 10 minutes et une seule fois,
+  refusé après 5 essais faux. Le téléphone l'échange contre le jeton par
+  `POST /api/v1/pairing`. Seule l'empreinte du code est enregistrée. Le QR code et la
+  saisie de l'adresse et du jeton restent possibles.
+- Navigation en onglets en bas de l'écran : Réviser, Offres, Candidatures, Entretien et
+  Plus (statistiques, examen blanc, simulations, guides, paramètres), à la place des
+  sept icônes de la barre du haut. Les paramètres sont séparés de la connexion.
+- Nouvelle identité : nuit indigo et lever de soleil ambré, la courbe d'un saut vers
+  une étoile sur l'icône, l'écran de connexion et la carte « Aujourd'hui » (questions à
+  revoir, objectif du jour en anneau, boutons Réviser et 5 min).
+- Animations : écrans qui apparaissent en glissant, correction qui rebondit si la
+  réponse est juste et tremble si elle est fausse, anneau de l'objectif et progression
+  des thèmes qui se remplissent ; tout est coupé quand le téléphone demande de réduire
+  les animations.
+- Mise en forme automatique du code mobile sur les pull requests (`format.yml`).
+
 ### Trajets, relecture et bilan du mois
 - Carte des offres : trajet estimé en voiture et à vélo dans chaque pastille, calculé
   hors ligne d'après la distance à vol d'oiseau ; vitesses moyennes réglables dans les

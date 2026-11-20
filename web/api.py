@@ -1,7 +1,9 @@
 """API JSON de l'application mobile de révision
 
 Toutes les routes exigent le jeton créé dans les Paramètres, transmis dans
-l'en-tête « Authorization: Bearer <jeton> ». Aucune session ni cookie : le
+l'en-tête « Authorization: Bearer <jeton> », sauf /ping, qui ne renvoie aucune
+donnée, et /pairing, qui échange le code à 6 chiffres affiché par le PC contre
+ce jeton. Aucune session ni cookie : le
 téléphone n'a donc pas besoin de la protection CSRF des formulaires.
 """
 
@@ -18,6 +20,7 @@ from job.interview_simulation import (
     record_phone_series,
 )
 from job.mobile_labs import build_labs_package, sync_lab_results
+from job.mobile_pairing import redeem_pairing_code
 from job.mobile_sync import (
     API_PREFIX,
     API_VERSION,
@@ -25,6 +28,7 @@ from job.mobile_sync import (
     build_quiz_package,
     build_tracking,
     check_mobile_token,
+    get_certificate_fingerprint,
     build_offer_list,
     sync_answers,
     sync_exam_results,
@@ -81,6 +85,30 @@ def ping():
     """
 
     rAnswer = {"application": SERVER_IDENTIFIER, "api_version": API_VERSION}
+
+    return rAnswer
+
+
+@router.post("/pairing")
+def pair_phone(
+    pPayload: dict = Body(...),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Échange le code à 6 chiffres affiché sur le PC contre le jeton mobile.
+
+    Le code ne sert qu'une fois et tombe après cinq essais faux. La réponse
+    porte aussi l'empreinte du certificat HTTPS, comme le QR code.
+    """
+
+    vToken = redeem_pairing_code(pDatabaseFile, str(pPayload.get("code", "")))
+
+    if vToken is None:
+        raise HTTPException(
+            status_code=403,
+            detail="Code refusé : affichez un nouveau code sur le PC et recommencez.",
+        )
+
+    rAnswer = {"token": vToken, "certificate_sha256": get_certificate_fingerprint()}
 
     return rAnswer
 

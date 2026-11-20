@@ -6,7 +6,7 @@ import 'package:workmanager/workmanager.dart';
 
 import 'revision_state.dart';
 import 'screens/home_screen.dart';
-import 'screens/setup_screen.dart';
+import 'screens/connect_screen.dart';
 import 'services/file_store.dart';
 import 'services/home_widget_service.dart';
 import 'services/offer_checks.dart';
@@ -90,7 +90,7 @@ class _StartScreenState extends State<StartScreen> {
         }
 
         return widget.state.settings == null
-            ? SetupScreen(state: widget.state)
+            ? ConnectScreen(state: widget.state)
             : HomeScreen(state: widget.state);
       },
     );

@@ -292,6 +292,14 @@
     background: #ffffff;
 }
 
+/* Code de connexion du téléphone : gros chiffres espacés, faciles à recopier */
+.pairing-code {
+    font-size: 2rem;
+    letter-spacing: 0.15em;
+    font-variant-numeric: tabular-nums;
+    margin: 0.5rem 0 0;
+}
+
 .reset-form {
     display: grid;
     gap: 12px;
