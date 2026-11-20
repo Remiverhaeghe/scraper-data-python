@@ -10,7 +10,6 @@ import 'package:jobboard_revision/revision_state.dart';
 import 'package:jobboard_revision/screens/connect_screen.dart';
 import 'package:jobboard_revision/services/api_client.dart';
 import 'package:jobboard_revision/services/discovery.dart';
-import 'package:jobboard_revision/services/revision_store.dart';
 
 import 'support/sample_data.dart';
 

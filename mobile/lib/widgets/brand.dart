@@ -115,14 +115,14 @@ class ElanCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         child: Stack(
           children: [
-            Positioned(
+            const Positioned(
               right: -24,
               bottom: -28,
               child: Opacity(
                 opacity: 0.18,
                 child: CustomPaint(
-                  size: const Size.square(180),
-                  painter: const SpringboardPainter(),
+                  size: Size.square(180),
+                  painter: SpringboardPainter(),
                 ),
               ),
             ),
