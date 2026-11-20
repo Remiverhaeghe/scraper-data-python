@@ -572,8 +572,8 @@ def test_mobile_token_is_created_copied_and_renewed(
 ):
     """Vérifie la carte de l'application mobile : création, copie et renouvellement.
 
-    Un seul bouton suffit pour connecter un téléphone : sans jeton, il le crée
-    puis affiche le QR code, dans une fenêtre fermée aussitôt ici.
+    « Connecter un téléphone » donne le code ; le bouton QR code, en secours, crée
+    le jeton s'il manque puis affiche le QR code, dans une fenêtre fermée aussitôt ici.
     """
 
     vPage = create_page(tmp_path / "scraper.db", monkeypatch)
@@ -586,7 +586,8 @@ def test_mobile_token_is_created_copied_and_renewed(
 
     assert vPage.mobile_panel.edit.text() == ""
     assert not vPage.mobile_panel.copy_button.isEnabled()
-    assert vPage.mobile_panel.qr_button.text() == "Connecter un téléphone"
+    assert vPage.mobile_panel.code_button.text() == "Connecter un téléphone"
+    assert vPage.mobile_panel.qr_button.text() == "QR code"
 
     vPage.mobile_panel.qr_button.click()
     vFirst = vPage.mobile_panel.edit.text()
