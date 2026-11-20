@@ -212,16 +212,16 @@
       }
     }
   },
-  "homeRevoirNouvelleQuestion": "{due} à revoir · {new} nouvelle(s) · {value2} question(s)",
+  "homeRevoirNouvelleQuestion": "{due} à revoir · {newValue} nouvelle(s) · {value2} question(s)",
   "@homeRevoirNouvelleQuestion": {
     "placeholders": {
       "due": {
         "type": "String"
       },
-      "new": {
+      "value2": {
         "type": "String"
       },
-      "value2": {
+      "newValue": {
         "type": "String"
       }
     }
