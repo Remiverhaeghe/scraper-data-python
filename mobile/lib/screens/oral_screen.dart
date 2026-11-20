@@ -7,6 +7,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../l10n/texts.dart';
 import '../logic/oral_interview.dart';
 import '../logic/python_compat.dart';
 import '../revision_state.dart';
@@ -184,7 +185,7 @@ class _OralScreenState extends State<OralScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Question ${min(position + 1, questions.length)} sur ${questions.length}',
+          context.texts.oralQuestionSur('${min(position + 1, questions.length)}', '${questions.length}'),
           style: vTheme.textTheme.bodySmall,
         ),
         Text(vQuestion[0] as String, style: vTheme.textTheme.titleLarge),
@@ -203,47 +204,46 @@ class _OralScreenState extends State<OralScreen> {
                 OutlinedButton.icon(
                     onPressed: read,
                     icon: const Icon(Icons.volume_up),
-                    label: const Text('Réécouter')),
+                    label: Text(context.texts.oralReecouter)),
                 FilledButton.icon(
                     onPressed: begin,
                     icon: const Icon(Icons.timer),
-                    label: const Text('Je commence')),
+                    label: Text(context.texts.oralJeCommence)),
               ] else
                 FilledButton.icon(
                     onPressed: finish,
                     icon: const Icon(Icons.check),
-                    label: const Text("J'ai terminé")),
+                    label: Text(context.texts.oralJAiTermine)),
             ],
           ),
         ],
         if (seconds != null && feedback == null) ...[
-          Text('Réponse de ${clock(seconds!)}'),
+          Text(context.texts.oralReponse('${clock(seconds!)}')),
           buildRating(vCriteria[0][1], vCriteria[0][2], structure, (pValue) => structure = pValue),
           buildRating(vCriteria[1][1], vCriteria[1][2], example, (pValue) => example = pValue),
           const SizedBox(height: 8),
           FilledButton(
             onPressed: structure == null || example == null ? null : validate,
-            child: const Text('Valider ma note'),
+            child: Text(context.texts.oralValiderMaNote),
           ),
         ],
         if (feedback case final vFeedback?) ...[
           Text(
-            'Réponse notée ${vFeedback['score']} % · ${vFeedback['seconds']} s, '
-            '${(rules['duration_ratings'] as Map)['${vFeedback['duration']}']}',
+            context.texts.oralReponseNotee('${vFeedback['score']}', '${vFeedback['seconds']}', '${(rules['duration_ratings'] as Map)['${vFeedback['duration']}']}'),
             style: vTheme.textTheme.titleMedium,
           ),
-          Text('Conseil : ${vQuestion[1]}'),
+          Text(context.texts.oralConseil('${vQuestion[1]}')),
           const SizedBox(height: 8),
           if (finalScore case final vScore?)
             Text(
-              'Séance terminée : $vScore % · +${widget.state.oralXp} XP au retour sur le PC',
+              context.texts.oralSeanceTermineeXpAu('${vScore}', '${widget.state.oralXp}'),
               style: vTheme.textTheme.titleMedium?.copyWith(color: Colors.green.shade700),
             )
           else
             FilledButton.icon(
               onPressed: showQuestion,
               icon: const Icon(Icons.arrow_forward),
-              label: const Text('Question suivante'),
+              label: Text(context.texts.commonQuestionSuivante),
             ),
         ],
       ],
@@ -259,19 +259,19 @@ class _OralScreenState extends State<OralScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (vRecent.isNotEmpty)
-          Text('Notes récentes : ${vRecent.map((pScore) => '$pScore %').join(', ')}'),
+          Text(context.texts.oralNotesRecentes('${vRecent.map((pScore) => '$pScore %').join(', ')}')),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           initialValue: mode,
           decoration:
-              const InputDecoration(labelText: 'Type de questions', border: OutlineInputBorder()),
+              InputDecoration(labelText: context.texts.oralTypeQuestions, border: OutlineInputBorder()),
           items: [
             for (final vEntry in vModes.entries)
               DropdownMenuItem(value: vEntry.key, child: Text(vEntry.value as String)),
           ],
           onChanged: (pMode) => setState(() => mode = pMode ?? mode),
         ),
-        if (vTarget.isNotEmpty) Text('Pour : $vTarget'),
+        if (vTarget.isNotEmpty) Text(context.texts.oralPour('${vTarget}')),
         const SizedBox(height: 8),
         SegmentedButton<int>(
           segments: [
@@ -293,13 +293,12 @@ class _OralScreenState extends State<OralScreen> {
 
   @override
   Widget build(BuildContext pContext) => Scaffold(
-        appBar: AppBar(title: const Text('Entretien oral')),
+        appBar: AppBar(title: Text(context.texts.commonEntretienOral)),
         body: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            const Text(
-              'La question est lue à voix haute : répondez à l\'oral, dans le temps, puis notez '
-              'votre réponse. Rien n\'est enregistré du son.',
+            Text(
+              context.texts.oralQuestionEstLueVoix,
             ),
             const SizedBox(height: 12),
             if (questions.isEmpty || finalScore != null) ...[

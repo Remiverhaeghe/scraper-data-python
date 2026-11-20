@@ -8,6 +8,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../l10n/texts.dart';
 import '../logic/time_attack.dart';
 import '../models/quiz_package.dart';
 import '../revision_state.dart';
@@ -191,7 +192,7 @@ class _TimeAttackScreenState extends State<TimeAttackScreen> with TickerProvider
               curve: Curves.easeOutBack,
               builder: (_, pScale, pChild) => Transform.scale(scale: pScale, child: pChild),
               child: Text(
-                '${score.points} pts',
+                context.texts.timeAttackPts('${score.points}'),
                 style: vTheme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
               ),
             ),
@@ -210,7 +211,7 @@ class _TimeAttackScreenState extends State<TimeAttackScreen> with TickerProvider
               duration: const Duration(milliseconds: 250),
               child: Chip(
                 avatar: Icon(Icons.local_fire_department, color: Colors.orange.shade700),
-                label: Text('x${score.multiplier} · série ${score.combo}'),
+                label: Text(context.texts.timeAttackXSerie('${score.multiplier}', '${score.combo}')),
               ),
             ),
           ],
@@ -294,7 +295,7 @@ class _TimeAttackScreenState extends State<TimeAttackScreen> with TickerProvider
               color: record ? Colors.amber.shade700 : vTheme.colorScheme.primary,
             ),
             const SizedBox(height: 12),
-            Text('Temps écoulé', style: vTheme.textTheme.headlineSmall),
+            Text(context.texts.timeAttackTempsEcoule, style: vTheme.textTheme.headlineSmall),
             const SizedBox(height: 8),
             Text(
               describeTimeAttack(score, widget.state.timeAttackBest, record),
@@ -304,11 +305,11 @@ class _TimeAttackScreenState extends State<TimeAttackScreen> with TickerProvider
             FilledButton.icon(
               onPressed: start,
               icon: const Icon(Icons.replay),
-              label: const Text('Rejouer'),
+              label: Text(context.texts.commonAttackRejouer),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Terminer'),
+              child: Text(context.texts.commonTerminer),
             ),
           ],
         ),
@@ -321,9 +322,9 @@ class _TimeAttackScreenState extends State<TimeAttackScreen> with TickerProvider
   @override
   Widget build(BuildContext context) {
     final rScreen = Scaffold(
-      appBar: AppBar(title: const Text('Contre la montre')),
+      appBar: AppBar(title: Text(context.texts.timeAttackContreMontre)),
       body: deck.isEmpty
-          ? const Center(child: Text("Aucun QCM pour le moment : synchronisez d'abord."))
+          ? Center(child: Text(context.texts.timeAttackAucunQcmPourMoment))
           : finished
               ? buildResult()
               : buildQuestion(),

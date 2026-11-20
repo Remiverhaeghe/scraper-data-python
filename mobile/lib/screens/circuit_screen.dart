@@ -6,6 +6,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
+import '../l10n/texts.dart';
 import '../logic/circuit.dart';
 import '../logic/circuit_editor.dart';
 import '../logic/circuit_levels.dart';
@@ -24,7 +25,7 @@ class CircuitListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext pContext) => Scaffold(
-        appBar: AppBar(title: const Text('Schémas électriques')),
+        appBar: AppBar(title: Text(context.texts.commonSchemasElectriques)),
         body: ListenableBuilder(
           listenable: state,
           builder: (pContext, _) => ListView(
@@ -33,8 +34,8 @@ class CircuitListScreen extends StatelessWidget {
               Card(
                 child: ListTile(
                   leading: const Icon(Icons.draw_outlined),
-                  title: const Text('Schéma libre'),
-                  subtitle: const Text('Tous les composants, pour essayer vos propres montages'),
+                  title: Text(context.texts.circuitSchemaLibre),
+                  subtitle: Text(context.texts.circuitTousComposantsPourEssayer),
                   onTap: () => open(pContext, null),
                 ),
               ),
@@ -256,8 +257,7 @@ class _CircuitScreenState extends State<CircuitScreen> {
               decoration: InputDecoration(
                 labelText: draft.label(vItem['id'] as String),
                 suffixText: valueRanges[vItem['type']]!.$4,
-                helperText: 'De ${formatG(valueRanges[vItem['type']]!.$2)} '
-                    'à ${formatG(valueRanges[vItem['type']]!.$3)}',
+                helperText: context.texts.circuitText('${formatG(valueRanges[vItem['type']]!.$2)}', '${formatG(valueRanges[vItem['type']]!.$3)}'),
                 border: const OutlineInputBorder(),
                 isDense: true,
               ),
@@ -311,7 +311,7 @@ class _CircuitScreenState extends State<CircuitScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Circuit sous tension', style: vTheme.textTheme.titleMedium),
+        Text(context.texts.circuitCircuitSousTension, style: vTheme.textTheme.titleMedium),
         for (final vFault in vResult['faults'] as List)
           Text(vFault as String, style: TextStyle(color: vTheme.colorScheme.error)),
         Wrap(
@@ -343,7 +343,7 @@ class _CircuitScreenState extends State<CircuitScreen> {
         children: [
           Text(level?['goal'] as String? ??
               'Composez librement : le simulateur calcule tensions et courants.'),
-          if (showHint) Text('Indice : ${level!['hint']}', style: vTheme.textTheme.bodySmall),
+          if (showHint) Text(context.texts.commonIndice('${level!['hint']}'), style: vTheme.textTheme.bodySmall),
           const SizedBox(height: 8),
           buildPalette(),
           const SizedBox(height: 8),
@@ -364,7 +364,7 @@ class _CircuitScreenState extends State<CircuitScreen> {
               ),
               if (vSelected != null)
                 IconButton(
-                  tooltip: 'Supprimer ${draft.label(vSelected)}',
+                  tooltip: context.texts.commonSupprimer('${draft.label(vSelected)}'),
                   icon: const Icon(Icons.delete_outline),
                   onPressed: () {
                     final vLabel = draft.label(vSelected);
@@ -383,20 +383,20 @@ class _CircuitScreenState extends State<CircuitScreen> {
                 FilledButton.icon(
                     onPressed: check,
                     icon: const Icon(Icons.task_alt),
-                    label: const Text('Vérifier')),
+                    label: Text(context.texts.commonVerifier)),
               OutlinedButton.icon(
-                  onPressed: simulate, icon: const Icon(Icons.bolt), label: const Text('Simuler')),
+                  onPressed: simulate, icon: const Icon(Icons.bolt), label: Text(context.texts.circuitSimuler)),
               if (level != null)
                 TextButton(
-                    onPressed: () => setState(() => showHint = true), child: const Text('Indice')),
+                    onPressed: () => setState(() => showHint = true), child: Text(context.texts.commonIndice2)),
               if (level != null)
-                TextButton(onPressed: showSolution, child: const Text('Voir la solution')),
+                TextButton(onPressed: showSolution, child: Text(context.texts.commonVoirSolution)),
               TextButton(
                 onPressed: () {
                   draft.clear();
                   changed();
                 },
-                child: const Text('Tout effacer'),
+                child: Text(context.texts.circuitToutEffacer),
               ),
             ],
           ),

@@ -6,6 +6,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../l10n/texts.dart';
 import '../logic/grading.dart';
 import '../logic/review.dart';
 import '../models/quiz_package.dart';
@@ -132,19 +133,18 @@ class _QuestionScreenState extends State<QuestionScreen> {
     final vConfirmed = await showDialog<bool>(
       context: context,
       builder: (pContext) => AlertDialog(
-        title: const Text('Signaler cette question ?'),
-        content: const Text(
-          "Énoncé faux, ambigu ou réponse discutable : elle n'est plus proposée, "
-          'et le PC la retire aussi à la prochaine synchronisation.',
+        title: Text(context.texts.questionSignalerCetteQuestion),
+        content: Text(
+          context.texts.questionEnonceFauxAmbiguOu,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(pContext).pop(false),
-            child: const Text('Annuler'),
+            child: Text(context.texts.commonAnnuler),
           ),
           FilledButton(
             onPressed: () => Navigator.of(pContext).pop(true),
-            child: const Text('Signaler'),
+            child: Text(context.texts.questionSignaler),
           ),
         ],
       ),
@@ -155,7 +155,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
     }
 
     await widget.state.flagQuestion(question!.id);
-    vMessenger.showSnackBar(const SnackBar(content: Text('Question signalée.')));
+    vMessenger.showSnackBar(SnackBar(content: Text(context.texts.questionQuestionSignalee)));
     pickNext();
   }
 
@@ -195,7 +195,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
             const SizedBox(height: 16),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Retour aux thèmes'),
+              child: Text(context.texts.questionRetourAuxThemes),
             ),
           ],
         ),
@@ -240,7 +240,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
         if (vGrade == null)
           FilledButton(
             onPressed: response == null ? null : validate,
-            child: const Text('Valider'),
+            child: Text(context.texts.commonValider),
           )
         else ...[
           ResultPanel(grade: vGrade, explanation: pQuestion.explanation),
@@ -252,13 +252,13 @@ class _QuestionScreenState extends State<QuestionScreen> {
             FilledButton.icon(
               onPressed: () => Navigator.of(context).pop(),
               icon: const Icon(Icons.task_alt),
-              label: const Text('Terminer'),
+              label: Text(context.texts.commonTerminer),
             ),
           ] else
             FilledButton.icon(
               onPressed: pickNext,
               icon: const Icon(Icons.arrow_forward),
-              label: const Text('Question suivante'),
+              label: Text(context.texts.commonQuestionSuivante),
             ),
         ],
       ],
@@ -283,20 +283,20 @@ class _QuestionScreenState extends State<QuestionScreen> {
               child: Center(
                 child: Text(
                   formatRemaining(vEndsAt.difference(DateTime.now())),
-                  semanticsLabel: 'Temps restant',
+                  semanticsLabel: context.texts.questionTempsRestant,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
             ),
           if (vQuestion != null)
             IconButton(
-              tooltip: 'Signaler une question fausse ou ambiguë',
+              tooltip: context.texts.questionSignalerQuestionFausseOu,
               icon: const Icon(Icons.flag_outlined),
               onPressed: flag,
             ),
           if (widget.theme != null)
             IconButton(
-              tooltip: 'Examen blanc sur ce thème',
+              tooltip: context.texts.questionExamenBlancSurCe,
               icon: const Icon(Icons.timer_outlined),
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(
@@ -310,7 +310,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
             ),
           if (vGuide != null)
             IconButton(
-              tooltip: 'Guide pratique',
+              tooltip: context.texts.questionGuidePratique,
               icon: const Icon(Icons.menu_book_outlined),
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(builder: (_) => GuideScreen(guide: vGuide)),

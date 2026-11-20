@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../l10n/texts.dart';
 import '../logic/library.dart';
 import '../models/quiz_package.dart';
 import '../widgets/question_parts.dart';
@@ -35,31 +36,31 @@ class _LibraryScreenState extends State<LibraryScreen> {
     ];
 
     final rScreen = Scaffold(
-      appBar: AppBar(title: const Text('Guides et schémas')),
+      appBar: AppBar(title: Text(context.texts.libraryGuidesSchemas)),
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
           TextField(
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               prefixIcon: Icon(Icons.search),
-              hintText: 'Chercher un thème, un mot du guide…',
+              hintText: context.texts.libraryChercherThemeMotGuide,
               border: OutlineInputBorder(),
             ),
             onChanged: (pValue) => setState(() => query = pValue),
           ),
           const SizedBox(height: 8),
           if (entries.isEmpty)
-            const Padding(
+            Padding(
               padding: EdgeInsets.all(24),
               child: Text(
-                "Aucun guide ni schéma reçu : synchronisez depuis l'accueil.",
+                context.texts.libraryAucunGuideNiSchema,
                 textAlign: TextAlign.center,
               ),
             )
           else if (vEntries.isEmpty)
-            const Padding(
+            Padding(
               padding: EdgeInsets.all(24),
-              child: Text('Aucun résultat.', textAlign: TextAlign.center),
+              child: Text(context.texts.libraryAucunResultat, textAlign: TextAlign.center),
             ),
           for (final (vIndex, vEntry) in vEntries.indexed) ...[
             if (vIndex == 0 || vEntries[vIndex - 1].domain != vEntry.domain)

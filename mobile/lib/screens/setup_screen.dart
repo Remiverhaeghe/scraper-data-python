@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../l10n/texts.dart';
 import '../logic/offer_alerts.dart';
 import '../revision_state.dart';
 import '../services/discovery.dart';
@@ -15,14 +16,14 @@ class SetupScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rScreen = Scaffold(
-      appBar: AppBar(title: const Text('Paramètres')),
+      appBar: AppBar(title: Text(context.texts.setupParametres)),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
           Card(
             child: ListTile(
               leading: const Icon(Icons.computer),
-              title: const Text('Connexion au PC'),
+              title: Text(context.texts.commonConnexionAuPc),
               subtitle: Text(getHost(state.settings?.address) ?? 'Pas encore connecté'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => Navigator.of(context).push(
@@ -31,38 +32,38 @@ class SetupScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Text('Apparence', style: Theme.of(context).textTheme.titleSmall),
+          Text(context.texts.setupApparence, style: Theme.of(context).textTheme.titleSmall),
           const SizedBox(height: 8),
           ListenableBuilder(
             listenable: state,
             builder: (_, __) => SegmentedButton<String>(
-              segments: const [
+              segments: [
                 ButtonSegment(
-                    value: 'system', label: Text('Auto'), icon: Icon(Icons.brightness_auto)),
-                ButtonSegment(value: 'light', label: Text('Clair'), icon: Icon(Icons.light_mode)),
-                ButtonSegment(value: 'dark', label: Text('Sombre'), icon: Icon(Icons.dark_mode)),
+                    value: 'system', label: Text(context.texts.setupAuto), icon: Icon(Icons.brightness_auto)),
+                ButtonSegment(value: 'light', label: Text(context.texts.setupClair), icon: Icon(Icons.light_mode)),
+                ButtonSegment(value: 'dark', label: Text(context.texts.setupSombre), icon: Icon(Icons.dark_mode)),
               ],
               selected: {state.appearance},
               onSelectionChanged: (pChoice) => state.setDisplay(pAppearance: pChoice.first),
             ),
           ),
           const SizedBox(height: 16),
-          Text('Taille du texte', style: Theme.of(context).textTheme.titleSmall),
+          Text(context.texts.setupTailleTexte, style: Theme.of(context).textTheme.titleSmall),
           const SizedBox(height: 8),
           ListenableBuilder(
             listenable: state,
             builder: (_, __) => SegmentedButton<double>(
-              segments: const [
-                ButtonSegment(value: 1.0, label: Text('Normale')),
-                ButtonSegment(value: 1.15, label: Text('Grande')),
-                ButtonSegment(value: 1.3, label: Text('Très grande')),
+              segments: [
+                ButtonSegment(value: 1.0, label: Text(context.texts.setupNormale)),
+                ButtonSegment(value: 1.15, label: Text(context.texts.setupGrande)),
+                ButtonSegment(value: 1.3, label: Text(context.texts.setupTresGrande)),
               ],
               selected: {state.textScale},
               onSelectionChanged: (pChoice) => state.setDisplay(pTextScale: pChoice.first),
             ),
           ),
           const SizedBox(height: 16),
-          Text('Objectif du jour', style: Theme.of(context).textTheme.titleSmall),
+          Text(context.texts.setupObjectifJour, style: Theme.of(context).textTheme.titleSmall),
           const SizedBox(height: 8),
           ListenableBuilder(
             listenable: state,
@@ -78,8 +79,8 @@ class SetupScreen extends StatelessWidget {
           ListenableBuilder(
             listenable: state,
             builder: (_, __) => SwitchListTile(
-              title: const Text('Vibration à la correction'),
-              subtitle: const Text('Courte si la réponse est juste, appuyée si elle est fausse'),
+              title: Text(context.texts.setupVibrationCorrection),
+              subtitle: Text(context.texts.setupCourteSiReponseEst),
               value: state.hapticsEnabled,
               onChanged: (pEnabled) => state.savePreference(hapticsPreference, pEnabled),
             ),
@@ -87,10 +88,9 @@ class SetupScreen extends StatelessWidget {
           ListenableBuilder(
             listenable: state,
             builder: (_, __) => SwitchListTile(
-              title: const Text('Alerte des nouvelles offres'),
-              subtitle: const Text(
-                'Vérifiées toutes les 3 h environ quand le PC est joignable ; '
-                'signalées si la correspondance atteint $offerAlertScore %',
+              title: Text(context.texts.setupAlerteNouvellesOffres),
+              subtitle: Text(
+                context.texts.setupVerifieesToutes3H('${offerAlertScore}'),
               ),
               value: state.offerAlertsEnabled,
               onChanged: (pEnabled) async {
@@ -99,8 +99,8 @@ class SetupScreen extends StatelessWidget {
 
                 if (pEnabled && !vEnabled) {
                   vMessenger.showSnackBar(
-                    const SnackBar(
-                      content: Text('Notifications refusées : autorisez-les dans les réglages.'),
+                    SnackBar(
+                      content: Text(context.texts.setupNotificationsRefuseesAutorisezDans),
                     ),
                   );
                 }
@@ -110,8 +110,8 @@ class SetupScreen extends StatelessWidget {
           ListenableBuilder(
             listenable: state,
             builder: (_, __) => SwitchListTile(
-              title: const Text('Rappel quotidien à 18 h 30'),
-              subtitle: const Text('Une notification avec le nombre de questions à revoir'),
+              title: Text(context.texts.setupRappelQuotidien18H),
+              subtitle: Text(context.texts.setupNotificationAvecNombreQuestions),
               value: state.reminderEnabled,
               onChanged: (pEnabled) async {
                 final vMessenger = ScaffoldMessenger.of(context);
@@ -119,8 +119,8 @@ class SetupScreen extends StatelessWidget {
 
                 if (pEnabled && !vEnabled) {
                   vMessenger.showSnackBar(
-                    const SnackBar(
-                      content: Text('Notifications refusées : autorisez-les dans les réglages.'),
+                    SnackBar(
+                      content: Text(context.texts.setupNotificationsRefuseesAutorisezDans),
                     ),
                   );
                 }

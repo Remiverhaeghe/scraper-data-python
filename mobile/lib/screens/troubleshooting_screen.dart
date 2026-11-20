@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../l10n/texts.dart';
 import '../logic/troubleshooting.dart';
 import '../revision_state.dart';
 
@@ -17,15 +18,14 @@ class TroubleshootingListScreen extends StatelessWidget {
     final vScenarios = state.troubleshootingScenarios;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Pannes à résoudre')),
+      appBar: AppBar(title: Text(context.texts.commonPannesResoudre)),
       body: ListenableBuilder(
         listenable: state,
         builder: (pContext, _) => vScenarios.isEmpty
-            ? const Padding(
+            ? Padding(
                 padding: EdgeInsets.all(24),
                 child: Text(
-                  'Synchronisez une fois avec le PC pour télécharger les simulations : '
-                  'elles se jouent ensuite sans réseau.',
+                  context.texts.commonSynchronisezFoisAvecPc,
                 ),
               )
             : ListView(
@@ -35,8 +35,7 @@ class TroubleshootingListScreen extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Text(
-                        '${state.pendingLabs.length} partie(s) à envoyer au PC à la prochaine '
-                        'synchronisation.',
+                        context.texts.commonPartieEnvoyerAuPc('${state.pendingLabs.length}'),
                       ),
                     ),
                   for (final vScenario in vScenarios)
@@ -125,7 +124,7 @@ class _TroubleshootingScreenState extends State<TroubleshootingScreen> {
           const SizedBox(height: 8),
           Text(widget.scenario['machine'] as String, style: vTheme.textTheme.bodySmall),
           const SizedBox(height: 12),
-          Text('Temps passé : ${vGame['minutes']} min', style: vTheme.textTheme.labelLarge),
+          Text(context.texts.troubleshootingTempsPasseMin('${vGame['minutes']}'), style: vTheme.textTheme.labelLarge),
           if (vSolved)
             Card(
               color: vTheme.colorScheme.primaryContainer,
@@ -135,54 +134,52 @@ class _TroubleshootingScreenState extends State<TroubleshootingScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Panne résolue : ${vGame['score']} points '
-                      '${'★' * (vGame['stars'] as int)}',
+                      context.texts.troubleshootingPanneResoluePoints('${vGame['score']}', '${'★' * (vGame['stars'] as int)}'),
                       style: vTheme.textTheme.titleMedium,
                     ),
                     Text(
-                      'Un technicien expérimenté met ${widget.scenario['best_minutes']} min. '
-                      '+${xpOf(vGame['score'] as int, vRules)} XP au retour sur le PC.',
+                      context.texts.troubleshootingTechnicienExperimenteMetMin('${widget.scenario['best_minutes']}', '${xpOf(vGame['score'] as int, vRules)}'),
                     ),
                     if (vGame['proven'] != true)
-                      const Text('Réparation devinée sans mesure qui la prouve : score plafonné.'),
+                      Text(context.texts.troubleshootingReparationDevineeSansMesure),
                     const SizedBox(height: 8),
                     Text(widget.scenario['explanation'] as String? ?? ''),
-                    TextButton(onPressed: restart, child: const Text('Rejouer')),
+                    TextButton(onPressed: restart, child: Text(context.texts.commonAttackRejouer)),
                   ],
                 ),
               ),
             ),
           if (!vSolved) ...[
             const SizedBox(height: 8),
-            Text('Mesures', style: vTheme.textTheme.titleSmall),
+            Text(context.texts.troubleshootingMesures, style: vTheme.textTheme.titleSmall),
             for (final vCheck in widget.scenario['checks'] as List)
               ListTile(
                 dense: true,
                 enabled: !vDone.contains((vCheck as Map)['id']),
                 leading: const Icon(Icons.search),
                 title: Text(vCheck['label'] as String),
-                trailing: Text('${vCheck['minutes']} min'),
+                trailing: Text(context.texts.troubleshootingMin('${vCheck['minutes']}')),
                 onTap: () => act('$checkPrefix${vCheck['id']}'),
               ),
-            Text('Réparations', style: vTheme.textTheme.titleSmall),
+            Text(context.texts.troubleshootingReparations, style: vTheme.textTheme.titleSmall),
             for (final vCause in widget.scenario['causes'] as List)
               ListTile(
                 dense: true,
                 enabled: !vWrong.contains((vCause as Map)['id']),
                 leading: const Icon(Icons.handyman_outlined),
                 title: Text(vCause['label'] as String),
-                trailing: Text('${vCause['minutes']} min'),
+                trailing: Text(context.texts.troubleshootingMin('${vCause['minutes']}')),
                 onTap: () => act('$repairPrefix${vCause['id']}'),
               ),
           ],
           const SizedBox(height: 12),
-          Text("Journal d'intervention", style: vTheme.textTheme.titleSmall),
+          Text(context.texts.troubleshootingJournalIntervention, style: vTheme.textTheme.titleSmall),
           for (final vEntry in (vGame['log'] as List).reversed)
             ListTile(
               dense: true,
               title: Text((vEntry as Map)['label'] as String),
               subtitle: Text(vEntry['result'] as String),
-              trailing: Text('${vEntry['minutes']} min'),
+              trailing: Text(context.texts.troubleshootingMin('${vEntry['minutes']}')),
             ),
         ],
       ),

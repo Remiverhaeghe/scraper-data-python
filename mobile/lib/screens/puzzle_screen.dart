@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../l10n/texts.dart';
 import '../logic/code_puzzles.dart';
 import '../models/quiz_package.dart';
 import '../revision_state.dart';
@@ -113,8 +114,8 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
               style: _codeStyle,
               autocorrect: false,
               enableSuggestions: false,
-              decoration: const InputDecoration(
-                  labelText: 'Ce qui remplace ____', border: OutlineInputBorder()),
+              decoration: InputDecoration(
+                  labelText: context.texts.puzzleCeQuiRemplace, border: OutlineInputBorder()),
               onSubmitted: (_) => submit(pPuzzle),
             ),
           ],
@@ -149,9 +150,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
       children: [
         Text(pPuzzle['title'] as String, style: vTheme.textTheme.titleLarge),
         Text(
-          'Puzzle ${vPosition + 1} sur ${state.puzzleRules.seriesLength} · '
-          '${state.puzzleRules.types[pPuzzle['type']]} · ${pPuzzle['language']} · '
-          '${state.puzzleRules.levelLabel(pPuzzle['level'] as int)}',
+          context.texts.puzzlePuzzleSur('${vPosition + 1}', '${state.puzzleRules.seriesLength}', '${state.puzzleRules.types[pPuzzle['type']]}', '${pPuzzle['language']}', '${state.puzzleRules.levelLabel(pPuzzle['level'] as int)}'),
           style: vTheme.textTheme.bodySmall,
         ),
         const SizedBox(height: 8),
@@ -163,7 +162,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
         FilledButton.icon(
           onPressed: () => submit(pPuzzle),
           icon: const Icon(Icons.check),
-          label: const Text('Valider'),
+          label: Text(context.texts.commonValider),
         ),
       ],
     );
@@ -178,17 +177,16 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
       children: [
         Text(vPuzzle['title'] as String, style: vTheme.textTheme.titleLarge),
         Text(
-          '${vCorrect ? 'Bonne réponse' : "Ce n'est pas la bonne réponse"} · '
-          'réponses justes d\'affilée : ${state.puzzleProgress['streak']}',
+          context.texts.puzzleReponsesJustesAffilee('${vCorrect ? 'Bonne réponse' : "Ce n'est pas la bonne réponse"}', '${state.puzzleProgress['streak']}'),
           style: vTheme.textTheme.titleMedium?.copyWith(
             color: vCorrect ? Colors.green.shade700 : vTheme.colorScheme.error,
           ),
         ),
         if (!vCorrect) ...[
           const SizedBox(height: 8),
-          const Text('Votre réponse'),
+          Text(context.texts.puzzleVotreReponse),
           code(vGiven),
-          const Text('Réponse attendue'),
+          Text(context.texts.puzzleReponseAttendue),
           code(vExpected),
         ],
         const SizedBox(height: 8),
@@ -198,7 +196,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
           FilledButton.icon(
             onPressed: () => setState(next),
             icon: const Icon(Icons.arrow_forward),
-            label: const Text('Puzzle suivant'),
+            label: Text(context.texts.puzzlePuzzleSuivant),
           ),
       ],
     );
@@ -211,9 +209,9 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Bilan de la série : ${pRecap['score']} sur ${pRecap['total']}',
+        Text(context.texts.puzzleBilanSerieSur('${pRecap['score']}', '${pRecap['total']}'),
             style: vTheme.textTheme.titleLarge),
-        if ((pRecap['mistakes'] as List).isEmpty) const Text('Aucune erreur : série parfaite.'),
+        if ((pRecap['mistakes'] as List).isEmpty) Text(context.texts.puzzleAucuneErreurSerieParfaite),
         for (final vMistake in pRecap['mistakes'] as List)
           if (vTitles[(vMistake as Map)['id']] case final vPuzzle?)
             Card(
@@ -224,9 +222,9 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
                   children: [
                     Text('${vPuzzle['title']} · ${vPuzzle['language']}',
                         style: vTheme.textTheme.titleSmall),
-                    const Text('Votre réponse'),
+                    Text(context.texts.puzzleVotreReponse),
                     code(vMistake['given'] as String),
-                    const Text('Réponse attendue'),
+                    Text(context.texts.puzzleReponseAttendue),
                     code(vMistake['expected'] as String),
                     Text(vPuzzle['explanation'] as String),
                   ],
@@ -244,18 +242,16 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
     final vRecap = state.puzzleRecap;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Puzzles de code')),
+      appBar: AppBar(title: Text(context.texts.commonPuzzlesCode)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Card(
             child: ListTile(
               leading: const Icon(Icons.extension_outlined),
-              title: Text('Niveau ${state.puzzleRules.levelLabel(vProgress['level'] as int)}'),
+              title: Text(context.texts.puzzleNiveau('${state.puzzleRules.levelLabel(vProgress['level'] as int)}')),
               subtitle: Text(
-                'Réponses justes d\'affilée : ${vProgress['streak']} · record : ${vProgress['best_streak']}\n'
-                'Une série à ${state.puzzleRules.levelUp} ou plus fait monter d\'un niveau, '
-                'à ${state.puzzleRules.levelDown} ou moins redescendre.',
+                context.texts.puzzleReponsesJustesAffileeRecord('${vProgress['streak']}', '${vProgress['best_streak']}', '${state.puzzleRules.levelUp}', '${state.puzzleRules.levelDown}'),
               ),
             ),
           ),

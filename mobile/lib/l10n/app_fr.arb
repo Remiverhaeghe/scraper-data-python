@@ -1,0 +1,765 @@
+{
+  "@@locale": "fr",
+  "commonSchemasElectriques": "Schémas électriques",
+  "circuitSchemaLibre": "Schéma libre",
+  "circuitTousComposantsPourEssayer": "Tous les composants, pour essayer vos propres montages",
+  "circuitText": "De {value0} à {value1}",
+  "@circuitText": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      },
+      "value1": {
+        "type": "String"
+      }
+    }
+  },
+  "circuitCircuitSousTension": "Circuit sous tension",
+  "commonIndice": "Indice : {value0}",
+  "@commonIndice": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      }
+    }
+  },
+  "commonSupprimer": "Supprimer {value0}",
+  "@commonSupprimer": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      }
+    }
+  },
+  "commonVerifier": "Vérifier",
+  "circuitSimuler": "Simuler",
+  "commonIndice2": "Indice",
+  "commonVoirSolution": "Voir la solution",
+  "circuitToutEffacer": "Tout effacer",
+  "connectConnecte": "Connecté : {value0}",
+  "@connectConnecte": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      }
+    }
+  },
+  "connectRechercheTonPcSur": "Recherche de ton PC sur le Wi-Fi…",
+  "connectPcTrouve": "PC trouvé",
+  "connectPcIntrouvableSurCe": "PC introuvable sur ce Wi-Fi",
+  "connectTelephoneDoitEtreSur": "Le téléphone doit être sur le même réseau que le PC, et le tableau de bord web lancé. Sinon, scanne le QR code.",
+  "connectChercherNouveau": "Chercher à nouveau",
+  "commonConnexionAuPc": "Connexion au PC",
+  "connectTremplin": "Tremplin",
+  "connectReviseToutSuiteMeme": "Révise tout de suite, même sans réseau. Relie ton PC quand tu veux pour recevoir tes offres et tes candidatures.",
+  "connectReviserSansPc": "Réviser sans le PC",
+  "connectSurPcParametresApplication": "Sur le PC : Paramètres, « Application mobile », « Connecter un téléphone ». Tape le code affiché :",
+  "connectCode6Chiffres": "Code à 6 chiffres",
+  "connectConnecter": "Connecter",
+  "connectScannerQrCodePc": "Scanner le QR code du PC",
+  "connectSaisirAdresseJeton": "Saisir l'adresse et le jeton",
+  "connectAdresseServeur": "Adresse du serveur",
+  "connectHttp1921681": "http://192.168.1.20:8000/api/v1",
+  "connectJeton": "Jeton",
+  "connectSeConnecter": "Se connecter",
+  "commonMavenDocker": "Maven et Docker",
+  "commonCommande": "Commande",
+  "commonExecuter": "Exécuter",
+  "commonRecommencer": "Recommencer",
+  "commonSolution": "Solution",
+  "devopsCommandesSolution": "Commandes de la solution : {value0}",
+  "@devopsCommandesSolution": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      }
+    }
+  },
+  "examBonnesReponsesMin": "{value0} / {value1} bonnes réponses en {value2} min {value3} s{value4}.",
+  "@examBonnesReponsesMin": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      },
+      "value1": {
+        "type": "String"
+      },
+      "value2": {
+        "type": "String"
+      },
+      "value3": {
+        "type": "String"
+      },
+      "value4": {
+        "type": "String"
+      }
+    }
+  },
+  "examAucuneErreur": "Aucune erreur.",
+  "examRevoir": "À revoir",
+  "commonReponse": "Réponse : {value0}",
+  "@commonReponse": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      }
+    }
+  },
+  "examTerminerExamen": "Terminer l'examen",
+  "examQuestion": "Question {value0} / {value1}",
+  "@examQuestion": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      },
+      "value1": {
+        "type": "String"
+      }
+    }
+  },
+  "commonValider": "Valider",
+  "examAucuneQuestionPourCet": "Aucune question pour cet examen.",
+  "commonAtelierExcel": "Atelier Excel",
+  "excelNomsFonctionsPointVirgule": "Noms de fonctions et point-virgule d'Excel en français : =SOMME(B2:B6), =SI(B2>0;\"oui\";\"non\").",
+  "commonNiveauReussi": "Niveau réussi{value0}",
+  "@commonNiveauReussi": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      }
+    }
+  },
+  "commonConseil": "Conseil : {advice}",
+  "@commonConseil": {
+    "placeholders": {
+      "advice": {
+        "type": "String"
+      }
+    }
+  },
+  "excelFormule": "Formule de {value0}",
+  "@excelFormule": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      }
+    }
+  },
+  "excelFx": "fx  ",
+  "commonBacSableGit": "Bac à sable Git",
+  "gitFichiersObjectif": "Fichiers : {value0}. Objectif : {value1}.",
+  "@gitFichiersObjectif": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      },
+      "value1": {
+        "type": "String"
+      }
+    }
+  },
+  "gitGitCommit": "git commit",
+  "gitCommandes": "Commandes : {value0}",
+  "@gitCommandes": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      }
+    }
+  },
+  "commonAnnuler": "Annuler",
+  "gitSolution": "Solution : {value0}",
+  "@gitSolution": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      }
+    }
+  },
+  "homeReviser": "Réviser",
+  "homeSynchroniser": "Synchroniser",
+  "homeEntretien": "Entretien le {value0}",
+  "@homeEntretien": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      }
+    }
+  },
+  "homeOuvrirFichePreparation": "{value0} · ouvrir la fiche de préparation",
+  "@homeOuvrirFichePreparation": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      }
+    }
+  },
+  "homeAucuneQuestionPourMoment": "Aucune question pour le moment : tirez vers le bas pour synchroniser.",
+  "homeSynchronise": "Synchronisé le {value0}/{value1} à {value2}:{value3}",
+  "@homeSynchronise": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      },
+      "value1": {
+        "type": "String"
+      },
+      "value2": {
+        "type": "String"
+      },
+      "value3": {
+        "type": "String"
+      }
+    }
+  },
+  "homeRevoirNouvelleQuestion": "{due} à revoir · {new} nouvelle(s) · {value2} question(s)",
+  "@homeRevoirNouvelleQuestion": {
+    "placeholders": {
+      "due": {
+        "type": "String"
+      },
+      "new": {
+        "type": "String"
+      },
+      "value2": {
+        "type": "String"
+      }
+    }
+  },
+  "homeAujourdHui": "Aujourd'hui",
+  "home5Min": "5 min",
+  "homePourMesCandidatures": "Pour mes candidatures",
+  "hubEntretien": "Entretien",
+  "hubPlus": "Plus",
+  "interviewSynchronisezAvecPcPour": "Synchronisez avec le PC pour recevoir les questions.",
+  "interviewSimulationEntretien": "Simulation d'entretien",
+  "interviewCinqQuestionsOuvertesComme": "Cinq questions ouvertes, comme face à un recruteur. Répondez, puis cochez les points clés que vous avez cités.",
+  "interviewCommencer": "Commencer",
+  "interviewQuestionSur": "{value0} · question {value1} sur {value2}",
+  "@interviewQuestionSur": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      },
+      "value1": {
+        "type": "String"
+      },
+      "value2": {
+        "type": "String"
+      }
+    }
+  },
+  "interviewVotreReponsePourVous": "Votre réponse, pour vous entraîner à la formuler",
+  "interviewVoirReponseAttendue": "Voir la réponse attendue",
+  "interviewCochezPointsClesCites": "Cochez les points clés cités :",
+  "interviewValiderContinuer": "Valider et continuer",
+  "interviewSerieTermineePointsCles": "Série terminée : {score} % des points clés cités.",
+  "@interviewSerieTermineePointsCles": {
+    "placeholders": {
+      "score": {
+        "type": "String"
+      }
+    }
+  },
+  "interviewRetravaillerAjouteEntrainementOral": "À retravailler, ajouté à l'entraînement à l'oral du PC :",
+  "interviewNouvelleSerie": "Nouvelle série",
+  "labsSimulations": "Simulations",
+  "commonSynchronisezFoisAvecPc": "Synchronisez une fois avec le PC pour télécharger les simulations : elles se jouent ensuite sans réseau.",
+  "commonPartieEnvoyerAuPc": "{value0} partie(s) à envoyer au PC à la prochaine synchronisation.",
+  "@commonPartieEnvoyerAuPc": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      }
+    }
+  },
+  "commonEntretienOral": "Entretien oral",
+  "labsQuestionsLuesVoixHaute": "Questions lues à voix haute, réponse chronométrée",
+  "commonPuzzlesCode": "Puzzles de code",
+  "labsOrdreLigneFautiveCode": "Ordre, ligne fautive, code à compléter · niveau {value0}",
+  "@labsOrdreLigneFautiveCode": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      }
+    }
+  },
+  "commonPannesResoudre": "Pannes à résoudre",
+  "labsMachinesPanne": "{value0} machines en panne",
+  "@labsMachinesPanne": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      }
+    }
+  },
+  "labsNiveauxReussis": "{value0} / {value1} niveaux réussis",
+  "@labsNiveauxReussis": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      },
+      "value1": {
+        "type": "String"
+      }
+    }
+  },
+  "commonBacSableSql": "Bac à sable SQL",
+  "labsMontagesReussisModeLibre": "{value0} / {value1} montages réussis, et le mode libre",
+  "@labsMontagesReussisModeLibre": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      },
+      "value1": {
+        "type": "String"
+      }
+    }
+  },
+  "commonSimulateurAutomate": "Simulateur d'automate",
+  "ladderChronogrammeEntreesBleuSorties": "Chronogramme : entrées en bleu, sorties en vert",
+  "ladderProgrammeBarreauParLigne": "Programme, un barreau par ligne",
+  "libraryGuidesSchemas": "Guides et schémas",
+  "libraryChercherThemeMotGuide": "Chercher un thème, un mot du guide…",
+  "libraryAucunGuideNiSchema": "Aucun guide ni schéma reçu : synchronisez depuis l'accueil.",
+  "libraryAucunResultat": "Aucun résultat.",
+  "offerDetailNoteRapide": "Note rapide",
+  "offerDetailAppelRecruteurImpressionFaire": "Appel du recruteur, impression, à faire…",
+  "offerDetailGarder": "Garder",
+  "offerDetailNoteGardeeElleRejoint": "Note gardée : elle rejoint la candidature à la synchronisation.",
+  "offerDetailOffre": "Offre",
+  "commonDetailCorrespondanceAvecVotreProfil": "{value0} % de correspondance avec votre profil",
+  "@commonDetailCorrespondanceAvecVotreProfil": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      }
+    }
+  },
+  "offerDetailOuvrirAnnonce": "Ouvrir l'annonce",
+  "offerDetailVoirSurCarte": "Voir sur la carte",
+  "offersAnnonceNPasPu": "L'annonce n'a pas pu être ouverte.",
+  "offersOffres": "Offres",
+  "commonTriRapide": "Tri rapide",
+  "offersAucuneOffreRecueOffres": "Aucune offre reçue. Les offres viennent du PC : connecte-le depuis Plus, puis synchronise. La révision marche sans lui.",
+  "offersRetenues": "Retenues",
+  "offersPresChezMoi": "Près de chez moi",
+  "offersAucuneOffrePourCes": "Aucune offre pour ces filtres.",
+  "offersCorrespondance": "{score} % de correspondance",
+  "@offersCorrespondance": {
+    "placeholders": {
+      "score": {
+        "type": "String"
+      }
+    }
+  },
+  "offersOuvrir": "Ouvrir",
+  "offersChangerStatut": "Changer le statut",
+  "oralQuestionSur": "Question {value0} sur {value1}",
+  "@oralQuestionSur": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      },
+      "value1": {
+        "type": "String"
+      }
+    }
+  },
+  "oralReecouter": "Réécouter",
+  "oralJeCommence": "Je commence",
+  "oralJAiTermine": "J'ai terminé",
+  "oralReponse": "Réponse de {value0}",
+  "@oralReponse": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      }
+    }
+  },
+  "oralValiderMaNote": "Valider ma note",
+  "oralReponseNotee": "Réponse notée {value0} % · {value1} s, {value2}",
+  "@oralReponseNotee": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      },
+      "value1": {
+        "type": "String"
+      },
+      "value2": {
+        "type": "String"
+      }
+    }
+  },
+  "oralConseil": "Conseil : {value0}",
+  "@oralConseil": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      }
+    }
+  },
+  "oralSeanceTermineeXpAu": "Séance terminée : {score} % · +{value1} XP au retour sur le PC",
+  "@oralSeanceTermineeXpAu": {
+    "placeholders": {
+      "score": {
+        "type": "String"
+      },
+      "value1": {
+        "type": "String"
+      }
+    }
+  },
+  "commonQuestionSuivante": "Question suivante",
+  "oralNotesRecentes": "Notes récentes : {value0}",
+  "@oralNotesRecentes": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      }
+    }
+  },
+  "oralTypeQuestions": "Type de questions",
+  "oralPour": "Pour : {target}",
+  "@oralPour": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "oralQuestionEstLueVoix": "La question est lue à voix haute : répondez à l'oral, dans le temps, puis notez votre réponse. Rien n'est enregistré du son.",
+  "puzzleCeQuiRemplace": "Ce qui remplace ____",
+  "puzzlePuzzleSur": "Puzzle {value0} sur {value1} · {value2} · {value3} · {value4}",
+  "@puzzlePuzzleSur": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      },
+      "value1": {
+        "type": "String"
+      },
+      "value2": {
+        "type": "String"
+      },
+      "value3": {
+        "type": "String"
+      },
+      "value4": {
+        "type": "String"
+      }
+    }
+  },
+  "puzzleReponsesJustesAffilee": "{value0} · réponses justes d'affilée : {value1}",
+  "@puzzleReponsesJustesAffilee": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      },
+      "value1": {
+        "type": "String"
+      }
+    }
+  },
+  "puzzleVotreReponse": "Votre réponse",
+  "puzzleReponseAttendue": "Réponse attendue",
+  "puzzlePuzzleSuivant": "Puzzle suivant",
+  "puzzleBilanSerieSur": "Bilan de la série : {value0} sur {value1}",
+  "@puzzleBilanSerieSur": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      },
+      "value1": {
+        "type": "String"
+      }
+    }
+  },
+  "puzzleAucuneErreurSerieParfaite": "Aucune erreur : série parfaite.",
+  "puzzleNiveau": "Niveau {value0}",
+  "@puzzleNiveau": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      }
+    }
+  },
+  "puzzleReponsesJustesAffileeRecord": "Réponses justes d'affilée : {value0} · record : {value1}\nUne série à {value2} ou plus fait monter d'un niveau, à {value3} ou moins redescendre.",
+  "@puzzleReponsesJustesAffileeRecord": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      },
+      "value1": {
+        "type": "String"
+      },
+      "value2": {
+        "type": "String"
+      },
+      "value3": {
+        "type": "String"
+      }
+    }
+  },
+  "questionSignalerCetteQuestion": "Signaler cette question ?",
+  "questionEnonceFauxAmbiguOu": "Énoncé faux, ambigu ou réponse discutable : elle n'est plus proposée, et le PC la retire aussi à la prochaine synchronisation.",
+  "questionSignaler": "Signaler",
+  "questionQuestionSignalee": "Question signalée.",
+  "questionRetourAuxThemes": "Retour aux thèmes",
+  "commonTerminer": "Terminer",
+  "questionTempsRestant": "Temps restant",
+  "questionSignalerQuestionFausseOu": "Signaler une question fausse ou ambiguë",
+  "questionExamenBlancSurCe": "Examen blanc sur ce thème",
+  "questionGuidePratique": "Guide pratique",
+  "scanScannerQrCode": "Scanner le QR code",
+  "scanCameraIndisponibleAutorisezDans": "Caméra indisponible : autorisez-la dans les réglages du téléphone, ou saisissez l'adresse et le jeton.",
+  "setupParametres": "Paramètres",
+  "setupApparence": "Apparence",
+  "setupAuto": "Auto",
+  "setupClair": "Clair",
+  "setupSombre": "Sombre",
+  "setupTailleTexte": "Taille du texte",
+  "setupNormale": "Normale",
+  "setupGrande": "Grande",
+  "setupTresGrande": "Très grande",
+  "setupObjectifJour": "Objectif du jour",
+  "setupVibrationCorrection": "Vibration à la correction",
+  "setupCourteSiReponseEst": "Courte si la réponse est juste, appuyée si elle est fausse",
+  "setupAlerteNouvellesOffres": "Alerte des nouvelles offres",
+  "setupVerifieesToutes3H": "Vérifiées toutes les 3 h environ quand le PC est joignable ; signalées si la correspondance atteint {offerAlertScore} %",
+  "@setupVerifieesToutes3H": {
+    "placeholders": {
+      "offerAlertScore": {
+        "type": "String"
+      }
+    }
+  },
+  "setupNotificationsRefuseesAutorisezDans": "Notifications refusées : autorisez-les dans les réglages.",
+  "setupRappelQuotidien18H": "Rappel quotidien à 18 h 30",
+  "setupNotificationAvecNombreQuestions": "Une notification avec le nombre de questions à revoir",
+  "skillsNiveauxEnregistresEnvoyesAu": "Niveaux enregistrés : envoyés au PC à la synchronisation.",
+  "skillsSynchronisezAvecPcPour": "Synchronisez avec le PC pour recevoir la grille.",
+  "skillsNiveau0Inconnue10": "Niveau de 0 (inconnue) à 10. Dès 5, la compétence compte dans le score des offres ; de 1 à 4, ses thèmes sont proposés en priorité.",
+  "skillsAutoEvaluation": "Auto-évaluation",
+  "skillsEnregistrer": "Enregistrer",
+  "sqlVotreResultat": "Votre résultat · {value0}{value1}",
+  "@sqlVotreResultat": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      },
+      "value1": {
+        "type": "String"
+      }
+    }
+  },
+  "sqlResultatAttendu": "Résultat attendu",
+  "sqlTablesBase": "Tables de la base",
+  "sqlRequete": "Requête {value0}",
+  "@sqlRequete": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      }
+    }
+  },
+  "statisticsStatistiques": "Statistiques",
+  "statisticsDerniersJours": "Derniers jours",
+  "statisticsDerniereSynchronisationVertReponses": "À la dernière synchronisation ; en vert, les réponses justes.",
+  "statisticsAucuneActiviteRecueSynchronisez": "Aucune activité reçue : synchronisez une première fois.",
+  "statisticsParTheme": "Par thème",
+  "statisticsMoinsAcquisPremier": "Les moins acquis en premier.",
+  "statisticsExamensBlancs": "Examens blancs",
+  "statisticsRevoirAujourdHui": "{value0} à revoir aujourd'hui",
+  "@statisticsRevoirAujourdHui": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      }
+    }
+  },
+  "timeAttackPts": "{value0} pts",
+  "@timeAttackPts": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      }
+    }
+  },
+  "timeAttackXSerie": "x{value0} · série {value1}",
+  "@timeAttackXSerie": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      },
+      "value1": {
+        "type": "String"
+      }
+    }
+  },
+  "timeAttackTempsEcoule": "Temps écoulé",
+  "commonAttackRejouer": "Rejouer",
+  "timeAttackContreMontre": "Contre la montre",
+  "timeAttackAucunQcmPourMoment": "Aucun QCM pour le moment : synchronisez d'abord.",
+  "trackingMesCandidatures": "Mes candidatures",
+  "trackingAucuneCandidatureRecueElles": "Aucune candidature reçue. Elles se suivent sur le PC : connecte-le depuis Plus, puis synchronise.",
+  "trackingFichePreparation": "Fiche de préparation",
+  "trackingMissionEntretien": "Mission entretien · {percent} %",
+  "@trackingMissionEntretien": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "trackingMissionAccomplieVousEtes": "Mission accomplie : vous êtes prêt pour le jour J.",
+  "trackingEtapesSeCochentSur": "Les étapes se cochent sur le PC.",
+  "triageToutesOffresSontTriees": "Toutes les offres sont triées : leur statut partira au PC à la prochaine synchronisation.",
+  "triageOffreTrier": "{value0} offre(s) à trier",
+  "@triageOffreTrier": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      }
+    }
+  },
+  "triageIgnorer": "Ignorer",
+  "triageInteresse": "Intéressé",
+  "troubleshootingTempsPasseMin": "Temps passé : {value0} min",
+  "@troubleshootingTempsPasseMin": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      }
+    }
+  },
+  "troubleshootingPanneResoluePoints": "Panne résolue : {value0} points {value1}",
+  "@troubleshootingPanneResoluePoints": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      },
+      "value1": {
+        "type": "String"
+      }
+    }
+  },
+  "troubleshootingTechnicienExperimenteMetMin": "Un technicien expérimenté met {value0} min. +{value1} XP au retour sur le PC.",
+  "@troubleshootingTechnicienExperimenteMetMin": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      },
+      "value1": {
+        "type": "String"
+      }
+    }
+  },
+  "troubleshootingReparationDevineeSansMesure": "Réparation devinée sans mesure qui la prouve : score plafonné.",
+  "troubleshootingMesures": "Mesures",
+  "troubleshootingMin": "{value0} min",
+  "@troubleshootingMin": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      }
+    }
+  },
+  "troubleshootingReparations": "Réparations",
+  "troubleshootingJournalIntervention": "Journal d'intervention",
+  "brandSur": "sur {goal}",
+  "@brandSur": {
+    "placeholders": {
+      "goal": {
+        "type": "String"
+      }
+    }
+  },
+  "gameXpProchain": "{value0} / {value1} XP · prochain : {value2}",
+  "@gameXpProchain": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      },
+      "value1": {
+        "type": "String"
+      },
+      "value2": {
+        "type": "String"
+      }
+    }
+  },
+  "gameSerieJours": "Série de {streak} jours",
+  "@gameSerieJours": {
+    "placeholders": {
+      "streak": {
+        "type": "String"
+      }
+    }
+  },
+  "gameTrophees": "Trophées : {value0} / {value1}",
+  "@gameTrophees": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      },
+      "value1": {
+        "type": "String"
+      }
+    }
+  },
+  "gameBilan": "Bilan de la {value0}",
+  "@gameBilan": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      }
+    }
+  },
+  "gameXp": "{value0} / {value1} · +{value2} XP",
+  "@gameXp": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      },
+      "value1": {
+        "type": "String"
+      },
+      "value2": {
+        "type": "String"
+      }
+    }
+  },
+  "gameVotreNiveauVosQuetes": "Votre niveau et vos quêtes arrivent à la prochaine synchronisation.",
+  "gameContreMontre60": "Contre la montre · 60 s{value0}",
+  "@gameContreMontre60": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      }
+    }
+  },
+  "questionCochezTousDefautsReels": "Cochez tous les défauts réels de cet extrait, et eux seuls.",
+  "questionChoisirCorrespondance": "Choisir la correspondance",
+  "questionVotreSchema": "Votre schéma",
+  "questionSchemaAttendu": "Schéma attendu",
+  "questionTouchezSchemaPourAgrandir": "Touchez le schéma pour l'agrandir. {description}",
+  "@questionTouchezSchemaPourAgrandir": {
+    "placeholders": {
+      "description": {
+        "type": "String"
+      }
+    }
+  },
+  "questionSchema": "Schéma",
+  "questionTournerSchema": "Tourner le schéma",
+  "questionVotreReponse": "Votre réponse : {value0}",
+  "@questionVotreReponse": {
+    "placeholders": {
+      "value0": {
+        "type": "String"
+      }
+    }
+  }
+}

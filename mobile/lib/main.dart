@@ -2,8 +2,10 @@
 // premier lancement ou directement les thèmes de révision.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:workmanager/workmanager.dart';
 
+import 'l10n/texts.dart';
 import 'revision_state.dart';
 import 'screens/home_screen.dart';
 import 'screens/connect_screen.dart';
@@ -51,6 +53,14 @@ class RevisionApp extends StatelessWidget {
         theme: buildTheme(Brightness.light),
         darkTheme: buildTheme(Brightness.dark),
         themeMode: themeModes[state.appearance],
+        locale: const Locale('fr'),
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
         // Le choix de l'application s'ajoute à la taille réglée sur le téléphone.
         builder: (pContext, pChild) => MediaQuery(
           data: MediaQuery.of(pContext).copyWith(

@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../l10n/texts.dart';
 import '../revision_state.dart';
 import '../services/api_client.dart';
 import '../services/discovery.dart';
@@ -177,7 +178,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Connecté : ${vReport.describe()}')),
+      SnackBar(content: Text(context.texts.connectConnecte('${vReport.describe()}'))),
     );
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute<void>(builder: (_) => HomeScreen(state: widget.state)),
@@ -201,30 +202,29 @@ class _ConnectScreenState extends State<ConnectScreen> {
     final vTheme = Theme.of(pContext);
 
     final rStatus = switch (status) {
-      SearchStatus.searching => const ListTile(
+      SearchStatus.searching => ListTile(
           key: ValueKey('searching'),
           leading: SizedBox.square(
             dimension: 24,
             child: CircularProgressIndicator(strokeWidth: 3),
           ),
-          title: Text('Recherche de ton PC sur le Wi-Fi…'),
+          title: Text(context.texts.connectRechercheTonPcSur),
         ),
       SearchStatus.found => ListTile(
           key: const ValueKey('found'),
           leading: Icon(Icons.check_circle, color: successColorOf(pContext)),
-          title: const Text('PC trouvé'),
+          title: Text(context.texts.connectPcTrouve),
           subtitle: Text(getHost(foundAddress) ?? ''),
         ),
       SearchStatus.missing => ListTile(
           key: const ValueKey('missing'),
           leading: Icon(Icons.wifi_off, color: vTheme.colorScheme.error),
-          title: const Text('PC introuvable sur ce Wi-Fi'),
-          subtitle: const Text(
-            'Le téléphone doit être sur le même réseau que le PC, et le tableau de '
-            'bord web lancé. Sinon, scanne le QR code.',
+          title: Text(context.texts.connectPcIntrouvableSurCe),
+          subtitle: Text(
+            context.texts.connectTelephoneDoitEtreSur,
           ),
           trailing: IconButton(
-            tooltip: 'Chercher à nouveau',
+            tooltip: context.texts.connectChercherNouveau,
             onPressed: search,
             icon: const Icon(Icons.refresh),
           ),
@@ -240,7 +240,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
     final vCanGoBack = Navigator.of(context).canPop();
 
     final rScreen = Scaffold(
-      appBar: vCanGoBack ? AppBar(title: const Text('Connexion au PC')) : null,
+      appBar: vCanGoBack ? AppBar(title: Text(context.texts.commonConnexionAuPc)) : null,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(20),
@@ -255,13 +255,12 @@ class _ConnectScreenState extends State<ConnectScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Tremplin',
+                          context.texts.connectTremplin,
                           style: vTheme.textTheme.headlineSmall!
                               .copyWith(color: Colors.white, fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: 4),
-                        const Text('Révise tout de suite, même sans réseau. Relie ton '
-                            'PC quand tu veux pour recevoir tes offres et tes candidatures.'),
+                        Text(context.texts.connectReviseToutSuiteMeme),
                       ],
                     ),
                   ),
@@ -277,7 +276,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
                 ),
                 onPressed: busy ? null : startWithoutServer,
                 icon: const Icon(Icons.menu_book_rounded),
-                label: const Text('Réviser sans le PC'),
+                label: Text(context.texts.connectReviserSansPc),
               ),
             ],
             const SizedBox(height: 16),
@@ -297,8 +296,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Text(
-                            'Sur le PC : Paramètres, « Application mobile », '
-                            '« Connecter un téléphone ». Tape le code affiché :',
+                            context.texts.connectSurPcParametresApplication,
                             style: vTheme.textTheme.bodyMedium,
                           ),
                           const SizedBox(height: 12),
@@ -310,8 +308,8 @@ class _ConnectScreenState extends State<ConnectScreen> {
                             maxLength: 7,
                             inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[0-9 ]'))],
                             style: vTheme.textTheme.headlineMedium!.copyWith(letterSpacing: 8),
-                            decoration: const InputDecoration(
-                              labelText: 'Code à 6 chiffres',
+                            decoration: InputDecoration(
+                              labelText: context.texts.connectCode6Chiffres,
                               counterText: '',
                               border: OutlineInputBorder(),
                             ),
@@ -331,7 +329,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
                                     child: CircularProgressIndicator(strokeWidth: 2),
                                   )
                                 : const Icon(Icons.link),
-                            label: const Text('Connecter'),
+                            label: Text(context.texts.connectConnecter),
                           ),
                         ],
                       ),
@@ -347,20 +345,20 @@ class _ConnectScreenState extends State<ConnectScreen> {
             OutlinedButton.icon(
               onPressed: busy ? null : scan,
               icon: const Icon(Icons.qr_code_scanner),
-              label: const Text('Scanner le QR code du PC'),
+              label: Text(context.texts.connectScannerQrCodePc),
             ),
             const SizedBox(height: 8),
             ExpansionTile(
               tilePadding: EdgeInsets.zero,
-              title: const Text("Saisir l'adresse et le jeton"),
+              title: Text(context.texts.connectSaisirAdresseJeton),
               children: [
                 TextField(
                   controller: addressController,
                   keyboardType: TextInputType.url,
                   autocorrect: false,
-                  decoration: const InputDecoration(
-                    labelText: 'Adresse du serveur',
-                    hintText: 'http://192.168.1.20:8000/api/v1',
+                  decoration: InputDecoration(
+                    labelText: context.texts.connectAdresseServeur,
+                    hintText: context.texts.connectHttp1921681,
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -370,8 +368,8 @@ class _ConnectScreenState extends State<ConnectScreen> {
                   obscureText: true,
                   autocorrect: false,
                   enableSuggestions: false,
-                  decoration: const InputDecoration(
-                    labelText: 'Jeton',
+                  decoration: InputDecoration(
+                    labelText: context.texts.connectJeton,
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -380,7 +378,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
                   alignment: Alignment.centerRight,
                   child: FilledButton.tonal(
                     onPressed: busy ? null : connectManually,
-                    child: const Text('Se connecter'),
+                    child: Text(context.texts.connectSeConnecter),
                   ),
                 ),
               ],

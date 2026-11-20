@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../l10n/texts.dart';
 import '../logic/review.dart';
 import '../models/quiz_package.dart';
 import '../revision_state.dart';
@@ -182,10 +183,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       listenable: state,
       builder: (pContext, _) => Scaffold(
         appBar: AppBar(
-          title: const Text('Réviser'),
+          title: Text(context.texts.homeReviser),
           actions: [
             IconButton(
-              tooltip: 'Synchroniser',
+              tooltip: context.texts.homeSynchroniser,
               onPressed: state.syncing ? null : synchronize,
               icon: const Icon(Icons.sync),
             ),
@@ -206,10 +207,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   child: ListTile(
                     leading: const Icon(Icons.event_available),
                     title: Text(
-                      'Entretien le ${formatMoment(vInterview['interview_at'] as String?)}',
+                      context.texts.homeEntretien('${formatMoment(vInterview['interview_at'] as String?)}'),
                     ),
-                    subtitle: Text('${vInterview['company'] ?? vInterview['title'] ?? ''}'
-                        ' · ouvrir la fiche de préparation'),
+                    subtitle: Text(context.texts.homeOuvrirFichePreparation('${vInterview['company'] ?? vInterview['title'] ?? ''}')),
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(
                         builder: (_) => SheetScreen(sheet: state.sheetOf(vInterview)!),
@@ -221,11 +221,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               if (state.package != null && state.applications.isNotEmpty)
                 ApplicationsCard(state: state),
               if (state.package == null)
-                const Padding(
+                Padding(
                   padding: EdgeInsets.all(24),
                   child: Text(
-                    'Aucune question pour le moment : tirez vers le bas pour '
-                    'synchroniser.',
+                    context.texts.homeAucuneQuestionPourMoment,
                     textAlign: TextAlign.center,
                   ),
                 )
@@ -288,10 +287,7 @@ class SummaryCard extends StatelessWidget {
               ),
             if (vLastSync != null)
               Text(
-                'Synchronisé le ${vLastSync.day.toString().padLeft(2, '0')}/'
-                '${vLastSync.month.toString().padLeft(2, '0')} à '
-                '${vLastSync.hour.toString().padLeft(2, '0')}:'
-                '${vLastSync.minute.toString().padLeft(2, '0')}',
+                context.texts.homeSynchronise('${vLastSync.day.toString().padLeft(2, '0')}', '${vLastSync.month.toString().padLeft(2, '0')}', '${vLastSync.hour.toString().padLeft(2, '0')}', '${vLastSync.minute.toString().padLeft(2, '0')}'),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
           ],
@@ -363,7 +359,7 @@ class DomainCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '$vDue à revoir · $vNew nouvelle(s) · ${vQuestions.length} question(s)',
+                        context.texts.homeRevoirNouvelleQuestion('${vDue}', '${vNew}', '${vQuestions.length}'),
                       ),
                       const SizedBox(height: 6),
                       AnimatedBar(
@@ -421,7 +417,7 @@ class TodayCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text("Aujourd'hui"),
+                    Text(context.texts.homeAujourdHui),
                     const SizedBox(height: 4),
                     TweenAnimationBuilder<int>(
                       tween: IntTween(begin: 0, end: vDue),
@@ -458,7 +454,7 @@ class TodayCard extends StatelessWidget {
                       MaterialPageRoute<void>(builder: (_) => QuestionScreen(state: state)),
                     ),
                     icon: const Icon(Icons.play_arrow_rounded),
-                    label: const Text('Réviser'),
+                    label: Text(context.texts.homeReviser),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -474,7 +470,7 @@ class TodayCard extends StatelessWidget {
                     ),
                   ),
                   icon: const Icon(Icons.bolt),
-                  label: const Text('5 min'),
+                  label: Text(context.texts.home5Min),
                 ),
               ],
             ),
@@ -504,7 +500,7 @@ class ApplicationsCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Pour mes candidatures', style: Theme.of(context).textTheme.titleMedium),
+            Text(context.texts.homePourMesCandidatures, style: Theme.of(context).textTheme.titleMedium),
             for (final vApplication in state.applications) ...[
               const SizedBox(height: 12),
               Text(

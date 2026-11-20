@@ -104,6 +104,9 @@ jobs:
       - name: Installation des dépendances
         run: flutter pub get
 
+      - name: Textes de l'application
+        run: flutter gen-l10n
+
       # Largeur des lignes fixée dans analysis_options.yaml
       - name: Vérification du formatage
         run: dart format --output=none --set-exit-if-changed lib test
@@ -138,7 +141,7 @@ jobs:
       - name: Installation des dépendances
         run: |
           pip install -r requirements.txt
-          cd mobile && flutter pub get
+          cd mobile && flutter pub get && flutter gen-l10n
 
       - name: Base neuve et serveur
         run: |

@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../l10n/texts.dart';
 import '../logic/grading.dart';
 import '../theme.dart';
 import 'brand.dart';
@@ -89,7 +90,7 @@ class SchemaView extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              "Touchez le schéma pour l'agrandir. $description",
+              context.texts.questionTouchezSchemaPourAgrandir('${description}'),
               style: vTheme.textTheme.bodySmall,
             ),
           ],
@@ -123,10 +124,10 @@ class _SchemaScreenState extends State<SchemaScreen> {
     final rScreen = Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Schéma'),
+        title: Text(context.texts.questionSchema),
         actions: [
           IconButton(
-            tooltip: 'Tourner le schéma',
+            tooltip: context.texts.questionTournerSchema,
             icon: const Icon(Icons.screen_rotation_alt),
             onPressed: () => setState(() => rotated = !rotated),
           ),
@@ -203,9 +204,9 @@ class ResultPanel extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              if (!grade.correct) Text('Votre réponse : ${grade.given}'),
+              if (!grade.correct) Text(context.texts.questionVotreReponse('${grade.given}')),
               Text(
-                'Réponse : ${grade.expected}',
+                context.texts.commonReponse('${grade.expected}'),
                 style: const TextStyle(fontWeight: FontWeight.w600),
               ),
               if (explanation.isNotEmpty) ...[

@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../l10n/texts.dart';
 import '../revision_state.dart';
 import '../screens/time_attack_screen.dart';
 import '../theme.dart';
@@ -84,8 +85,7 @@ class GameCard extends StatelessWidget {
                 children: [
                   Text('${pGame['title']}', style: vTheme.textTheme.titleMedium),
                   Text(
-                    '${vInLevel.toInt()} / ${vForLevel.toInt()} XP · prochain : '
-                    '${pGame['next_title']}',
+                    context.texts.gameXpProchain('${vInLevel.toInt()}', '${vForLevel.toInt()}', '${pGame['next_title']}'),
                     style: vTheme.textTheme.bodySmall,
                   ),
                 ],
@@ -94,7 +94,7 @@ class GameCard extends StatelessWidget {
             Icon(Icons.local_fire_department, color: Colors.orange.shade700),
             Text(
               '$vStreak',
-              semanticsLabel: 'Série de $vStreak jours',
+              semanticsLabel: context.texts.gameSerieJours('${vStreak}'),
               style: vTheme.textTheme.titleMedium?.copyWith(color: Colors.orange.shade800),
             ),
           ],
@@ -138,7 +138,7 @@ class GameCard extends StatelessWidget {
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           Icon(Icons.emoji_events, color: Colors.amber.shade700, size: 20),
-          Text('Trophées : ${vUnlocked.length} / ${vAll.length}'),
+          Text(context.texts.gameTrophees('${vUnlocked.length}', '${vAll.length}')),
           for (final vItem in vUnlocked.take(3))
             Chip(
               label: Text('${vItem['title']}'),
@@ -163,7 +163,7 @@ class GameCard extends StatelessWidget {
         Icons.military_tech,
         color: parseColor(vMedal?['color']) ?? Theme.of(pContext).colorScheme.outline,
       ),
-      title: Text('Bilan de la ${pSeason['title']}'),
+      title: Text(context.texts.gameBilan('${pSeason['title']}')),
       subtitle: Text(
         [pSeason['summary'], if (vMedal != null) vMedal['label']].join(' · '),
       ),
@@ -197,7 +197,7 @@ class GameCard extends StatelessWidget {
         '${pQuest['weekly'] == true ? 'Semaine · ' : ''}${pQuest['label']}',
         style: vDone ? const TextStyle(decoration: TextDecoration.lineThrough) : null,
       ),
-      trailing: Text('${pQuest['progress']} / ${pQuest['target']} · +${pQuest['xp']} XP'),
+      trailing: Text(context.texts.gameXp('${pQuest['progress']}', '${pQuest['target']}', '${pQuest['xp']}')),
     );
 
     return rQuest;
@@ -214,7 +214,7 @@ class GameCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (vGame == null)
-              const Text('Votre niveau et vos quêtes arrivent à la prochaine synchronisation.')
+              Text(context.texts.gameVotreNiveauVosQuetes)
             else ...[
               if (vGame['mascot'] case final Map vMascot) buildMascot(context, vMascot),
               buildLevel(context, vGame),
@@ -232,8 +232,7 @@ class GameCard extends StatelessWidget {
                 ),
                 icon: const Icon(Icons.timer_outlined),
                 label: Text(
-                  'Contre la montre · 60 s'
-                  '${state.timeAttackBest > 0 ? ' · record ${state.timeAttackBest}' : ''}',
+                  context.texts.gameContreMontre60('${state.timeAttackBest > 0 ? ' · record ${state.timeAttackBest}' : ''}'),
                 ),
               ),
             ],
