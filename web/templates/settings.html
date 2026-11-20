@@ -87,7 +87,16 @@
 
         <article class="card">
             <h2>Application mobile</h2>
-            <p class="card-subtitle">Révision sur le téléphone, même hors ligne : saisissez cette adresse et ce jeton dans l'application. Les réponses rejoignent la progression d'ici au retour du réseau.</p>
+            <p class="card-subtitle">Révision sur le téléphone, même hors ligne. Le plus simple : affichez un code et tapez-le dans l'application, qui trouve le PC toute seule sur le Wi-Fi. Les réponses rejoignent la progression d'ici au retour du réseau.</p>
+            <form method="post" action="{{ url_for('show_mobile_code').path }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+                <button class="button" type="submit">{{ icon("send", 16) }} Connecter un téléphone avec un code</button>
+            </form>
+            {% if mobile_code %}
+            <p class="pairing-code" role="status"><strong>{{ mobile_code }}</strong></p>
+            <p class="muted">À taper dans l'application dans les 10 minutes. Le code ne sert qu'une fois.</p>
+            {% endif %}
+            <p class="muted">Ou saisissez cette adresse et ce jeton :</p>
             <p><code>{{ mobile_address }}</code></p>
             {% if mobile_token %}
             <div class="copy-field" id="mobile-token">

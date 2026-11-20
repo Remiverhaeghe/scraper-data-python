@@ -55,6 +55,7 @@ Chaque requête porte l'en-tête `Authorization: Bearer <jeton>` ; aucune sessio
 | Méthode | Adresse | Rôle |
 |---|---|---|
 | GET | `/api/v1/ping` | Sans jeton : nom de l'application et version de l'API, pour que le téléphone trouve le serveur sur le Wi-Fi |
+| POST | `/api/v1/pairing` | Sans jeton : `{"code": "482913"}`, le code à 6 chiffres affiché par « Connecter un téléphone » ; renvoie `{"token", "certificate_sha256"}`. Code valable 10 minutes et une fois, effacé après 5 essais faux ; 403 sinon. En HTTPS, la demande ne peut pas encore vérifier le certificat : sur un réseau qui n'est pas le sien, le QR code reste la voie sûre |
 | GET | `/api/v1/quiz` | Thèmes, questions (réponse et explication comprises), schémas et guides ; `ETag` : 304 si rien n'a changé |
 | GET | `/api/v1/progress` | Boîte et date de révision de chaque question, chiffres d'ensemble |
 | POST | `/api/v1/exams` | Examens blancs du téléphone, ajoutés sans doublon à l'historique du PC : `{"exams": [{"title", "finished_at", "correct", "count", "seconds"}]}` |

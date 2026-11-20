@@ -27,6 +27,7 @@ from job.company_pages import (
     load_company_list,
     save_company_lists,
 )
+from job.mobile_pairing import create_pairing_code, format_pairing_code
 from job.mobile_sync import (
     API_PREFIX,
     build_connection_svg,
@@ -75,6 +76,7 @@ def render_settings(
     pCalendarMessage=None,
     pArchiveMessage=None,
     pMobileMessage=None,
+    pMobileCode=None,
     pBackupMessage=None,
     pCompanyPagesMessage=None,
     pCompanyPagesTone="success",
@@ -153,6 +155,7 @@ def render_settings(
                 else None
             ),
             "mobile_message": pMobileMessage,
+            "mobile_code": pMobileCode,
             "message_tone": get_message_tone(pStatusCode),
             "archive_message": pArchiveMessage,
             "company_pages": [
@@ -382,6 +385,28 @@ def renew_mobile(
         request,
         pDatabaseFile,
         pMobileMessage="Jeton créé : saisissez-le dans l'application.",
+    )
+
+    return rResponse
+
+
+@router.post(
+    "/settings/mobile/code",
+    response_class=HTMLResponse,
+    dependencies=[Depends(require_csrf)],
+)
+def show_mobile_code(
+    request: Request,
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Affiche un code à 6 chiffres que le téléphone échange contre son jeton."""
+
+    vCode = create_pairing_code(pDatabaseFile)
+
+    rResponse = render_settings(
+        request,
+        pDatabaseFile,
+        pMobileCode=format_pairing_code(vCode),
     )
 
     return rResponse

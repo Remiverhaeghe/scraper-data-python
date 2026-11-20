@@ -26,9 +26,12 @@ class TokenAccessPanel(QWidget):
     None ; pRenew en crée une nouvelle. pFixedText ajoute une ligne en lecture seule,
     l'adresse du serveur par exemple. pQrCode, s'il est donné, retourne en PNG le
     QR code de la valeur : son bouton crée la valeur si besoin, puis l'affiche.
+    pPairingCode, s'il est donné, crée un code court à taper sur le téléphone.
     """
 
-    def __init__(self, pTexts, pRead, pRenew, pFixedText=None, pQrCode=None):
+    def __init__(
+        self, pTexts, pRead, pRenew, pFixedText=None, pQrCode=None, pPairingCode=None
+    ):
         """Construit la carte ; la valeur est lue par refresh."""
         super().__init__()
 
@@ -60,11 +63,23 @@ class TokenAccessPanel(QWidget):
         self.qr_button.clicked.connect(self.show_qr_code)
         self.qr_button.setVisible(pQrCode is not None)
 
+        self.pairing_code = pPairingCode
+        self.code_button = create_button(
+            pTexts.get("code", "Code"),
+            "send",
+            "primaryButton",
+            COLORS["on_primary"],
+        )
+        self.code_button.setToolTip("Affiche un code à taper dans l'application")
+        self.code_button.clicked.connect(self.show_pairing_code)
+        self.code_button.setVisible(pPairingCode is not None)
+
         self.message_label = QLabel()
         self.message_label.setObjectName("cardSubtitle")
         self.message_label.setWordWrap(True)
 
         vActions = QHBoxLayout()
+        vActions.addWidget(self.code_button)
         vActions.addWidget(self.qr_button)
         vActions.addWidget(self.button)
         vActions.addWidget(self.copy_button)
@@ -149,6 +164,38 @@ class TokenAccessPanel(QWidget):
 
         vLayout = QVBoxLayout(vDialog)
         vLayout.addWidget(vImage)
+        vLayout.addWidget(vHelp)
+
+        vDialog.exec()
+
+    def show_pairing_code(self):
+        """Affiche un code à 6 chiffres, valable dix minutes et une seule fois."""
+        try:
+            vCode = self.pairing_code()
+
+        except Exception:
+            logger.exception("Impossible de créer le code de connexion")
+            show_message(self.message_label, self.texts["failed"], "danger")
+
+            return
+
+        vCodeLabel = QLabel(vCode)
+        vCodeLabel.setObjectName("pairingCode")
+        vCodeLabel.setStyleSheet(
+            "font-size: 36px; font-weight: 600; letter-spacing: 6px;"
+        )
+
+        vHelp = QLabel(
+            "Dans l'application : « Connecter mon PC », puis tapez ce code dans "
+            "les 10 minutes. Il ne sert qu'une fois."
+        )
+        vHelp.setWordWrap(True)
+
+        vDialog = QDialog(self)
+        vDialog.setWindowTitle(self.texts["title"])
+
+        vLayout = QVBoxLayout(vDialog)
+        vLayout.addWidget(vCodeLabel)
         vLayout.addWidget(vHelp)
 
         vDialog.exec()

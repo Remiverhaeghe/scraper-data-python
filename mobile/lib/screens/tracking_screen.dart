@@ -60,7 +60,8 @@ class TrackingScreen extends StatelessWidget {
               child: Padding(
                 padding: EdgeInsets.all(24),
                 child: Text(
-                  'Aucune candidature en cours reçue du PC : synchronisez pour la mettre à jour.',
+                  'Aucune candidature reçue. Elles se suivent sur le PC : connecte-le depuis '
+                  'Plus, puis synchronise.',
                   textAlign: TextAlign.center,
                 ),
               ),

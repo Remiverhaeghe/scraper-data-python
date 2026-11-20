@@ -1,0 +1,64 @@
+name: Mise en forme
+
+# Sur une pull request, remet le code de l'application mobile en forme avec dart format
+# et le recommite sur la branche, au nom de l'auteur du dépôt. Un push fait avec le jeton
+# du workflow ne relance pas les autres workflows : on relance donc la CI à la main sur
+# le commit mis en forme.
+on:
+  pull_request:
+    paths:
+      - "mobile/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: format-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  format:
+    name: Mise en forme du code mobile
+    runs-on: ubuntu-latest
+    # Pas sur les branches venues d'un autre dépôt : le jeton n'y a pas le droit d'écrire
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: write
+      actions: write
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          ref: ${{ github.head_ref }}
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          flutter-version: 3.47.7
+          cache: true
+
+      # Sans pub get, dart format ne connaît pas la version de Dart du projet et applique
+      # un autre style à tous les fichiers
+      - name: Dépendances
+        run: flutter pub get
+
+      - name: Mise en forme
+        run: dart format lib test
+
+      - name: Commit et relance de la CI
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          if git diff --quiet; then
+            echo "Code déjà en forme"
+            exit 0
+          fi
+          git config user.name Remiverhaeghe
+          git config user.email remi.verhaeghe59@gmail.com
+          git commit -am "style : mise en forme automatique"
+          git push origin "HEAD:$BRANCH"
+          gh workflow run ci.yml --ref "$BRANCH"

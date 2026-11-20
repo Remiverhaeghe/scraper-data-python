@@ -8,13 +8,14 @@ import 'package:flutter/material.dart';
 
 const celebrationDuration = Duration(milliseconds: 2600);
 const confettiCount = 90;
+// Couleurs de la piscine : eau, plongeoir, bouées et écume
 const confettiColors = [
-  Color(0xFF3B82F6),
-  Color(0xFFF59E0B),
-  Color(0xFF8B5CF6),
-  Color(0xFF10B981),
-  Color(0xFFEC4899),
-  Color(0xFF06B6D4),
+  Color(0xFF35C2CF),
+  Color(0xFFFFC23D),
+  Color(0xFFFF6A55),
+  Color(0xFF0E6F8C),
+  Color(0xFFFFFFFF),
+  Color(0xFF8FE3EA),
 ];
 
 /// Affiche la célébration par-dessus l'écran courant.

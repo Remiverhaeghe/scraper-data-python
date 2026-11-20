@@ -5,6 +5,33 @@ dans l'historique git.
 
 ## Non publié
 
+### Appli mobile : connexion par code, onglets et nouvelle identité
+- Connexion par code : le téléphone cherche le PC sur le Wi-Fi dès l'ouverture ; sur
+  le PC (Paramètres de l'application de bureau ou de la page web), « Connecter un
+  téléphone » affiche un code à 6 chiffres, valable 10 minutes et une seule fois,
+  refusé après 5 essais faux. Le téléphone l'échange contre le jeton par
+  `POST /api/v1/pairing`. Seule l'empreinte du code est enregistrée. Le QR code et la
+  saisie de l'adresse et du jeton restent possibles.
+- Navigation en onglets en bas de l'écran : Réviser, Offres, Candidatures, Entretien et
+  Plus (statistiques, examen blanc, simulations, guides, paramètres), à la place des
+  sept icônes de la barre du haut. Les paramètres sont séparés de la connexion.
+- Sans le PC : au premier lancement, « Réviser sans le PC » installe le paquet de
+  révision livré avec l'application (`assets/revision/depart.json.gz`, les 944 questions
+  des thèmes livrés, écrit par `python -m tools.mobile_package`). Les réponses restent
+  sur le téléphone et partent au PC le jour où il est connecté. Un test vérifie que le
+  paquet suit les thèmes livrés.
+- Nouvelle identité, la piscine : bleu du bassin, eau turquoise, jaune du plongeoir et
+  corail des bouées. L'icône montre un livre ouvert qui sert de tremplin à un nageur ;
+  on le retrouve, animé, sur l'écran de connexion et en filigrane de la carte
+  « Aujourd'hui » (questions à revoir, objectif du jour en anneau, boutons Réviser et
+  5 min), dont les reflets ondulent lentement.
+- Animations : écrans qui apparaissent en glissant, éclaboussure autour de la coche
+  d'une bonne réponse, correction qui tremble si elle est fausse, confettis aux couleurs
+  de la piscine pour un niveau gagné, anneau de l'objectif et progression
+  des thèmes qui se remplissent ; tout est coupé quand le téléphone demande de réduire
+  les animations.
+- Mise en forme automatique du code mobile sur les pull requests (`format.yml`).
+
 ### Trajets, relecture et bilan du mois
 - Carte des offres : trajet estimé en voiture et à vélo dans chaque pastille, calculé
   hors ligne d'après la distance à vol d'oiseau ; vitesses moyennes réglables dans les

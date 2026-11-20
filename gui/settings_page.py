@@ -45,6 +45,7 @@ from job.calendar import (
     get_calendar_token,
     renew_calendar_token,
 )
+from job.mobile_pairing import create_pairing_code, format_pairing_code
 from job.mobile_sync import (
     API_PREFIX,
     build_connection_png,
@@ -340,10 +341,13 @@ class SettingsPage(QWidget):
         self.mobile_panel = TokenAccessPanel(
             {
                 "title": "Application mobile",
-                "subtitle": "Révision sur le téléphone, même hors ligne. Un scan "
-                "du QR code suffit : adresse, jeton et certificat en une fois. Les "
+                "subtitle": "Révision sur le téléphone, même hors ligne. Le plus "
+                "simple : « Connecter un téléphone » affiche un code à taper dans "
+                "l'application, qui trouve le PC sur le Wi-Fi. Le QR code reste "
+                "possible. Les "
                 "réponses rejoignent la progression d'ici au retour du réseau.",
-                "qr": "Connecter un téléphone",
+                "qr": "QR code",
+                "code": "Connecter un téléphone",
                 "placeholder": "Aucun jeton créé",
                 "create": "Créer le jeton",
                 "renew": "Renouveler le jeton",
@@ -361,6 +365,7 @@ class SettingsPage(QWidget):
             lambda pToken: build_connection_png(
                 f"{WEB_BASE_URL}{API_PREFIX}", pToken, get_certificate_fingerprint()
             ),
+            lambda: format_pairing_code(create_pairing_code(self.database_file)),
         )
 
     def set_actions_enabled(self, pEnabled):

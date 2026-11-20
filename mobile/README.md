@@ -1,18 +1,22 @@
 # Tremplin, application mobile de révision
 
-Application Flutter de révision technique hors ligne. Elle télécharge les questions
-du serveur Tremplin, corrige les réponses sur le téléphone, les garde sans
-réseau, puis les envoie à la synchronisation suivante. Le serveur recalcule chaque
+Application Flutter de révision technique hors ligne. Elle marche sans le PC : au
+premier lancement, « Réviser sans le PC » installe le paquet livré avec l'appli
+(`assets/revision/depart.json.gz`, thèmes livrés avec Tremplin, réécrit par
+`python -m tools.mobile_package` quand ils changent). Une fois le PC connecté, elle
+télécharge les questions du serveur Tremplin, corrige les réponses sur le téléphone,
+les garde sans réseau, puis les envoie à la synchronisation suivante. Le serveur recalcule chaque
 correction : la progression reste la même sur le PC, le web et le téléphone.
 
 Pris en charge : QCM, calculs avec unité, remises en ordre, associations et revues de code, schémas
 SVG, extraits de code, guides pratiques, répétition espacée (boîtes de Leitner),
 examen blanc chronométré (tous thèmes ou un thème), synchronisation automatique à
 l'ouverture, au retour dans l'application et toutes les dix réponses, rappel
-quotidien à 18 h 30 avec le nombre de questions à revoir, connexion par le QR code
-affiché dans les Paramètres du PC ou du web, recherche du serveur sur
-le Wi-Fi (bouton de l'écran de connexion, et automatiquement quand son adresse
-change), schémas en plein écran tournés pour la longueur du téléphone, statistiques
+quotidien à 18 h 30 avec le nombre de questions à revoir, connexion par un code à 6
+chiffres affiché dans les Paramètres du PC ou du web (le téléphone trouve le serveur
+sur le Wi-Fi tout seul), ou par le QR code, recherche du serveur sur le Wi-Fi quand
+son adresse change, navigation en onglets (Réviser, Offres, Candidatures, Entretien,
+Plus), schémas en plein écran tournés pour la longueur du téléphone, statistiques
 (activité des derniers jours, réussite par thème, examens blancs), apparence
 claire ou sombre et taille du texte réglables, question signalée depuis le
 téléphone, révision des thèmes de ses candidatures en cours, objectif de réponses

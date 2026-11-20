@@ -85,7 +85,8 @@ class _OffersScreenState extends State<OffersScreen> {
               child: Padding(
                 padding: EdgeInsets.all(24),
                 child: Text(
-                  "Aucune offre reçue : synchronisez depuis l'accueil.",
+                  "Aucune offre reçue. Les offres viennent du PC : connecte-le depuis "
+                  "Plus, puis synchronise. La révision marche sans lui.",
                   textAlign: TextAlign.center,
                 ),
               ),
