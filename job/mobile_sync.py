@@ -104,6 +104,9 @@ MAX_SYNC_STATUSES = 200
 
 # Notes rapides prises sur le téléphone, ajoutées à celles de la candidature
 MAX_SYNC_NOTES = 50
+# Candidatures notées sur le téléphone, envoyées en un lot au plus
+MAX_QUICK_APPLICATIONS = 50
+QUICK_FIELD_LENGTHS = {"company": 200, "title": 300, "url": 1000, "note": 1000}
 MAX_PHONE_NOTE = 1000
 
 # Candidatures envoyées au téléphone pour réviser leurs thèmes : les plus récentes
@@ -850,3 +853,114 @@ def build_mobile_sheet(pDatabaseFile, pOffer, pProfile):
     }
 
     return rSheet
+
+
+def read_quick_application(pItem, pNow):
+    """Vérifie une candidature notée sur le téléphone ; retourne ses champs nettoyés.
+
+    Lève ValueError si l'entreprise manque, si un champ est trop long, si le lien n'est pas
+    une adresse web ou si la date est illisible ou dans le futur.
+    """
+
+    if not isinstance(pItem, dict):
+        raise ValueError("format inattendu")
+
+    vFields = {
+        vName: " ".join(str(pItem.get(vName) or "").split())
+        for vName in QUICK_FIELD_LENGTHS
+    }
+
+    if not vFields["company"]:
+        raise ValueError("entreprise manquante")
+
+    for vName, vLength in QUICK_FIELD_LENGTHS.items():
+        if len(vFields[vName]) > vLength:
+            raise ValueError(f"{vName} de plus de {vLength} caractères")
+
+    if vFields["url"] and not re.match(r"https?://", vFields["url"]):
+        raise ValueError("lien qui n'est pas une adresse web")
+
+    try:
+        vAppliedAt = datetime.fromisoformat(str(pItem.get("applied_at"))).replace(
+            tzinfo=None
+        )
+
+    except ValueError as vException:
+        raise ValueError("date de candidature illisible") from vException
+
+    if vAppliedAt > pNow + timedelta(days=1):
+        raise ValueError("date de candidature dans le futur")
+
+    rFields = {**vFields, "applied_at": vAppliedAt}
+
+    return rFields
+
+
+def sync_quick_applications(pDatabaseFile, pItems, pNow):
+    """Enregistre les candidatures notées sur le téléphone sans passer par une offre.
+
+    Chacune devient une offre manuelle au statut Postulé, comme une candidature saisie
+    sur le PC. Un lot renvoyé après une coupure ne crée pas de doublon : une offre déjà
+    présente compte comme reçue.
+    """
+
+    # Import local : les offres manuelles chargent pandas, inutile pour le reste du module
+    from job.manual_offers import (  # pylint: disable=import-outside-toplevel
+        add_manual_offer,
+    )
+    from job.presentation import (
+        MANUAL_SOURCE,
+    )  # pylint: disable=import-outside-toplevel
+
+    if not isinstance(pItems, list) or len(pItems) > MAX_QUICK_APPLICATIONS:
+        raise ValueError(
+            f"Liste de {MAX_QUICK_APPLICATIONS} candidatures au plus attendue."
+        )
+
+    vAdded = 0
+    vKnown = 0
+    vRejected = []
+
+    for vItem in pItems:
+        try:
+            vFields = read_quick_application(vItem, pNow)
+            vSourceId = add_manual_offer(
+                pDatabaseFile,
+                {
+                    "title": vFields["title"] or "Candidature",
+                    "company": vFields["company"],
+                    "url": vFields["url"],
+                    "description": vFields["note"]
+                    or f"Candidature notée sur le téléphone le "
+                    f"{vFields['applied_at']:%d/%m/%Y}.",
+                },
+                vFields["applied_at"],
+            )
+
+        except ValueError as vException:
+            if "déjà dans la liste" in str(vException):
+                vKnown += 1
+            else:
+                vRejected.append(str(vException))
+            continue
+
+        save_application(
+            pDatabaseFile,
+            MANUAL_SOURCE,
+            vSourceId,
+            "APPLIED",
+            pNow=vFields["applied_at"],
+        )
+        vAdded += 1
+
+    # Les entreprises ne sont pas journalisées : la recherche d'emploi reste privée.
+    logger.info(
+        "Candidatures du téléphone : %s ajoutée(s), %s déjà reçue(s), %s refusée(s)",
+        vAdded,
+        vKnown,
+        len(vRejected),
+    )
+
+    rReport = {"added": vAdded, "known": vKnown, "rejected": vRejected}
+
+    return rReport

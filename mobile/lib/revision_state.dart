@@ -44,6 +44,7 @@ part 'state/interview_skills.dart';
 part 'state/preference_keys.dart';
 part 'state/sync_report.dart';
 part 'state/game_progress.dart';
+part 'state/quick_applications.dart';
 
 /// Les simulations sont dans des mixins, un fichier par simulation sous state/.
 class RevisionState extends ChangeNotifier
@@ -59,7 +60,8 @@ class RevisionState extends ChangeNotifier
         PuzzleSimulation,
         OralSimulation,
         InterviewSkills,
-        GameProgress {
+        GameProgress,
+        QuickApplications {
   RevisionState(
     this.store, {
     ApiClient Function(ServerSettings)? pClientFactory,
@@ -420,6 +422,8 @@ class RevisionState extends ChangeNotifier
         await pClient.uploadNotes(pendingNotes);
         await savePreference(pendingNotesPreference, <Map<String, dynamic>>[]);
       }
+
+      await sendQuickApplications(pClient);
 
       final vPrevious = offers;
 

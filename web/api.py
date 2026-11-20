@@ -34,6 +34,7 @@ from job.mobile_sync import (
     sync_exam_results,
     sync_flags,
     sync_phone_notes,
+    sync_quick_applications,
     sync_status_changes,
 )
 from job.profile import load_profile
@@ -378,6 +379,22 @@ def upload_status_changes(
 
     try:
         rReport = sync_status_changes(pDatabaseFile, pChanges, datetime.now())
+
+    except ValueError as vException:
+        raise HTTPException(status_code=400, detail=str(vException)) from vException
+
+    return rReport
+
+
+@router.post("/quick-applications", dependencies=[Depends(require_api_token)])
+def upload_quick_applications(
+    pItems: list = Body(..., embed=True, alias="applications"),
+    pDatabaseFile: str = Depends(get_database_file),
+):
+    """Enregistre les candidatures notées sur le téléphone, sans offre reçue."""
+
+    try:
+        rReport = sync_quick_applications(pDatabaseFile, pItems, datetime.now())
 
     except ValueError as vException:
         raise HTTPException(status_code=400, detail=str(vException)) from vException

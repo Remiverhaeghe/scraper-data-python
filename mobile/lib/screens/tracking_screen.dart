@@ -8,6 +8,7 @@ import '../logic/interview_alerts.dart';
 import '../revision_state.dart';
 import 'offer_detail_screen.dart';
 import 'offers_screen.dart';
+import 'quick_application_screen.dart';
 
 /// Date et heure lisibles, « 27/10 à 14:30 », ou la date seule.
 String formatMoment(String? pValue) {
@@ -56,6 +57,15 @@ class TrackingScreen extends StatelessWidget {
 
     final rScreen = Scaffold(
       appBar: AppBar(title: Text(context.texts.trackingMesCandidatures)),
+      // Candidature envoyée ailleurs : notée ici, enregistrée sur le PC ensuite
+      floatingActionButton: FloatingActionButton.extended(
+        tooltip: context.texts.quickOpen,
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => QuickApplicationScreen(state: state)),
+        ),
+        icon: const Icon(Icons.add),
+        label: Text(context.texts.quickTitle),
+      ),
       body: vApplications.isEmpty
           ? Center(
               child: Padding(

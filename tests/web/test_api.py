@@ -12,7 +12,7 @@ from job.quiz import load_active_quiz
 from job.quiz_exam import load_exam_results
 from storage.database import initialize_database
 from storage.job_applications import get_application, save_application
-from storage.job_offers import save_offers, set_availability
+from storage.job_offers import get_offers, save_offers, set_availability
 from storage.settings_repository import save_json_setting
 from web.app import app, get_database_file
 
@@ -261,6 +261,65 @@ def test_quick_notes_from_the_phone(api, tmp_path):
         f"[{vWrittenAt:%d/%m/%Y %H:%M}, téléphone] Rappel reçu, entretien à caler"
     )
     assert api.post("/api/v1/notes", json={"notes": "x"}).status_code == 422
+
+
+def test_quick_applications_from_the_phone(api, tmp_path):
+    """Vérifie les candidatures notées sur le téléphone : offre manuelle au statut Postulé."""
+
+    vDatabaseFile = tmp_path / "scraper.db"
+    vAppliedAt = datetime.now().replace(microsecond=0) - timedelta(days=2)
+    vItem = {
+        "company": "  Exemple   Industrie ",
+        "title": "Technicien de maintenance",
+        "url": "https://exemple.test/offre",
+        "note": "Envoyée par le site de l'entreprise",
+        "applied_at": vAppliedAt.isoformat(),
+    }
+
+    vReport = api.post(
+        "/api/v1/quick-applications",
+        json={
+            "applications": [
+                vItem,
+                vItem,
+                {**vItem, "company": " "},
+                {**vItem, "company": "Autre", "url": "javascript:alert(1)"},
+                {**vItem, "company": "Autre", "applied_at": "hier"},
+                {**vItem, "company": "Autre", "title": "x" * 301},
+                {
+                    **vItem,
+                    "company": "Futur",
+                    "applied_at": (datetime.now() + timedelta(days=3)).isoformat(),
+                },
+            ]
+        },
+    ).json()
+
+    assert vReport == {
+        "added": 1,
+        "known": 1,
+        "rejected": [
+            "entreprise manquante",
+            "lien qui n'est pas une adresse web",
+            "date de candidature illisible",
+            "title de plus de 300 caractères",
+            "date de candidature dans le futur",
+        ],
+    }
+    vOffers = get_offers(vDatabaseFile)
+    assert list(vOffers["company"]) == ["Exemple Industrie"]
+    assert list(vOffers["title"]) == ["Technicien de maintenance"]
+    assert list(vOffers["application_status"]) == ["APPLIED"]
+    assert (
+        api.post("/api/v1/quick-applications", json={"applications": "x"}).status_code
+        == 422
+    )
+    assert (
+        api.post(
+            "/api/v1/quick-applications", json={"applications": [vItem] * 51}
+        ).status_code
+        == 400
+    )
 
 
 def test_tracking_lists_applications_and_interview_sheets(api, tmp_path):

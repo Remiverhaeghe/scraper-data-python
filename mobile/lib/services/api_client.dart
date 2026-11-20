@@ -346,6 +346,22 @@ class ApiClient {
     return rReport;
   }
 
+  /// Envoie les candidatures notées sur le téléphone, sans offre reçue.
+  Future<Map<String, dynamic>> uploadQuickApplications(List<Map<String, dynamic>> pItems) async {
+    final vResponse = await send(
+      'Candidatures',
+      () => client.post(
+        buildUri('/quick-applications'),
+        headers: {...buildHeaders(), 'Content-Type': 'application/json'},
+        body: jsonEncode({'applications': pItems}),
+      ),
+    );
+
+    final rReport = decode(vResponse);
+
+    return rReport;
+  }
+
   /// Envoie les questions signalées comme fausses ou ambiguës.
   Future<Map<String, dynamic>> uploadFlags(List<String> pQuestionIds) async {
     final vResponse = await send(

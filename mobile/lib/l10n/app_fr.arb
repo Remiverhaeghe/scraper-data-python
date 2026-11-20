@@ -858,5 +858,33 @@
   "diveThursday": "Jeu",
   "diveFriday": "Ven",
   "diveSaturday": "Sam",
-  "diveSunday": "Dim"
+  "diveSunday": "Dim",
+  "quickTitle": "Noter une candidature",
+  "quickHelp": "Une candidature envoyée ailleurs que dans Tremplin : site de l'entreprise, salon, courrier. Elle rejoint vos candidatures sur le PC à la prochaine synchronisation.",
+  "quickCompany": "Entreprise",
+  "quickCompanyMissing": "Indiquez au moins l'entreprise",
+  "quickJobTitle": "Poste (facultatif)",
+  "quickLink": "Lien de l'annonce (facultatif)",
+  "quickNote": "Note (facultatif)",
+  "quickAppliedOn": "Envoyée le {day}",
+  "@quickAppliedOn": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "quickChangeDay": "Changer",
+  "quickSave": "Garder pour le PC",
+  "quickSaved": "Candidature gardée, elle partira au PC à la prochaine synchronisation.",
+  "quickPending": "{count, plural, =1{1 candidature en attente d'envoi} other{{count} candidatures en attente d'envoi}}",
+  "@quickPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "quickRemove": "Retirer cette candidature",
+  "quickOpen": "Noter une candidature envoyée ailleurs"
 }
