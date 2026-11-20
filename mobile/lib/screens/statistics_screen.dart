@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../l10n/texts.dart';
 import '../logic/statistics.dart';
 import '../revision_state.dart';
 import '../theme.dart';
@@ -22,7 +23,7 @@ class StatisticsScreen extends StatelessWidget {
     final vTextTheme = Theme.of(context).textTheme;
 
     final rScreen = Scaffold(
-      appBar: AppBar(title: const Text('Statistiques')),
+      appBar: AppBar(title: Text(context.texts.statisticsStatistiques)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -44,24 +45,24 @@ class StatisticsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Text('Derniers jours', style: vTextTheme.titleMedium),
+          Text(context.texts.statisticsDerniersJours, style: vTextTheme.titleMedium),
           Text(
-            'À la dernière synchronisation ; en vert, les réponses justes.',
+            context.texts.statisticsDerniereSynchronisationVertReponses,
             style: vTextTheme.bodySmall,
           ),
           const SizedBox(height: 8),
           if (vDays.isEmpty)
-            const Text('Aucune activité reçue : synchronisez une première fois.')
+            Text(context.texts.statisticsAucuneActiviteRecueSynchronisez)
           else
             ActivityChart(days: vDays),
           const SizedBox(height: 24),
-          Text('Par thème', style: vTextTheme.titleMedium),
-          Text('Les moins acquis en premier.', style: vTextTheme.bodySmall),
+          Text(context.texts.statisticsParTheme, style: vTextTheme.titleMedium),
+          Text(context.texts.statisticsMoinsAcquisPremier, style: vTextTheme.bodySmall),
           const SizedBox(height: 8),
           for (final vTheme in vThemes) ThemeProgress(theme: vTheme),
           if (state.examResults.isNotEmpty) ...[
             const SizedBox(height: 24),
-            Text('Examens blancs', style: vTextTheme.titleMedium),
+            Text(context.texts.statisticsExamensBlancs, style: vTextTheme.titleMedium),
             for (final vResult in state.examResults.take(10))
               ListTile(
                 contentPadding: EdgeInsets.zero,
@@ -162,7 +163,9 @@ class ThemeProgress extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
             color: theme.share >= 0.8 ? successColorOf(context) : null,
           ),
-          if (theme.due > 0) Text("${theme.due} à revoir aujourd'hui", style: vTextTheme.bodySmall),
+          if (theme.due > 0)
+            Text(context.texts.statisticsRevoirAujourdHui('${theme.due}'),
+                style: vTextTheme.bodySmall),
         ],
       ),
     );

@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../l10n/texts.dart';
 import '../revision_state.dart';
 
 const maxSkillLevel = 10;
@@ -24,29 +25,29 @@ class _SkillsScreenState extends State<SkillsScreen> {
 
   Future<void> save() async {
     final vMessenger = ScaffoldMessenger.of(context);
+    final vSaved = context.texts.skillsNiveauxEnregistresEnvoyesAu;
 
     await widget.state.saveSkillLevels(levels);
 
     vMessenger.showSnackBar(
-      const SnackBar(content: Text('Niveaux enregistrés : envoyés au PC à la synchronisation.')),
+      SnackBar(content: Text(vSaved)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final Widget vBody = levels.isEmpty
-        ? const Center(
+        ? Center(
             child: Padding(
-              padding: EdgeInsets.all(24),
-              child: Text('Synchronisez avec le PC pour recevoir la grille.'),
+              padding: const EdgeInsets.all(24),
+              child: Text(context.texts.skillsSynchronisezAvecPcPour),
             ),
           )
         : ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              const Text(
-                'Niveau de 0 (inconnue) à 10. Dès 5, la compétence compte dans le score '
-                'des offres ; de 1 à 4, ses thèmes sont proposés en priorité.',
+              Text(
+                context.texts.skillsNiveau0Inconnue10,
               ),
               for (final vSkill in levels.keys)
                 ListTile(
@@ -66,10 +67,13 @@ class _SkillsScreenState extends State<SkillsScreen> {
 
     final rScreen = Scaffold(
       appBar: AppBar(
-        title: const Text('Auto-évaluation'),
+        title: Text(context.texts.skillsAutoEvaluation),
         actions: [
           if (levels.isNotEmpty)
-            IconButton(tooltip: 'Enregistrer', onPressed: save, icon: const Icon(Icons.save)),
+            IconButton(
+                tooltip: context.texts.skillsEnregistrer,
+                onPressed: save,
+                icon: const Icon(Icons.save)),
         ],
       ),
       body: vBody,

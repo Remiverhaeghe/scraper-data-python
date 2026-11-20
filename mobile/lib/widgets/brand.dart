@@ -6,6 +6,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../l10n/texts.dart';
 import '../theme.dart';
 
 /// Le livre ouvert qui sert de tremplin, et le nageur qui en saute bras levés.
@@ -338,7 +339,7 @@ class GoalRing extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'sur $goal',
+                  context.texts.brandSur('$goal'),
                   style: TextStyle(fontSize: size * 0.13, color: Colors.white70),
                 ),
               ],

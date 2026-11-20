@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+import '../l10n/texts.dart';
 import '../services/connection_code.dart';
 
 class ScanScreen extends StatefulWidget {
@@ -47,19 +48,18 @@ class _ScanScreenState extends State<ScanScreen> {
   @override
   Widget build(BuildContext context) {
     final rScreen = Scaffold(
-      appBar: AppBar(title: const Text('Scanner le QR code')),
+      appBar: AppBar(title: Text(context.texts.scanScannerQrCode)),
       body: Column(
         children: [
           Expanded(
             child: MobileScanner(
               controller: controller,
               onDetect: handle,
-              errorBuilder: (_, pError) => const Center(
+              errorBuilder: (_, pError) => Center(
                 child: Padding(
-                  padding: EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(24),
                   child: Text(
-                    "Caméra indisponible : autorisez-la dans les réglages du téléphone, "
-                    "ou saisissez l'adresse et le jeton.",
+                    context.texts.scanCameraIndisponibleAutorisezDans,
                     textAlign: TextAlign.center,
                   ),
                 ),

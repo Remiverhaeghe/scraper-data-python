@@ -10,6 +10,10 @@ dependencies:
   crypto: ^3.0.8
   flutter:
     sdk: flutter
+  # Textes de l'application dans lib/l10n/app_fr.arb
+  flutter_localizations:
+    sdk: flutter
+  intl: any
   # Jeton de l'API rangé dans le stockage chiffré du téléphone
   flutter_local_notifications: ^23.0.0
   flutter_secure_storage: ^11.2.0
@@ -37,6 +41,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true
   # Paquet de révision livré : l'appli marche sans le PC
   assets:
     - assets/revision/

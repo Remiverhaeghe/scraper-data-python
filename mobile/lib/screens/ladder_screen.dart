@@ -7,6 +7,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../l10n/texts.dart';
 import '../logic/ladder.dart';
 import '../logic/ladder_game.dart';
 import '../revision_state.dart';
@@ -26,7 +27,7 @@ class LadderListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext pContext) => Scaffold(
-        appBar: AppBar(title: const Text("Simulateur d'automate")),
+        appBar: AppBar(title: Text(pContext.texts.commonSimulateurAutomate)),
         body: ListenableBuilder(
           listenable: state,
           builder: (pContext, _) => ListView(
@@ -294,7 +295,7 @@ class _LadderScreenState extends State<LadderScreen> {
             leading: Icon(Icons.warning_amber, color: vTheme.colorScheme.error),
             title: Text(vMessage as String),
           ),
-        const Text('Chronogramme : entrées en bleu, sorties en vert'),
+        Text(context.texts.ladderChronogrammeEntreesBleuSorties),
         buildDrawing(
           renderChronogram(
             List<String>.from(vRun['signals'] as List),
@@ -324,7 +325,7 @@ class _LadderScreenState extends State<LadderScreen> {
               style: vTheme.textTheme.bodySmall,
             ),
           ExpansionTile(
-            title: const Text('Indice'),
+            title: Text(context.texts.commonIndice2),
             tilePadding: EdgeInsets.zero,
             children: [Text(level['hint'] as String)],
           ),
@@ -333,9 +334,9 @@ class _LadderScreenState extends State<LadderScreen> {
             minLines: 5,
             maxLines: null,
             style: const TextStyle(fontFamily: 'monospace'),
-            decoration: const InputDecoration(
-              labelText: 'Programme, un barreau par ligne',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: context.texts.ladderProgrammeBarreauParLigne,
+              border: const OutlineInputBorder(),
             ),
             autocorrect: false,
             enableSuggestions: false,
@@ -346,7 +347,9 @@ class _LadderScreenState extends State<LadderScreen> {
             spacing: 8,
             children: [
               FilledButton.icon(
-                  onPressed: check, icon: const Icon(Icons.check), label: const Text('Vérifier')),
+                  onPressed: check,
+                  icon: const Icon(Icons.check),
+                  label: Text(context.texts.commonVerifier)),
               OutlinedButton.icon(
                 onPressed: toggleSimulation,
                 icon: Icon(timer == null ? Icons.play_arrow : Icons.stop),
@@ -354,7 +357,7 @@ class _LadderScreenState extends State<LadderScreen> {
               ),
               TextButton(
                 onPressed: () => setState(() => editor.text = level['solution'] as String),
-                child: const Text('Voir la solution'),
+                child: Text(context.texts.commonVoirSolution),
               ),
             ],
           ),

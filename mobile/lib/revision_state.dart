@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
 import 'logic/devops.dart';
+import 'logic/dive.dart';
 import 'logic/circuit_drawing.dart';
 import 'logic/code_puzzles.dart';
 import 'logic/excel_levels.dart';
@@ -40,127 +41,10 @@ part 'state/circuit_simulation.dart';
 part 'state/puzzle_simulation.dart';
 part 'state/oral_simulation.dart';
 part 'state/interview_skills.dart';
-
-/// Le serveur refuse plus de 500 réponses par envoi.
-const maxAnswersPerUpload = 500;
-
-/// Réponses accumulées avant un envoi automatique, si le réseau le permet.
-const autoSyncEvery = 10;
-
-/// Préférence du rappel quotidien
-const reminderPreference = 'reminder_enabled';
-const offerAlertPreference = 'offer_alerts';
-
-/// Réponses de recruteurs déjà notifiées, par identifiant.
-const notifiedRepliesPreference = 'notified_replies';
-
-/// Offres suivies retirées déjà notifiées, par source et identifiant.
-const notifiedWithdrawnPreference = 'notified_withdrawn';
-
-/// Apparence choisie : system (celle du téléphone), light ou dark.
-const appearancePreference = 'appearance';
-const appearances = ['system', 'light', 'dark'];
-
-/// Questions signalées, pas encore envoyées au PC
-const flaggedPreference = 'flagged_questions';
-
-/// Objectif de réponses par jour, et réponses déjà données ce jour-là
-const dailyGoalPreference = 'daily_goal';
-const goalDayPreference = 'goal_day';
-const goalCountPreference = 'goal_count';
-const defaultDailyGoal = 15;
-const dailyGoals = [10, 15, 25, 40];
-
-/// Statuts donnés aux offres sur le téléphone, pas encore envoyés au PC
-const pendingStatusPreference = 'pending_status';
-
-/// Notes rapides prises sur une offre, pas encore envoyées au PC
-const pendingNotesPreference = 'pending_notes';
-
-/// Candidatures en cours et fiches des entretiens à venir, lisibles hors ligne
-const trackingPreference = 'tracking';
-
-/// Progression reçue du PC (niveau, série, quêtes) et dernier niveau fêté ici
-const gamePreference = 'game';
-const celebratedLevelPreference = 'celebrated_level';
-
-/// Semaine du dernier bilan annoncé : une seule notification par saison.
-const notifiedSeasonPreference = 'notified_season';
-
-/// Meilleur score du jeu « Contre la montre »
-const timeAttackBestPreference = 'time_attack_best';
-
-/// Avant un entretien, la fiche de préparation est proposée sur l'accueil.
-const interviewSheetLead = Duration(hours: 24);
-
-/// Taille d'une note rapide, la même limite que côté PC
-const maxNoteLength = 1000;
-
-/// Simulation d'entretien : questions reçues du PC et séries pas encore envoyées
-const interviewPreference = 'interview_content';
-const pendingInterviewPreference = 'pending_interview';
-const labsPreference = 'labs_content';
-const pendingLabsPreference = 'pending_labs';
-const labScoresPreference = 'lab_scores';
-const ladderPassedPreference = 'ladder_passed';
-const ladderProgramsPreference = 'ladder_programs';
-const gitBestPreference = 'git_best';
-const gitHistoriesPreference = 'git_histories';
-const devopsPassedPreference = 'devops_passed';
-const devopsSessionsPreference = 'devops_sessions';
-const sqlDialectPreference = 'sql_dialect';
-const sqlPassedPreference = 'sql_passed';
-const sqlQueriesPreference = 'sql_queries';
-const excelPassedPreference = 'excel_passed';
-const excelFormulasPreference = 'excel_formulas';
-const circuitPassedPreference = 'circuit_passed';
-const circuitDraftsPreference = 'circuit_drafts';
-const puzzleProgressPreference = 'puzzle_progress';
-const puzzleSeriesPreference = 'puzzle_series';
-const puzzleRecapPreference = 'puzzle_recap';
-
-/// Auto-évaluation : grille reçue du PC et niveaux saisis pas encore envoyés
-const skillGridPreference = 'skill_grid';
-const pendingSkillsPreference = 'pending_skills';
-
-/// Statuts qu'une offre peut recevoir sur le téléphone, avec leur libellé
-const offerStatuses = {
-  'INTERESTED': 'Intéressé',
-  'APPLIED': 'Postulé',
-  'IGNORED': 'Ignorée',
-};
-
-/// Libellés affichés, entretien compris : ce statut se donne sur le PC
-const offerStatusLabels = {...offerStatuses, 'INTERVIEW': 'Entretien'};
-
-/// Offres retenues, gardées par le PC sur le téléphone même anciennes
-const retainedStatuses = {'INTERESTED', 'APPLIED', 'INTERVIEW'};
-
-/// Vibration à la correction : courte si juste, appuyée si faux
-const hapticsPreference = 'haptics';
-
-/// Agrandissement du texte, en plus de celui réglé sur le téléphone.
-const textScalePreference = 'text_scale';
-const textScales = [1.0, 1.15, 1.3];
-
-/// Bilan d'une synchronisation, montré à l'utilisateur.
-class SyncReport {
-  const SyncReport({required this.sent, required this.rejected, required this.contentUpdated});
-
-  final int sent;
-  final int rejected;
-  final bool contentUpdated;
-
-  String describe() {
-    final rText = [
-      if (sent > 0) '$sent réponse(s) envoyée(s)',
-      if (rejected > 0) '$rejected refusée(s) par le serveur',
-      contentUpdated ? 'questions mises à jour' : 'questions déjà à jour',
-    ].join(', ');
-
-    return rText;
-  }
-}
+part 'state/preference_keys.dart';
+part 'state/sync_report.dart';
+part 'state/game_progress.dart';
+part 'state/quick_applications.dart';
 
 /// Les simulations sont dans des mixins, un fichier par simulation sous state/.
 class RevisionState extends ChangeNotifier
@@ -175,7 +59,9 @@ class RevisionState extends ChangeNotifier
         CircuitSimulation,
         PuzzleSimulation,
         OralSimulation,
-        InterviewSkills {
+        InterviewSkills,
+        GameProgress,
+        QuickApplications {
   RevisionState(
     this.store, {
     ApiClient Function(ServerSettings)? pClientFactory,
@@ -192,6 +78,7 @@ class RevisionState extends ChangeNotifier
   final ApiClient Function(ServerSettings) clientFactory;
 
   /// Rappel quotidien ; absent dans les tests, qui n'ont pas de notifications.
+  @override
   final Reminders? reminders;
 
   /// Widget de l'écran d'accueil ; absent dans les tests.
@@ -216,6 +103,7 @@ class RevisionState extends ChangeNotifier
   Map<String, dynamic> preferences = {};
   bool syncing = false;
 
+  @override
   bool get reminderEnabled => preferences[reminderPreference] == true;
 
   bool get offerAlertsEnabled => preferences[offerAlertPreference] == true;
@@ -535,6 +423,8 @@ class RevisionState extends ChangeNotifier
         await savePreference(pendingNotesPreference, <Map<String, dynamic>>[]);
       }
 
+      await sendQuickApplications(pClient);
+
       final vPrevious = offers;
 
       offers = await pClient.downloadOffers();
@@ -764,83 +654,6 @@ class RevisionState extends ChangeNotifier
     return rNext;
   }
 
-  /// Progression reçue du PC, ou null avant la première synchronisation.
-  Map<String, dynamic>? get game {
-    final vGame = preferences[gamePreference];
-
-    final rGame = vGame is Map ? Map<String, dynamic>.from(vGame) : null;
-
-    return rGame;
-  }
-
-  /// Niveau atteint depuis la dernière fête, ou null : la première progression
-  /// reçue sert de référence, sans fête pour l'historique.
-  int? get levelToCelebrate {
-    final vLevel = (game?['level'] as num?)?.toInt();
-    final vCelebrated = (preferences[celebratedLevelPreference] as num?)?.toInt();
-
-    final rLevel = vLevel != null && vCelebrated != null && vLevel > vCelebrated ? vLevel : null;
-
-    return rLevel;
-  }
-
-  /// Note le niveau actuel comme fêté.
-  Future<void> markLevelCelebrated() async {
-    final vLevel = (game?['level'] as num?)?.toInt();
-
-    if (vLevel != null) {
-      await savePreference(celebratedLevelPreference, vLevel);
-    }
-  }
-
-  /// Garde la progression du PC ; la première reçue devient la référence des fêtes.
-  Future<void> exchangeGame(ApiClient pClient) async {
-    try {
-      final vGame = await pClient.downloadGame();
-
-      await savePreference(gamePreference, vGame);
-
-      if (preferences[celebratedLevelPreference] == null && vGame['level'] is num) {
-        await savePreference(celebratedLevelPreference, vGame['level'] as num);
-      }
-
-      await notifySeason(vGame['season']);
-    } on ApiException catch (vException) {
-      if (vException.unreachable) {
-        rethrow;
-      }
-
-      log('Progression non reçue : ${vException.message}', name: 'sync');
-    }
-  }
-
-  /// Annonce une fois le bilan d'une nouvelle semaine, si les rappels sont actifs.
-  Future<void> notifySeason(Object? pSeason) async {
-    if (pSeason is! Map || preferences[notifiedSeasonPreference] == '${pSeason['key']}') {
-      return;
-    }
-
-    if (reminderEnabled && reminders != null) {
-      await reminders!.showSeasonReview(Map<String, dynamic>.from(pSeason));
-    }
-
-    await savePreference(notifiedSeasonPreference, '${pSeason['key']}');
-  }
-
-  /// Meilleur score du jeu « Contre la montre », 0 avant la première partie.
-  int get timeAttackBest => (preferences[timeAttackBestPreference] as num?)?.toInt() ?? 0;
-
-  /// Garde le score s'il bat le record ; retourne si c'est un nouveau record.
-  Future<bool> recordTimeAttack(int pScore) async {
-    final rRecord = pScore > timeAttackBest;
-
-    if (rRecord) {
-      await savePreference(timeAttackBestPreference, pScore);
-    }
-
-    return rRecord;
-  }
-
   /// Garde les candidatures et les fiches pour une consultation hors ligne ; un
   /// serveur plus ancien qui ne les connaît pas n'empêche pas la synchronisation.
   Future<void> exchangeTracking(ApiClient pClient) async {
@@ -966,6 +779,7 @@ class RevisionState extends ChangeNotifier
       goalCountPreference: answersToday + 1,
     };
     await store.savePreferences(preferences);
+    await recordDive(rGrade.correct, pAt: vNow);
 
     schedule = {
       ...schedule,

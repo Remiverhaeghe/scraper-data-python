@@ -5,6 +5,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../l10n/texts.dart';
 import '../logic/exam.dart';
 import '../logic/grading.dart';
 import '../models/quiz_package.dart';
@@ -111,27 +112,30 @@ class _ExamScreenState extends State<ExamScreen> {
       children: [
         Text('${pResult.score} %', style: vTextTheme.displaySmall),
         Text(
-          '${pResult.correct} / ${pResult.count} bonnes réponses en '
-          '${pResult.seconds ~/ 60} min ${(pResult.seconds % 60).toString().padLeft(2, '0')} s'
-          '${pResult.overtime ? ', au-delà de la durée conseillée' : ''}.',
+          context.texts.examBonnesReponsesMin(
+              '${pResult.correct}',
+              '${pResult.count}',
+              '${pResult.seconds ~/ 60}',
+              (pResult.seconds % 60).toString().padLeft(2, '0'),
+              pResult.overtime ? ', au-delà de la durée conseillée' : ''),
         ),
         const SizedBox(height: 16),
         if (wrong.isEmpty)
-          const Text('Aucune erreur.')
+          Text(context.texts.examAucuneErreur)
         else ...[
-          Text('À revoir', style: vTextTheme.titleMedium),
+          Text(context.texts.examRevoir, style: vTextTheme.titleMedium),
           for (final (vQuestion, vGrade) in wrong)
             Card(
               child: ListTile(
                 title: Text(vQuestion.text),
-                subtitle: Text('Réponse : ${vGrade.expected}'),
+                subtitle: Text(context.texts.commonReponse(vGrade.expected)),
               ),
             ),
         ],
         const SizedBox(height: 16),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text("Terminer l'examen"),
+          child: Text(context.texts.examTerminerExamen),
         ),
       ],
     );
@@ -158,7 +162,7 @@ class _ExamScreenState extends State<ExamScreen> {
         LinearProgressIndicator(value: (index + 1) / questions.length),
         const SizedBox(height: 12),
         Text(
-          'Question ${index + 1} / ${questions.length}',
+          context.texts.examQuestion('${index + 1}', '${questions.length}'),
           style: Theme.of(context).textTheme.labelLarge,
         ),
         const SizedBox(height: 8),
@@ -179,7 +183,7 @@ class _ExamScreenState extends State<ExamScreen> {
         if (vGrade == null)
           FilledButton(
             onPressed: response == null ? null : validate,
-            child: const Text('Valider'),
+            child: Text(context.texts.commonValider),
           )
         else ...[
           ResultPanel(grade: vGrade, explanation: vQuestion.explanation),
@@ -203,7 +207,7 @@ class _ExamScreenState extends State<ExamScreen> {
     final rScreen = Scaffold(
       appBar: AppBar(title: Text(widget.title)),
       body: questions.isEmpty
-          ? const Center(child: Text('Aucune question pour cet examen.'))
+          ? Center(child: Text(context.texts.examAucuneQuestionPourCet))
           : vResult == null
               ? buildQuestion()
               : buildSummary(vResult),

@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../l10n/texts.dart';
 import '../revision_state.dart';
 
 class ExcelListScreen extends StatelessWidget {
@@ -13,7 +14,7 @@ class ExcelListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext pContext) => Scaffold(
-        appBar: AppBar(title: const Text('Atelier Excel')),
+        appBar: AppBar(title: Text(pContext.texts.commonAtelierExcel)),
         body: ListenableBuilder(
           listenable: state,
           builder: (pContext, _) {
@@ -27,8 +28,7 @@ class ExcelListScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               children: [
                 Text(
-                  "Noms de fonctions et point-virgule d'Excel en français : =SOMME(B2:B6), "
-                  '=SI(B2>0;"oui";"non").',
+                  pContext.texts.excelNomsFonctionsPointVirgule,
                   style: Theme.of(pContext).textTheme.bodySmall,
                 ),
                 for (final vEntry in vSeries.entries) ...[
@@ -183,13 +183,15 @@ class _ExcelScreenState extends State<ExcelScreen> {
       children: [
         if (run['passed'] == true) ...[
           Text(
-            'Niveau réussi${first ? ' · +${widget.state.excelXp} XP au retour sur le PC' : ''}',
+            context.texts.commonNiveauReussi(
+                first ? ' · +${widget.state.excelXp} XP au retour sur le PC' : ''),
             style: vTheme.textTheme.titleMedium?.copyWith(color: Colors.green.shade700),
           ),
           Text(level['explanation'] as String? ?? ''),
         ] else ...[
           Text(run['message'] as String, style: TextStyle(color: vTheme.colorScheme.error)),
-          for (final vAdvice in run['advice'] as List) Text('Conseil : $vAdvice'),
+          for (final vAdvice in run['advice'] as List)
+            Text(context.texts.commonConseil('$vAdvice')),
         ],
         for (final vCell in run['cells'] as List)
           Text(
@@ -229,8 +231,8 @@ class _ExcelScreenState extends State<ExcelScreen> {
             textInputAction: TextInputAction.done,
             onSubmitted: (_) => validate(),
             decoration: InputDecoration(
-              labelText: 'Formule de ${level['cell']}',
-              prefixText: 'fx  ',
+              labelText: context.texts.excelFormule('${level['cell']}'),
+              prefixText: context.texts.excelFx,
               border: const OutlineInputBorder(),
             ),
           ),
@@ -240,16 +242,18 @@ class _ExcelScreenState extends State<ExcelScreen> {
               FilledButton.icon(
                 onPressed: validate,
                 icon: const Icon(Icons.check),
-                label: const Text('Valider'),
+                label: Text(context.texts.commonValider),
               ),
               TextButton(
-                  onPressed: () => setState(() => showHint = true), child: const Text('Indice')),
+                  onPressed: () => setState(() => showHint = true),
+                  child: Text(context.texts.commonIndice2)),
               TextButton(
                   onPressed: () => setState(() => editor.text = level['solution'] as String),
-                  child: const Text('Voir la solution')),
+                  child: Text(context.texts.commonVoirSolution)),
             ],
           ),
-          if (showHint) Text('Indice : ${level['hint']}', style: vTheme.textTheme.bodySmall),
+          if (showHint)
+            Text(context.texts.commonIndice('${level['hint']}'), style: vTheme.textTheme.bodySmall),
           if (tried) buildVerdict(),
         ],
       ),

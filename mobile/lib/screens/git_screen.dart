@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../l10n/texts.dart';
 import '../logic/git_levels.dart';
 import '../logic/git_repository.dart';
 import '../logic/git_worktree.dart';
@@ -63,7 +64,7 @@ class GitListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext pContext) => Scaffold(
-        appBar: AppBar(title: const Text('Bac à sable Git')),
+        appBar: AppBar(title: Text(pContext.texts.commonBacSableGit)),
         body: ListenableBuilder(
           listenable: state,
           builder: (pContext, _) {
@@ -216,8 +217,9 @@ class _GitScreenState extends State<GitScreen> {
           ],
           if (vWorktree.isNotEmpty || vGoalWorktree.isNotEmpty)
             Text(
-              'Fichiers : ${vWorktree.isEmpty ? 'rien en cours' : vWorktree.join(' · ')}. '
-              'Objectif : ${vGoalWorktree.isEmpty ? 'rien en cours' : vGoalWorktree.join(' · ')}.',
+              context.texts.gitFichiersObjectif(
+                  vWorktree.isEmpty ? 'rien en cours' : vWorktree.join(' · '),
+                  vGoalWorktree.isEmpty ? 'rien en cours' : vGoalWorktree.join(' · ')),
               style: vTheme.textTheme.bodySmall,
             ),
           if (message.isNotEmpty)
@@ -232,11 +234,13 @@ class _GitScreenState extends State<GitScreen> {
               enableSuggestions: false,
               style: const TextStyle(fontFamily: 'monospace'),
               decoration: InputDecoration(
-                labelText: 'Commande',
-                hintText: 'git commit',
+                labelText: context.texts.commonCommande,
+                hintText: context.texts.gitGitCommit,
                 border: const OutlineInputBorder(),
-                suffixIcon:
-                    IconButton(icon: const Icon(Icons.send), tooltip: 'Exécuter', onPressed: run),
+                suffixIcon: IconButton(
+                    icon: const Icon(Icons.send),
+                    tooltip: context.texts.commonExecuter,
+                    onPressed: run),
               ),
               onSubmitted: (_) => run(),
             ),
@@ -255,24 +259,28 @@ class _GitScreenState extends State<GitScreen> {
             ),
           ],
           if (history.isNotEmpty)
-            Text('Commandes : ${history.join(' · ')}', style: vTheme.textTheme.bodySmall),
+            Text(context.texts.gitCommandes(history.join(' · ')),
+                style: vTheme.textTheme.bodySmall),
           Wrap(
             spacing: 8,
             children: [
               if (history.isNotEmpty && !vDone)
                 TextButton(
                     onPressed: () => restart(history.sublist(0, history.length - 1)),
-                    child: const Text('Annuler')),
-              TextButton(onPressed: () => restart([]), child: const Text('Recommencer')),
+                    child: Text(context.texts.commonAnnuler)),
               TextButton(
-                  onPressed: () => setState(() => showHint = true), child: const Text('Indice')),
+                  onPressed: () => restart([]), child: Text(context.texts.commonRecommencer)),
+              TextButton(
+                  onPressed: () => setState(() => showHint = true),
+                  child: Text(context.texts.commonIndice2)),
               TextButton(
                   onPressed: () => setState(() => showSolution = true),
-                  child: const Text('Solution')),
+                  child: Text(context.texts.commonSolution)),
             ],
           ),
-          if (showHint) Text('Indice : ${level['hint']}'),
-          if (showSolution) Text('Solution : ${(level['solution'] as List).join(' · ')}'),
+          if (showHint) Text(context.texts.commonIndice('${level['hint']}')),
+          if (showSolution)
+            Text(context.texts.gitSolution((level['solution'] as List).join(' · '))),
         ],
       ),
     );

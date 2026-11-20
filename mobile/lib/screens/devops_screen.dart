@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../l10n/texts.dart';
 import '../logic/devops.dart';
 import '../revision_state.dart';
 
@@ -29,7 +30,7 @@ class DevopsListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext pContext) => Scaffold(
-        appBar: AppBar(title: const Text('Maven et Docker')),
+        appBar: AppBar(title: Text(pContext.texts.commonMavenDocker)),
         body: ListenableBuilder(
           listenable: state,
           builder: (pContext, _) {
@@ -210,10 +211,12 @@ class _DevopsScreenState extends State<DevopsScreen> {
             autocorrect: false,
             enableSuggestions: false,
             decoration: InputDecoration(
-              labelText: 'Commande',
+              labelText: context.texts.commonCommande,
               border: const OutlineInputBorder(),
-              suffixIcon:
-                  IconButton(icon: const Icon(Icons.send), tooltip: 'Exécuter', onPressed: run),
+              suffixIcon: IconButton(
+                  icon: const Icon(Icons.send),
+                  tooltip: context.texts.commonExecuter,
+                  onPressed: run),
             ),
             onSubmitted: (_) => run(),
           ),
@@ -254,22 +257,24 @@ class _DevopsScreenState extends State<DevopsScreen> {
           Wrap(
             spacing: 8,
             children: [
-              TextButton(onPressed: restart, child: const Text('Recommencer')),
+              TextButton(onPressed: restart, child: Text(context.texts.commonRecommencer)),
               TextButton(
-                  onPressed: () => setState(() => showHint = true), child: const Text('Indice')),
+                  onPressed: () => setState(() => showHint = true),
+                  child: Text(context.texts.commonIndice2)),
               TextButton(
                 onPressed: () => setState(() {
                   showSolution = true;
                   file.text = level['solution'] as String;
                 }),
-                child: const Text('Solution'),
+                child: Text(context.texts.commonSolution),
               ),
             ],
           ),
-          if (showHint) Text('Indice : ${level['hint']}', style: vTheme.textTheme.bodySmall),
+          if (showHint)
+            Text(context.texts.commonIndice('${level['hint']}'), style: vTheme.textTheme.bodySmall),
           if (showSolution)
             Text(
-              'Commandes de la solution : ${(level['commands'] as List).join(' · ')}',
+              context.texts.devopsCommandesSolution((level['commands'] as List).join(' · ')),
               style: vTheme.textTheme.bodySmall,
             ),
         ],

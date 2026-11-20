@@ -64,6 +64,9 @@ jobs:
       - name: Installation des dépendances
         run: flutter pub get
 
+      - name: Textes de l'application
+        run: flutter gen-l10n
+
       - name: Construction
         # Numéro de construction croissant : Android refuse une mise à jour dont le
         # versionCode n'augmente pas

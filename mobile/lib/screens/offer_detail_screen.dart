@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../l10n/texts.dart';
 import '../revision_state.dart';
 import '../theme.dart';
 
@@ -35,27 +36,29 @@ class OfferDetailScreen extends StatelessWidget {
 
   Future<void> writeNote(BuildContext pContext) async {
     final vMessenger = ScaffoldMessenger.of(pContext);
+    final vKept = pContext.texts.offerDetailNoteGardeeElleRejoint;
     final vController = TextEditingController();
     final vText = await showDialog<String>(
       context: pContext,
       builder: (pDialogContext) => AlertDialog(
-        title: const Text('Note rapide'),
+        title: Text(pContext.texts.offerDetailNoteRapide),
         content: TextField(
           controller: vController,
           autofocus: true,
           minLines: 3,
           maxLines: 6,
           maxLength: maxNoteLength,
-          decoration: const InputDecoration(hintText: 'Appel du recruteur, impression, à faire…'),
+          decoration:
+              InputDecoration(hintText: pContext.texts.offerDetailAppelRecruteurImpressionFaire),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(pDialogContext).pop(),
-            child: const Text('Annuler'),
+            child: Text(pContext.texts.commonAnnuler),
           ),
           FilledButton(
             onPressed: () => Navigator.of(pDialogContext).pop(vController.text),
-            child: const Text('Garder'),
+            child: Text(pContext.texts.offerDetailGarder),
           ),
         ],
       ),
@@ -68,10 +71,7 @@ class OfferDetailScreen extends StatelessWidget {
     }
 
     await onNote!(vText);
-    vMessenger.showSnackBar(
-      const SnackBar(
-          content: Text('Note gardée : elle rejoint la candidature à la synchronisation.')),
-    );
+    vMessenger.showSnackBar(SnackBar(content: Text(vKept)));
   }
 
   /// Couleur du diplôme demandé : vert accessible, orange un niveau au-dessus,
@@ -103,14 +103,15 @@ class OfferDetailScreen extends StatelessWidget {
     final vMapUri = buildMapUri(offer);
 
     final rScreen = Scaffold(
-      appBar: AppBar(title: const Text('Offre')),
+      appBar: AppBar(title: Text(context.texts.offerDetailOffre)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Text('${offer['title'] ?? ''}', style: vTheme.textTheme.titleLarge),
           if (vDetails.isNotEmpty) Text(vDetails, style: vTheme.textTheme.bodyMedium),
           if (offer['match_score'] != null)
-            Text('${offer['match_score']} % de correspondance avec votre profil'),
+            Text(
+                context.texts.commonDetailCorrespondanceAvecVotreProfil('${offer['match_score']}')),
           if (offer['education'] != null)
             Padding(
               padding: const EdgeInsets.only(top: 6),
@@ -155,14 +156,14 @@ class OfferDetailScreen extends StatelessWidget {
           FilledButton.icon(
             onPressed: onOpen,
             icon: const Icon(Icons.open_in_new),
-            label: const Text("Ouvrir l'annonce"),
+            label: Text(context.texts.offerDetailOuvrirAnnonce),
           ),
           if (onNote != null) ...[
             const SizedBox(height: 8),
             OutlinedButton.icon(
               onPressed: () => writeNote(context),
               icon: const Icon(Icons.edit_note),
-              label: const Text('Note rapide'),
+              label: Text(context.texts.offerDetailNoteRapide),
             ),
           ],
           if (vMapUri != null) ...[
@@ -170,7 +171,7 @@ class OfferDetailScreen extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: () => launchUrl(vMapUri, mode: LaunchMode.externalApplication),
               icon: const Icon(Icons.map_outlined),
-              label: const Text('Voir sur la carte'),
+              label: Text(context.texts.offerDetailVoirSurCarte),
             ),
           ],
         ],

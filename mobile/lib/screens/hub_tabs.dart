@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../l10n/texts.dart';
 import '../revision_state.dart';
 import '../theme.dart';
 import 'interview_screen.dart';
@@ -69,7 +70,7 @@ class InterviewHub extends StatelessWidget {
     final vSheet = vNext == null ? null : state.sheetOf(vNext);
 
     final rTab = Scaffold(
-      appBar: AppBar(title: const Text('Entretien')),
+      appBar: AppBar(title: Text(context.texts.hubEntretien)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -119,7 +120,7 @@ class MoreTab extends StatelessWidget {
     final vPackage = state.package;
 
     final rTab = Scaffold(
-      appBar: AppBar(title: const Text('Plus')),
+      appBar: AppBar(title: Text(context.texts.hubPlus)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

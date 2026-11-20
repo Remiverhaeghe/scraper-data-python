@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../l10n/texts.dart';
 import '../logic/sql_levels.dart';
 import '../logic/sql_sandbox.dart';
 import '../revision_state.dart';
@@ -38,7 +39,7 @@ class SqlListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext pContext) => Scaffold(
-        appBar: AppBar(title: const Text('Bac à sable SQL')),
+        appBar: AppBar(title: Text(pContext.texts.commonBacSableSql)),
         body: ListenableBuilder(
           listenable: state,
           builder: (pContext, _) {
@@ -180,23 +181,26 @@ class _SqlScreenState extends State<SqlScreen> {
       children: [
         if (vRun['passed'] == true) ...[
           Text(
-            'Niveau réussi${first ? ' · +${widget.state.sqlXp} XP au retour sur le PC' : ''}',
+            context.texts.commonNiveauReussi(
+                first ? ' · +${widget.state.sqlXp} XP au retour sur le PC' : ''),
             style: vTheme.textTheme.titleMedium?.copyWith(color: Colors.green.shade700),
           ),
           Text(level['explanation'] as String? ?? ''),
         ] else ...[
           Text(vRun['message'] as String, style: TextStyle(color: vTheme.colorScheme.error)),
-          for (final vAdvice in vRun['advice'] as List) Text('Conseil : $vAdvice'),
+          for (final vAdvice in vRun['advice'] as List)
+            Text(context.texts.commonConseil('$vAdvice')),
         ],
         const SizedBox(height: 8),
         Text(
-          'Votre résultat · ${vResult['changed'] != null ? '${vResult['changed']} ligne(s) modifiée(s) · ' : ''}'
-          '${vResult['truncated'] == true ? '200 premières lignes' : '$vRows ligne(s)'}',
+          context.texts.sqlVotreResultat(
+              vResult['changed'] != null ? '${vResult['changed']} ligne(s) modifiée(s) · ' : '',
+              vResult['truncated'] == true ? '200 premières lignes' : '$vRows ligne(s)'),
           style: vTheme.textTheme.labelLarge,
         ),
         ResultTable(columns: vResult['columns'] as List, rows: vResult['rows'] as List),
         const SizedBox(height: 8),
-        Text('Résultat attendu', style: vTheme.textTheme.labelLarge),
+        Text(context.texts.sqlResultatAttendu, style: vTheme.textTheme.labelLarge),
         ResultTable(columns: vExpected['columns'] as List, rows: vExpected['rows'] as List),
       ],
     );
@@ -218,7 +222,7 @@ class _SqlScreenState extends State<SqlScreen> {
             const SizedBox(height: 8),
             Text(level['goal'] as String),
             ExpansionTile(
-              title: const Text('Tables de la base'),
+              title: Text(context.texts.sqlTablesBase),
               tilePadding: EdgeInsets.zero,
               children: [
                 for (final vTable in widget.state.sqlPackage['schema'] as List? ?? const [])
@@ -238,8 +242,8 @@ class _SqlScreenState extends State<SqlScreen> {
               autocorrect: false,
               enableSuggestions: false,
               decoration: InputDecoration(
-                labelText:
-                    'Requête ${widget.state.sqlDialect == 'sqlserver' ? 'SQL Server' : 'MySQL'}',
+                labelText: context.texts
+                    .sqlRequete(widget.state.sqlDialect == 'sqlserver' ? 'SQL Server' : 'MySQL'),
                 border: const OutlineInputBorder(),
               ),
             ),
@@ -253,17 +257,19 @@ class _SqlScreenState extends State<SqlScreen> {
                       ? const SizedBox(
                           width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                       : const Icon(Icons.play_arrow),
-                  label: const Text('Exécuter'),
+                  label: Text(context.texts.commonExecuter),
                 ),
                 TextButton(
-                    onPressed: () => setState(() => showHint = true), child: const Text('Indice')),
+                    onPressed: () => setState(() => showHint = true),
+                    child: Text(context.texts.commonIndice2)),
                 TextButton(
                     onPressed: () => setState(() => editor.text = vSolution),
-                    child: const Text('Voir la solution')),
+                    child: Text(context.texts.commonVoirSolution)),
               ],
             ),
             if (showHint)
-              Text('Indice : ${pick(level, 'hint', dialect)}', style: vTheme.textTheme.bodySmall),
+              Text(context.texts.commonIndice('${pick(level, 'hint', dialect)}'),
+                  style: vTheme.textTheme.bodySmall),
             if (run != null) buildRun(),
           ],
         ),

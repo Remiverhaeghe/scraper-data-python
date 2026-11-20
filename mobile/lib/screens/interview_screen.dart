@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../l10n/texts.dart';
 import '../revision_state.dart';
 
 /// Questions d'une série, au plus
@@ -79,10 +80,10 @@ class _InterviewScreenState extends State<InterviewScreen> {
     final Widget vBody;
 
     if (widget.state.interviewQuestions.isEmpty) {
-      vBody = const Center(
+      vBody = Center(
         child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Text('Synchronisez avec le PC pour recevoir les questions.'),
+          padding: const EdgeInsets.all(24),
+          child: Text(context.texts.interviewSynchronisezAvecPcPour),
         ),
       );
     } else if (questions.isEmpty) {
@@ -94,7 +95,7 @@ class _InterviewScreenState extends State<InterviewScreen> {
     }
 
     final rScreen = Scaffold(
-      appBar: AppBar(title: const Text("Simulation d'entretien")),
+      appBar: AppBar(title: Text(context.texts.interviewSimulationEntretien)),
       body: vBody,
     );
 
@@ -105,9 +106,8 @@ class _InterviewScreenState extends State<InterviewScreen> {
     final rStart = ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        const Text(
-          'Cinq questions ouvertes, comme face à un recruteur. Répondez, puis cochez '
-          'les points clés que vous avez cités.',
+        Text(
+          context.texts.interviewCinqQuestionsOuvertesComme,
         ),
         const SizedBox(height: 16),
         DropdownButton<String>(
@@ -119,7 +119,7 @@ class _InterviewScreenState extends State<InterviewScreen> {
           onChanged: (pTheme) => setState(() => theme = pTheme),
         ),
         const SizedBox(height: 16),
-        FilledButton(onPressed: start, child: const Text('Commencer')),
+        FilledButton(onPressed: start, child: Text(context.texts.interviewCommencer)),
       ],
     );
 
@@ -134,30 +134,31 @@ class _InterviewScreenState extends State<InterviewScreen> {
       padding: const EdgeInsets.all(16),
       children: [
         Text(
-          '${pQuestion['theme']} · question ${position + 1} sur ${questions.length}',
+          context.texts.interviewQuestionSur(
+              '${pQuestion['theme']}', '${position + 1}', '${questions.length}'),
           style: vTheme.textTheme.bodySmall,
         ),
         const SizedBox(height: 8),
         Text('${pQuestion['question']}', style: vTheme.textTheme.titleMedium),
         const SizedBox(height: 12),
-        const TextField(
+        TextField(
           minLines: 3,
           maxLines: 8,
           decoration: InputDecoration(
-            border: OutlineInputBorder(),
-            hintText: 'Votre réponse, pour vous entraîner à la formuler',
+            border: const OutlineInputBorder(),
+            hintText: context.texts.interviewVotreReponsePourVous,
           ),
         ),
         const SizedBox(height: 12),
         if (!revealed)
           OutlinedButton(
             onPressed: () => setState(() => revealed = true),
-            child: const Text('Voir la réponse attendue'),
+            child: Text(context.texts.interviewVoirReponseAttendue),
           )
         else ...[
           Text('${pQuestion['answer']}'),
           const SizedBox(height: 12),
-          Text('Cochez les points clés cités :', style: vTheme.textTheme.labelLarge),
+          Text(context.texts.interviewCochezPointsClesCites, style: vTheme.textTheme.labelLarge),
           for (var vIndex = 0; vIndex < vPoints.length; vIndex++)
             CheckboxListTile(
               value: checked.contains(vIndex),
@@ -166,7 +167,7 @@ class _InterviewScreenState extends State<InterviewScreen> {
                 () => pValue ?? false ? checked.add(vIndex) : checked.remove(vIndex),
               ),
             ),
-          FilledButton(onPressed: validate, child: const Text('Valider et continuer')),
+          FilledButton(onPressed: validate, child: Text(context.texts.interviewValiderContinuer)),
         ],
       ],
     );
@@ -185,16 +186,16 @@ class _InterviewScreenState extends State<InterviewScreen> {
       padding: const EdgeInsets.all(16),
       children: [
         Text(
-          'Série terminée : $vScore % des points clés cités.',
+          context.texts.interviewSerieTermineePointsCles('$vScore'),
           style: Theme.of(context).textTheme.titleMedium,
         ),
         if (vWeak.isNotEmpty) ...[
           const SizedBox(height: 12),
-          const Text("À retravailler, ajouté à l'entraînement à l'oral du PC :"),
+          Text(context.texts.interviewRetravaillerAjouteEntrainementOral),
           for (final vQuestion in vWeak) Text('• $vQuestion'),
         ],
         const SizedBox(height: 16),
-        FilledButton(onPressed: start, child: const Text('Nouvelle série')),
+        FilledButton(onPressed: start, child: Text(context.texts.interviewNouvelleSerie)),
       ],
     );
 

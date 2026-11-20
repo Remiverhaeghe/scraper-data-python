@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../l10n/texts.dart';
 import '../revision_state.dart';
 import '../theme.dart';
 
@@ -24,19 +25,18 @@ class TriageScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rScreen = Scaffold(
-      appBar: AppBar(title: const Text('Tri rapide')),
+      appBar: AppBar(title: Text(context.texts.commonTriRapide)),
       body: ListenableBuilder(
         listenable: state,
         builder: (_, __) {
           final vUnsorted = findUnsortedOffers(state.offers);
 
           if (vUnsorted.isEmpty) {
-            return const Center(
+            return Center(
               child: Padding(
-                padding: EdgeInsets.all(24),
+                padding: const EdgeInsets.all(24),
                 child: Text(
-                  'Toutes les offres sont triées : leur statut partira au PC à la '
-                  'prochaine synchronisation.',
+                  context.texts.triageToutesOffresSontTriees,
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -49,7 +49,7 @@ class TriageScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                Text('${vUnsorted.length} offre(s) à trier'),
+                Text(context.texts.triageOffreTrier('${vUnsorted.length}')),
                 const SizedBox(height: 12),
                 Expanded(
                   child: Dismissible(
@@ -70,7 +70,7 @@ class TriageScreen extends StatelessWidget {
                       child: OutlinedButton.icon(
                         onPressed: () => sort(vOffer, 'IGNORED'),
                         icon: const Icon(Icons.close),
-                        label: const Text('Ignorer'),
+                        label: Text(context.texts.triageIgnorer),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -78,7 +78,7 @@ class TriageScreen extends StatelessWidget {
                       child: FilledButton.icon(
                         onPressed: () => sort(vOffer, 'INTERESTED'),
                         icon: const Icon(Icons.star_outline),
-                        label: const Text('Intéressé'),
+                        label: Text(context.texts.triageInteresse),
                       ),
                     ),
                   ],
@@ -131,7 +131,8 @@ class TriageCard extends StatelessWidget {
           Text('${offer['title'] ?? 'Offre sans titre'}', style: vTheme.textTheme.titleLarge),
           if (vDetails.isNotEmpty) Text(vDetails),
           if (offer['match_score'] != null)
-            Text('${offer['match_score']} % de correspondance avec votre profil'),
+            Text(
+                context.texts.commonDetailCorrespondanceAvecVotreProfil('${offer['match_score']}')),
           const SizedBox(height: 12),
           if (vDescription.isNotEmpty)
             Text(vDescription, maxLines: 12, overflow: TextOverflow.ellipsis),

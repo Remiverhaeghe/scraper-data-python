@@ -3,4 +3,6 @@
     <color name="widget_background">#171E29</color>
     <color name="widget_text">#E5E7EB</color>
     <color name="widget_muted">#8FA0BA</color>
+    <color name="widget_button">#FFC23D</color>
+    <color name="widget_button_text">#0B4F66</color>
 </resources>

@@ -1,11 +1,15 @@
 // Lignes du widget de l'écran d'accueil et mise à jour après synchronisation.
 
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:jobboard_revision/revision_state.dart';
+import 'package:jobboard_revision/screens/home_screen.dart';
+import 'package:jobboard_revision/screens/question_screen.dart';
 import 'package:jobboard_revision/services/api_client.dart';
 import 'package:jobboard_revision/services/home_widget_service.dart';
 import 'package:jobboard_revision/services/revision_store.dart';
@@ -19,6 +23,12 @@ class FakeHomeWidget implements HomeWidgetUpdater {
 
   @override
   Future<void> show((String, String) pLines) async => shown.add(pLines);
+
+  /// Touchers simulés sur le widget.
+  final touches = StreamController<Uri?>();
+
+  @override
+  Stream<Uri?> launches() => touches.stream;
 }
 
 void main() {
@@ -81,5 +91,42 @@ void main() {
 
     expect(vWidget.shown, hasLength(1));
     expect(vWidget.shown.single.$2, 'Aucun entretien prévu');
+  });
+
+  test('Seule l adresse du bouton 5 min lance la révision express', () {
+    expect(isSprintLaunch(sprintLaunch), isTrue);
+    expect(isSprintLaunch(Uri.parse('tremplin://accueil')), isFalse);
+    expect(isSprintLaunch(Uri.parse('https://sprint')), isFalse);
+    expect(isSprintLaunch(null), isFalse);
+  });
+
+  testWidgets('Le bouton 5 min du widget ouvre la révision express', (pTester) async {
+    final vWidget = FakeHomeWidget();
+    final vState = RevisionState(
+      MemoryRevisionStore()
+        ..settings = const ServerSettings(address: 'http://pc/api/v1', token: 'secret')
+        ..package = jsonEncode(buildPackageJson())
+        ..progress = buildProgressJson(),
+      pClientFactory: (pSettings) => ApiClient(
+        pSettings,
+        pClient: MockClient((_) async => http.Response('', 503)),
+      ),
+      homeWidget: vWidget,
+    );
+    await vState.load();
+
+    await pTester.pumpWidget(MaterialApp(home: HomeScreen(state: vState)));
+    await pTester.pump();
+    vWidget.touches.add(null);
+    await pTester.pumpAndSettle();
+    expect(find.byType(QuestionScreen), findsNothing);
+
+    vWidget.touches.add(sprintLaunch);
+    // La page poussée passe une image hors de l'écran avant sa transition
+    for (var vStep = 0; vStep < 4; vStep++) {
+      await pTester.pump(const Duration(milliseconds: 200));
+    }
+    expect(find.byType(QuestionScreen), findsOneWidget);
+    expect(find.text('Révision express'), findsOneWidget);
   });
 }

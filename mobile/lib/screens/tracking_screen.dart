@@ -3,10 +3,12 @@
 
 import 'package:flutter/material.dart';
 
+import '../l10n/texts.dart';
 import '../logic/interview_alerts.dart';
 import '../revision_state.dart';
 import 'offer_detail_screen.dart';
 import 'offers_screen.dart';
+import 'quick_application_screen.dart';
 
 /// Date et heure lisibles, « 27/10 à 14:30 », ou la date seule.
 String formatMoment(String? pValue) {
@@ -54,14 +56,22 @@ class TrackingScreen extends StatelessWidget {
     final vApplications = state.trackedApplications;
 
     final rScreen = Scaffold(
-      appBar: AppBar(title: const Text('Mes candidatures')),
+      appBar: AppBar(title: Text(context.texts.trackingMesCandidatures)),
+      // Candidature envoyée ailleurs : notée ici, enregistrée sur le PC ensuite
+      floatingActionButton: FloatingActionButton.extended(
+        tooltip: context.texts.quickOpen,
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => QuickApplicationScreen(state: state)),
+        ),
+        icon: const Icon(Icons.add),
+        label: Text(context.texts.quickTitle),
+      ),
       body: vApplications.isEmpty
-          ? const Center(
+          ? Center(
               child: Padding(
-                padding: EdgeInsets.all(24),
+                padding: const EdgeInsets.all(24),
                 child: Text(
-                  'Aucune candidature reçue. Elles se suivent sur le PC : connecte-le depuis '
-                  'Plus, puis synchronise.',
+                  context.texts.trackingAucuneCandidatureRecueElles,
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -128,7 +138,7 @@ class SheetScreen extends StatelessWidget {
     ];
 
     final rScreen = Scaffold(
-      appBar: AppBar(title: const Text('Fiche de préparation')),
+      appBar: AppBar(title: Text(context.texts.trackingFichePreparation)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -175,14 +185,15 @@ class MissionCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Mission entretien · $vPercent %', style: vTheme.textTheme.titleMedium),
+            Text(context.texts.trackingMissionEntretien('$vPercent'),
+                style: vTheme.textTheme.titleMedium),
             const SizedBox(height: 6),
             LinearProgressIndicator(value: vPercent / 100),
             if (mission['completed_at'] != null)
               Padding(
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
-                  'Mission accomplie : vous êtes prêt pour le jour J.',
+                  context.texts.trackingMissionAccomplieVousEtes,
                   style: TextStyle(color: Colors.green.shade700),
                 ),
               ),
@@ -201,7 +212,7 @@ class MissionCard extends StatelessWidget {
                   '${vStep['task']}${'${vStep['detail'] ?? ''}'.isEmpty ? '' : '\n${vStep['detail']}'}',
                 ),
               ),
-            Text('Les étapes se cochent sur le PC.', style: vTheme.textTheme.bodySmall),
+            Text(context.texts.trackingEtapesSeCochentSur, style: vTheme.textTheme.bodySmall),
           ],
         ),
       ),

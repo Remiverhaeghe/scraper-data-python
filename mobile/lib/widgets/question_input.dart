@@ -6,6 +6,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../l10n/texts.dart';
 import '../logic/circuit_drawing.dart';
 import '../logic/circuit_editor.dart';
 import '../logic/grading.dart';
@@ -165,9 +166,9 @@ class _ReviewInputState extends State<ReviewInput> {
     final rInput = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(bottom: 8),
-          child: Text('Cochez tous les défauts réels de cet extrait, et eux seuls.'),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(context.texts.questionCochezTousDefautsReels),
         ),
         for (final vIndex in order)
           Card(
@@ -330,7 +331,7 @@ class _PairsInputState extends State<PairsInput> {
                   Text(pairs[vLeft][0], style: Theme.of(context).textTheme.titleSmall),
                   DropdownButton<int>(
                     isExpanded: true,
-                    hint: const Text('Choisir la correspondance'),
+                    hint: Text(context.texts.questionChoisirCorrespondance),
                     value: selections[vLeft],
                     onChanged: widget.enabled ? (pRight) => select(vLeft, pRight) : null,
                     items: [
@@ -476,7 +477,7 @@ class _ConstructionInputState extends State<ConstructionInput> {
         ),
         const SizedBox(height: 8),
         if (!widget.enabled) ...[
-          Text('Votre schéma', style: vTheme.textTheme.titleSmall),
+          Text(context.texts.questionVotreSchema, style: vTheme.textTheme.titleSmall),
           const SizedBox(height: 4),
         ],
         Container(
@@ -499,7 +500,7 @@ class _ConstructionInputState extends State<ConstructionInput> {
               ),
               if (vSelected != null)
                 IconButton(
-                  tooltip: 'Supprimer ${draft.label(vSelected)}',
+                  tooltip: context.texts.commonSupprimer(draft.label(vSelected)),
                   icon: const Icon(Icons.delete_outline),
                   onPressed: () {
                     final vLabel = draft.label(vSelected);
@@ -511,7 +512,7 @@ class _ConstructionInputState extends State<ConstructionInput> {
           )
         else ...[
           const SizedBox(height: 12),
-          Text('Schéma attendu', style: vTheme.textTheme.titleSmall),
+          Text(context.texts.questionSchemaAttendu, style: vTheme.textTheme.titleSmall),
           const SizedBox(height: 4),
           SchemaView(content: renderExpected(), description: 'Schéma attendu'),
         ],

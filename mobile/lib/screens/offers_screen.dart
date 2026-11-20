@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../l10n/texts.dart';
 import '../revision_state.dart';
 import '../theme.dart';
 import 'offer_detail_screen.dart';
@@ -13,6 +14,7 @@ import 'triage_screen.dart';
 /// Ouvre l'annonce dans le navigateur ; seules les adresses web sont ouvertes.
 Future<void> openOfferUrl(BuildContext pContext, Map<String, dynamic> pOffer) async {
   final vMessenger = ScaffoldMessenger.of(pContext);
+  final vFailed = pContext.texts.offersAnnonceNPasPu;
   final vUri = Uri.tryParse('${pOffer['url'] ?? ''}');
 
   final vOpened = vUri != null &&
@@ -20,7 +22,7 @@ Future<void> openOfferUrl(BuildContext pContext, Map<String, dynamic> pOffer) as
       await launchUrl(vUri, mode: LaunchMode.externalApplication);
 
   if (!vOpened) {
-    vMessenger.showSnackBar(const SnackBar(content: Text("L'annonce n'a pas pu être ouverte.")));
+    vMessenger.showSnackBar(SnackBar(content: Text(vFailed)));
   }
 }
 
@@ -59,10 +61,10 @@ class _OffersScreenState extends State<OffersScreen> {
 
     final rScreen = Scaffold(
       appBar: AppBar(
-        title: const Text('Offres'),
+        title: Text(context.texts.offersOffres),
         actions: [
           IconButton(
-            tooltip: 'Tri rapide',
+            tooltip: context.texts.commonTriRapide,
             icon: const Icon(Icons.swipe),
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute<void>(builder: (_) => TriageScreen(state: vState)),
@@ -81,12 +83,11 @@ class _OffersScreenState extends State<OffersScreen> {
           );
 
           if (vState.offers.isEmpty) {
-            return const Center(
+            return Center(
               child: Padding(
-                padding: EdgeInsets.all(24),
+                padding: const EdgeInsets.all(24),
                 child: Text(
-                  "Aucune offre reçue. Les offres viennent du PC : connecte-le depuis "
-                  "Plus, puis synchronise. La révision marche sans lui.",
+                  context.texts.offersAucuneOffreRecueOffres,
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -101,7 +102,7 @@ class _OffersScreenState extends State<OffersScreen> {
                 children: [
                   FilterChip(
                     avatar: const Icon(Icons.bookmark_outline, size: 18),
-                    label: const Text('Retenues'),
+                    label: Text(context.texts.offersRetenues),
                     selected: retainedOnly,
                     onSelected: (pSelected) => setState(() => retainedOnly = pSelected),
                   ),
@@ -109,16 +110,16 @@ class _OffersScreenState extends State<OffersScreen> {
                   if (vHasNear)
                     FilterChip(
                       avatar: const Icon(Icons.place_outlined, size: 18),
-                      label: const Text('Près de chez moi'),
+                      label: Text(context.texts.offersPresChezMoi),
                       selected: nearOnly,
                       onSelected: (pSelected) => setState(() => nearOnly = pSelected),
                     ),
                 ],
               ),
               if (vOffers.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Text('Aucune offre pour ces filtres.', textAlign: TextAlign.center),
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(context.texts.offersAucuneOffrePourCes, textAlign: TextAlign.center),
                 ),
               for (final vOffer in vOffers) OfferCard(state: vState, offer: vOffer),
             ],
@@ -193,20 +194,20 @@ class OfferCard extends StatelessWidget {
                 children: [
                   if (vScore != null)
                     Chip(
-                      label: Text('$vScore % de correspondance'),
+                      label: Text(context.texts.offersCorrespondance('$vScore')),
                       visualDensity: VisualDensity.compact,
                     ),
                   const Spacer(),
                   TextButton.icon(
                     onPressed: () => open(context),
                     icon: const Icon(Icons.open_in_new, size: 18),
-                    label: const Text('Ouvrir'),
+                    label: Text(context.texts.offersOuvrir),
                   ),
                   if (vLocked)
                     vStatusLabel
                   else
                     PopupMenuButton<String>(
-                      tooltip: 'Changer le statut',
+                      tooltip: context.texts.offersChangerStatut,
                       onSelected: (pStatus) => state.setOfferStatus(offer, pStatus),
                       itemBuilder: (_) => [
                         for (final vEntry in offerStatuses.entries)
