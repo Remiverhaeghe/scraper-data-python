@@ -48,7 +48,8 @@ const widgetProviderName = 'RevisionWidgetProvider';
 final sprintLaunch = Uri.parse('tremplin://sprint');
 
 /// Vrai quand le widget a été touché sur son bouton « 5 min ».
-bool isSprintLaunch(Uri? pUri) => pUri != null && pUri.scheme == 'tremplin' && pUri.host == 'sprint';
+bool isSprintLaunch(Uri? pUri) =>
+    pUri != null && pUri.scheme == 'tremplin' && pUri.host == 'sprint';
 
 /// Envoie les lignes au widget ; sans widget posé, Android les garde pour plus tard.
 abstract class HomeWidgetUpdater {
