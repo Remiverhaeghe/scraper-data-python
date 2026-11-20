@@ -169,50 +169,50 @@ class ResultPanel extends StatelessWidget {
         child: Transform.translate(offset: Offset(0, 16 * (1 - pValue)), child: pChild),
       ),
       child: Card(
-      shape: RoundedRectangleBorder(
-        side: BorderSide(color: vColor, width: 1.5),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                // L'icône rebondit pour une bonne réponse, tremble pour une fausse
-                TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0, end: 1),
-                  duration: motionOf(context, const Duration(milliseconds: 600)),
-                  builder: (_, pValue, pChild) => grade.correct
-                      ? Transform.scale(scale: Curves.elasticOut.transform(pValue), child: pChild)
-                      : Transform.translate(
-                          offset: Offset(sin(pValue * pi * 6) * 6 * (1 - pValue), 0),
-                          child: pChild,
-                        ),
-                  child: Icon(grade.correct ? Icons.check_circle : Icons.cancel, color: vColor),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  grade.correct ? 'Bonne réponse' : 'Réponse incorrecte',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(color: vColor),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            if (!grade.correct) Text('Votre réponse : ${grade.given}'),
-            Text(
-              'Réponse : ${grade.expected}',
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            if (explanation.isNotEmpty) ...[
+        shape: RoundedRectangleBorder(
+          side: BorderSide(color: vColor, width: 1.5),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  // L'icône rebondit pour une bonne réponse, tremble pour une fausse
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: 1),
+                    duration: motionOf(context, const Duration(milliseconds: 600)),
+                    builder: (_, pValue, pChild) => grade.correct
+                        ? Transform.scale(scale: Curves.elasticOut.transform(pValue), child: pChild)
+                        : Transform.translate(
+                            offset: Offset(sin(pValue * pi * 6) * 6 * (1 - pValue), 0),
+                            child: pChild,
+                          ),
+                    child: Icon(grade.correct ? Icons.check_circle : Icons.cancel, color: vColor),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    grade.correct ? 'Bonne réponse' : 'Réponse incorrecte',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(color: vColor),
+                  ),
+                ],
+              ),
               const SizedBox(height: 12),
-              Text(explanation),
+              if (!grade.correct) Text('Votre réponse : ${grade.given}'),
+              Text(
+                'Réponse : ${grade.expected}',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              if (explanation.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Text(explanation),
+              ],
             ],
-          ],
+          ),
         ),
       ),
-    ),
     );
 
     return rPanel;

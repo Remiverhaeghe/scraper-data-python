@@ -358,9 +358,8 @@ class DomainCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       AnimatedBar(
-                        value: vQuestions.isEmpty
-                            ? 0
-                            : (vQuestions.length - vNew) / vQuestions.length,
+                        value:
+                            vQuestions.isEmpty ? 0 : (vQuestions.length - vNew) / vQuestions.length,
                         color: sunriseColor,
                       ),
                     ],
@@ -396,7 +395,8 @@ class TodayCard extends StatelessWidget {
     final vDone = state.answersToday;
     final vGoal = state.dailyGoal;
     final vPackage = state.package;
-    final vDue = vPackage == null ? 0 : countDue(vPackage.questions, state.schedule, DateTime.now());
+    final vDue =
+        vPackage == null ? 0 : countDue(vPackage.questions, state.schedule, DateTime.now());
     final vTitle = Theme.of(context).textTheme.headlineSmall!.copyWith(
           color: Colors.white,
           fontWeight: FontWeight.w700,

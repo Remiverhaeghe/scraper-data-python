@@ -21,7 +21,8 @@ MockClient buildPc({List<String>? pCodes}) => MockClient((pRequest) async {
       if (pRequest.url.host != '192.168.1.80') {
         throw http.ClientException('Aucun appareil');
       } else if (pRequest.url.path.endsWith('/ping')) {
-        rResponse = http.Response(jsonEncode({'application': 'JobBoard Perso', 'api_version': 1}), 200);
+        rResponse =
+            http.Response(jsonEncode({'application': 'JobBoard Perso', 'api_version': 1}), 200);
       } else if (pRequest.url.path.endsWith('/pairing')) {
         final vCode = (jsonDecode(pRequest.body) as Map)['code'] as String;
         pCodes?.add(vCode);
@@ -40,7 +41,8 @@ MockClient buildPc({List<String>? pCodes}) => MockClient((pRequest) async {
 void main() {
   test('Le code est échangé contre le jeton, chiffres seuls', () async {
     final vCodes = <String>[];
-    final vDiscovery = ServerDiscovery(pClient: buildPc(pCodes: vCodes), pFindPrefixes: () async => []);
+    final vDiscovery =
+        ServerDiscovery(pClient: buildPc(pCodes: vCodes), pFindPrefixes: () async => []);
 
     final vSettings = await vDiscovery.pair('http://192.168.1.80:8000/api/v1', '482 913');
 
@@ -49,7 +51,8 @@ void main() {
     expect(vCodes, ['482913']);
     await expectLater(
       vDiscovery.pair('http://192.168.1.80:8000/api/v1', '111111'),
-      throwsA(isA<ApiException>().having((pError) => pError.message, 'message', contains('Code refusé'))),
+      throwsA(isA<ApiException>()
+          .having((pError) => pError.message, 'message', contains('Code refusé'))),
     );
   });
 

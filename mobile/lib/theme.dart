@@ -34,7 +34,8 @@ Color dangerColorOf(BuildContext pContext) => Theme.of(pContext).brightness == B
     : const Color(0xFFC81E1E);
 
 /// Durée des animations courtes ; zéro quand le téléphone demande de les réduire.
-Duration motionOf(BuildContext pContext, [Duration pDuration = const Duration(milliseconds: 450)]) =>
+Duration motionOf(BuildContext pContext,
+        [Duration pDuration = const Duration(milliseconds: 450)]) =>
     MediaQuery.maybeDisableAnimationsOf(pContext) ?? false ? Duration.zero : pDuration;
 
 /// Passage d'un écran à l'autre : le nouvel écran monte un peu en apparaissant.

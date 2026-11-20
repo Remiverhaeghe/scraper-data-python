@@ -72,8 +72,7 @@ class SpringboardPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(SpringboardPainter pOld) =>
-      pOld.progress != progress || pOld.color != color;
+  bool shouldRepaint(SpringboardPainter pOld) => pOld.progress != progress || pOld.color != color;
 }
 
 /// Courbe du saut qui se dessine une fois à l'apparition.
