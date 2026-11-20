@@ -122,8 +122,10 @@ void main() {
     expect(find.byType(QuestionScreen), findsNothing);
 
     vWidget.touches.add(sprintLaunch);
-    await pTester.pump();
-    await pTester.pump(const Duration(milliseconds: 500));
+    // La page poussée passe une image hors de l'écran avant sa transition
+    for (var vStep = 0; vStep < 4; vStep++) {
+      await pTester.pump(const Duration(milliseconds: 200));
+    }
     expect(find.byType(QuestionScreen), findsOneWidget);
     expect(find.text('Révision express'), findsOneWidget);
   });
