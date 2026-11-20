@@ -15,11 +15,19 @@ dans l'historique git.
 - Navigation en onglets en bas de l'écran : Réviser, Offres, Candidatures, Entretien et
   Plus (statistiques, examen blanc, simulations, guides, paramètres), à la place des
   sept icônes de la barre du haut. Les paramètres sont séparés de la connexion.
-- Nouvelle identité : nuit indigo et lever de soleil ambré, la courbe d'un saut vers
-  une étoile sur l'icône, l'écran de connexion et la carte « Aujourd'hui » (questions à
-  revoir, objectif du jour en anneau, boutons Réviser et 5 min).
-- Animations : écrans qui apparaissent en glissant, correction qui rebondit si la
-  réponse est juste et tremble si elle est fausse, anneau de l'objectif et progression
+- Sans le PC : au premier lancement, « Réviser sans le PC » installe le paquet de
+  révision livré avec l'application (`assets/revision/depart.json.gz`, les 944 questions
+  des thèmes livrés, écrit par `python -m tools.mobile_package`). Les réponses restent
+  sur le téléphone et partent au PC le jour où il est connecté. Un test vérifie que le
+  paquet suit les thèmes livrés.
+- Nouvelle identité, la piscine : bleu du bassin, eau turquoise, jaune du plongeoir et
+  corail des bouées. L'icône montre un livre ouvert qui sert de tremplin à un nageur ;
+  on le retrouve, animé, sur l'écran de connexion et en filigrane de la carte
+  « Aujourd'hui » (questions à revoir, objectif du jour en anneau, boutons Réviser et
+  5 min), dont les reflets ondulent lentement.
+- Animations : écrans qui apparaissent en glissant, éclaboussure autour de la coche
+  d'une bonne réponse, correction qui tremble si elle est fausse, confettis aux couleurs
+  de la piscine pour un niveau gagné, anneau de l'objectif et progression
   des thèmes qui se remplissent ; tout est coupé quand le téléphone demande de réduire
   les animations.
 - Mise en forme automatique du code mobile sur les pull requests (`format.yml`).

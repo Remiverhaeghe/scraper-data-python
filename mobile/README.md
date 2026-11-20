@@ -1,8 +1,11 @@
 # Tremplin, application mobile de révision
 
-Application Flutter de révision technique hors ligne. Elle télécharge les questions
-du serveur Tremplin, corrige les réponses sur le téléphone, les garde sans
-réseau, puis les envoie à la synchronisation suivante. Le serveur recalcule chaque
+Application Flutter de révision technique hors ligne. Elle marche sans le PC : au
+premier lancement, « Réviser sans le PC » installe le paquet livré avec l'appli
+(`assets/revision/depart.json.gz`, thèmes livrés avec Tremplin, réécrit par
+`python -m tools.mobile_package` quand ils changent). Une fois le PC connecté, elle
+télécharge les questions du serveur Tremplin, corrige les réponses sur le téléphone,
+les garde sans réseau, puis les envoie à la synchronisation suivante. Le serveur recalcule chaque
 correction : la progression reste la même sur le PC, le web et le téléphone.
 
 Pris en charge : QCM, calculs avec unité, remises en ordre, associations et revues de code, schémas

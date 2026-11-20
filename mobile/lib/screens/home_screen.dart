@@ -11,6 +11,7 @@ import '../theme.dart';
 import '../widgets/celebration.dart';
 import '../widgets/brand.dart';
 import '../widgets/game_card.dart';
+import 'connect_screen.dart';
 import 'exam_screen.dart';
 import 'hub_tabs.dart';
 import 'offers_screen.dart';
@@ -76,6 +77,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Future<void> synchronize() async {
     final vMessenger = ScaffoldMessenger.of(context);
+
+    // Sans PC, synchroniser veut dire le connecter
+    if (state.settings == null) {
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => ConnectScreen(state: state)),
+      );
+      return;
+    }
 
     try {
       final vReport = await state.synchronizeOrRelocate();
@@ -360,7 +369,7 @@ class DomainCard extends StatelessWidget {
                       AnimatedBar(
                         value:
                             vQuestions.isEmpty ? 0 : (vQuestions.length - vNew) / vQuestions.length,
-                        color: sunriseColor,
+                        color: boardColor,
                       ),
                     ],
                   ),
@@ -402,7 +411,7 @@ class TodayCard extends StatelessWidget {
           fontWeight: FontWeight.w700,
         );
 
-    final rCard = ElanCard(
+    final rCard = PoolCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -442,8 +451,8 @@ class TodayCard extends StatelessWidget {
                 Expanded(
                   child: FilledButton.icon(
                     style: FilledButton.styleFrom(
-                      backgroundColor: sunriseColor,
-                      foregroundColor: nightColor,
+                      backgroundColor: boardColor,
+                      foregroundColor: deepColor,
                     ),
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(builder: (_) => QuestionScreen(state: state)),

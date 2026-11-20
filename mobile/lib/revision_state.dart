@@ -405,6 +405,18 @@ class RevisionState extends ChangeNotifier
     schedule = vSchedule;
   }
 
+  /// Révision sans le PC : installe le paquet livré avec l'application.
+  ///
+  /// Les réponses restent sur le téléphone ; elles partiront au PC le jour où
+  /// il sera connecté.
+  Future<void> startWithoutServer(String pContent) async {
+    package = QuizPackage.fromJson(jsonDecode(pContent) as Map<String, dynamic>)
+        .withoutQuestions(flaggedIds);
+    await store.savePackage(pContent);
+    rebuildSchedule();
+    notifyListeners();
+  }
+
   /// Enregistre de nouveaux réglages après une première synchronisation réussie.
   Future<SyncReport> configure(ServerSettings pSettings) async {
     final vPrevious = settings;

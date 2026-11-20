@@ -7,6 +7,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../logic/grading.dart';
 import '../theme.dart';
+import 'brand.dart';
 
 /// Extrait de code en police à chasse fixe, défilant horizontalement.
 class CodeBlock extends StatelessWidget {
@@ -190,7 +191,9 @@ class ResultPanel extends StatelessWidget {
                             offset: Offset(sin(pValue * pi * 6) * 6 * (1 - pValue), 0),
                             child: pChild,
                           ),
-                    child: Icon(grade.correct ? Icons.check_circle : Icons.cancel, color: vColor),
+                    child: grade.correct
+                        ? SplashRings(size: 40, child: Icon(Icons.check_circle, color: vColor))
+                        : Icon(Icons.cancel, color: vColor),
                   ),
                   const SizedBox(width: 8),
                   Text(

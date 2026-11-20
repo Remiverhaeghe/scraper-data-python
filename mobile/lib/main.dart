@@ -89,7 +89,9 @@ class _StartScreenState extends State<StartScreen> {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
 
-        return widget.state.settings == null
+        // Sans PC ni paquet : premier lancement, on propose de connecter le PC ou
+        // de réviser tout de suite avec le paquet livré
+        return widget.state.settings == null && widget.state.package == null
             ? ConnectScreen(state: widget.state)
             : HomeScreen(state: widget.state);
       },

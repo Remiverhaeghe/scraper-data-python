@@ -1,27 +1,31 @@
 // Couleurs, formes et transitions de l'application.
 //
-// Tremplin, c'est l'élan : une nuit indigo qui s'éclaircit vers un lever de soleil
-// ambré, et la courbe d'un saut qui revient sur l'accueil, la connexion et l'icône.
+// Tremplin, c'est la piscine : l'eau turquoise du bassin, le jaune du plongeoir,
+// le corail des bouées. Le livre ouvert sert de tremplin : on révise, on saute.
 
 import 'package:flutter/material.dart';
 
-/// Indigo de la nuit avant le saut : couleur principale.
-const primaryColor = Color(0xFF3B3A9E);
+/// Bleu du bassin : couleur principale.
+const primaryColor = Color(0xFF0E6F8C);
 
-/// Ambre du lever de soleil : ce qui avance, l'objectif, la réussite du jour.
-const sunriseColor = Color(0xFFF2A33A);
+/// Turquoise de l'eau en surface.
+const waterColor = Color(0xFF35C2CF);
 
-/// Corail : l'accent des moments forts (entretien proche, record).
-const coralColor = Color(0xFFE8604C);
+/// Jaune du plongeoir : ce qui avance, l'objectif, la réussite du jour.
+const boardColor = Color(0xFFFFC23D);
 
-/// Nuit profonde, fond des en-têtes en dégradé.
-const nightColor = Color(0xFF1A1847);
+/// Corail des bouées : l'accent des moments forts (entretien proche, record).
+const coralColor = Color(0xFFFF6A55);
 
-/// Dégradé des en-têtes : de la nuit vers l'indigo, avec une pointe de violet.
-const elanGradient = LinearGradient(
-  begin: Alignment.topLeft,
-  end: Alignment.bottomRight,
-  colors: [nightColor, primaryColor, Color(0xFF6A4FC8)],
+/// Bleu du grand bain, fond des en-têtes et texte sur le jaune.
+const deepColor = Color(0xFF0B4F66);
+
+/// Dégradé des en-têtes : de la surface vers le grand bain.
+const poolGradient = LinearGradient(
+  begin: Alignment.topCenter,
+  end: Alignment.bottomCenter,
+  colors: [Color(0xFF2FB8C7), primaryColor, deepColor],
+  stops: [0, 0.55, 1],
 );
 
 /// Vert et rouge lisibles en texte : foncés sur fond clair, clairs sur fond sombre.
@@ -38,7 +42,7 @@ Duration motionOf(BuildContext pContext,
         [Duration pDuration = const Duration(milliseconds: 450)]) =>
     MediaQuery.maybeDisableAnimationsOf(pContext) ?? false ? Duration.zero : pDuration;
 
-/// Passage d'un écran à l'autre : le nouvel écran monte un peu en apparaissant.
+/// Passage d'un écran à l'autre : le nouvel écran remonte à la surface en apparaissant.
 class ElanPageTransitionsBuilder extends PageTransitionsBuilder {
   const ElanPageTransitionsBuilder();
 
@@ -67,7 +71,7 @@ ThemeData buildTheme(Brightness pBrightness) {
   final vScheme = ColorScheme.fromSeed(
     seedColor: primaryColor,
     brightness: pBrightness,
-    secondary: pBrightness == Brightness.light ? const Color(0xFFB86E0B) : sunriseColor,
+    secondary: pBrightness == Brightness.light ? const Color(0xFF9A6A00) : boardColor,
     tertiary: coralColor,
   );
   final vShape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(18));
@@ -75,7 +79,7 @@ ThemeData buildTheme(Brightness pBrightness) {
     useMaterial3: true,
     colorScheme: vScheme,
     scaffoldBackgroundColor:
-        pBrightness == Brightness.light ? const Color(0xFFF5F5FB) : const Color(0xFF111127),
+        pBrightness == Brightness.light ? const Color(0xFFF2FAFB) : const Color(0xFF0A1F27),
     cardTheme: CardThemeData(elevation: 0, shape: vShape, color: vScheme.surfaceContainerLow),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
@@ -84,7 +88,7 @@ ThemeData buildTheme(Brightness pBrightness) {
       ),
     ),
     navigationBarTheme: NavigationBarThemeData(
-      indicatorColor: sunriseColor.withValues(alpha: 0.35),
+      indicatorColor: waterColor.withValues(alpha: 0.35),
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
     ),
     pageTransitionsTheme: const PageTransitionsTheme(

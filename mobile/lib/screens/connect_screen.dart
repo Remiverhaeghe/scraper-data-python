@@ -9,6 +9,7 @@ import '../revision_state.dart';
 import '../services/api_client.dart';
 import '../services/discovery.dart';
 import '../services/revision_store.dart';
+import '../services/starter_package.dart';
 import '../theme.dart';
 import '../widgets/brand.dart';
 import 'home_screen.dart';
@@ -18,9 +19,12 @@ import 'scan_screen.dart';
 enum SearchStatus { searching, found, missing }
 
 class ConnectScreen extends StatefulWidget {
-  const ConnectScreen({super.key, required this.state});
+  const ConnectScreen({super.key, required this.state, this.bundle});
 
   final RevisionState state;
+
+  /// Fichiers livrés avec l'appli ; remplaçable dans les tests.
+  final AssetBundle? bundle;
 
   @override
   State<ConnectScreen> createState() => _ConnectScreenState();
@@ -181,6 +185,18 @@ class _ConnectScreenState extends State<ConnectScreen> {
     );
   }
 
+  /// Installe le paquet livré : la révision marche sans le PC ni le réseau.
+  Future<void> startWithoutServer() async {
+    setState(() => busy = true);
+    try {
+      await widget.state.startWithoutServer(await loadStarterPackage(widget.bundle));
+    } finally {
+      if (mounted) {
+        setState(() => busy = false);
+      }
+    }
+  }
+
   Widget buildStatus(BuildContext pContext) {
     final vTheme = Theme.of(pContext);
 
@@ -229,7 +245,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            ElanCard(
+            PoolCard(
               child: Row(
                 children: [
                   const SpringboardMark(size: 84),
@@ -244,14 +260,26 @@ class _ConnectScreenState extends State<ConnectScreen> {
                               .copyWith(color: Colors.white, fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: 4),
-                        const Text('Relie ton téléphone à ton PC pour réviser partout, '
-                            'même sans réseau.'),
+                        const Text('Révise tout de suite, même sans réseau. Relie ton '
+                            'PC quand tu veux pour recevoir tes offres et tes candidatures.'),
                       ],
                     ),
                   ),
                 ],
               ),
             ),
+            if (widget.state.settings == null && widget.state.package == null) ...[
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: boardColor,
+                  foregroundColor: deepColor,
+                ),
+                onPressed: busy ? null : startWithoutServer,
+                icon: const Icon(Icons.menu_book_rounded),
+                label: const Text('Réviser sans le PC'),
+              ),
+            ],
             const SizedBox(height: 16),
             Card(
               child: AnimatedSwitcher(
