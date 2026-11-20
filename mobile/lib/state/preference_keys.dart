@@ -101,3 +101,6 @@ const hapticsPreference = 'haptics';
 /// Agrandissement du texte, en plus de celui réglé sur le téléphone.
 const textScalePreference = 'text_scale';
 const textScales = [1.0, 1.15, 1.3];
+
+/// Carnet de plongée : réponses et réponses justes, jour par jour, sur huit semaines.
+const diveLogPreference = 'dive_log';

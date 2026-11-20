@@ -167,7 +167,7 @@ class _ReviewInputState extends State<ReviewInput> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.only(bottom: 8),
           child: Text(context.texts.questionCochezTousDefautsReels),
         ),
         for (final vIndex in order)
@@ -500,7 +500,7 @@ class _ConstructionInputState extends State<ConstructionInput> {
               ),
               if (vSelected != null)
                 IconButton(
-                  tooltip: context.texts.commonSupprimer('${draft.label(vSelected)}'),
+                  tooltip: context.texts.commonSupprimer(draft.label(vSelected)),
                   icon: const Icon(Icons.delete_outline),
                   onPressed: () {
                     final vLabel = draft.label(vSelected);

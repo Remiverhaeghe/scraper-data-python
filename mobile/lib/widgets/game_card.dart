@@ -85,7 +85,7 @@ class GameCard extends StatelessWidget {
                 children: [
                   Text('${pGame['title']}', style: vTheme.textTheme.titleMedium),
                   Text(
-                    context.texts.gameXpProchain(
+                    pContext.texts.gameXpProchain(
                         '${vInLevel.toInt()}', '${vForLevel.toInt()}', '${pGame['next_title']}'),
                     style: vTheme.textTheme.bodySmall,
                   ),
@@ -95,7 +95,7 @@ class GameCard extends StatelessWidget {
             Icon(Icons.local_fire_department, color: Colors.orange.shade700),
             Text(
               '$vStreak',
-              semanticsLabel: context.texts.gameSerieJours('${vStreak}'),
+              semanticsLabel: pContext.texts.gameSerieJours('$vStreak'),
               style: vTheme.textTheme.titleMedium?.copyWith(color: Colors.orange.shade800),
             ),
           ],
@@ -139,7 +139,7 @@ class GameCard extends StatelessWidget {
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           Icon(Icons.emoji_events, color: Colors.amber.shade700, size: 20),
-          Text(context.texts.gameTrophees('${vUnlocked.length}', '${vAll.length}')),
+          Text(pContext.texts.gameTrophees('${vUnlocked.length}', '${vAll.length}')),
           for (final vItem in vUnlocked.take(3))
             Chip(
               label: Text('${vItem['title']}'),
@@ -164,7 +164,7 @@ class GameCard extends StatelessWidget {
         Icons.military_tech,
         color: parseColor(vMedal?['color']) ?? Theme.of(pContext).colorScheme.outline,
       ),
-      title: Text(context.texts.gameBilan('${pSeason['title']}')),
+      title: Text(pContext.texts.gameBilan('${pSeason['title']}')),
       subtitle: Text(
         [pSeason['summary'], if (vMedal != null) vMedal['label']].join(' · '),
       ),
@@ -199,7 +199,7 @@ class GameCard extends StatelessWidget {
         style: vDone ? const TextStyle(decoration: TextDecoration.lineThrough) : null,
       ),
       trailing: Text(
-          context.texts.gameXp('${pQuest['progress']}', '${pQuest['target']}', '${pQuest['xp']}')),
+          pContext.texts.gameXp('${pQuest['progress']}', '${pQuest['target']}', '${pQuest['xp']}')),
     );
 
     return rQuest;
@@ -235,7 +235,7 @@ class GameCard extends StatelessWidget {
                 icon: const Icon(Icons.timer_outlined),
                 label: Text(
                   context.texts.gameContreMontre60(
-                      '${state.timeAttackBest > 0 ? ' · record ${state.timeAttackBest}' : ''}'),
+                      state.timeAttackBest > 0 ? ' · record ${state.timeAttackBest}' : ''),
                 ),
               ),
             ],

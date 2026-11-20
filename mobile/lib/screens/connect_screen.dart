@@ -178,7 +178,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.texts.connectConnecte('${vReport.describe()}'))),
+      SnackBar(content: Text(context.texts.connectConnecte(vReport.describe()))),
     );
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute<void>(builder: (_) => HomeScreen(state: widget.state)),
@@ -203,10 +203,10 @@ class _ConnectScreenState extends State<ConnectScreen> {
 
     final rStatus = switch (status) {
       SearchStatus.searching => ListTile(
-          key: ValueKey('searching'),
-          leading: SizedBox.square(
+          key: const ValueKey('searching'),
+          leading: const SizedBox.square(
             dimension: 24,
-            child: CircularProgressIndicator(strokeWidth: 3),
+            child: const CircularProgressIndicator(strokeWidth: 3),
           ),
           title: Text(context.texts.connectRechercheTonPcSur),
         ),
@@ -311,7 +311,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
                             decoration: InputDecoration(
                               labelText: context.texts.connectCode6Chiffres,
                               counterText: '',
-                              border: OutlineInputBorder(),
+                              border: const OutlineInputBorder(),
                             ),
                             onChanged: (pText) {
                               // Les six chiffres tapés suffisent : pas de bouton à chercher.
@@ -359,7 +359,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
                   decoration: InputDecoration(
                     labelText: context.texts.connectAdresseServeur,
                     hintText: context.texts.connectHttp1921681,
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -370,7 +370,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
                   enableSuggestions: false,
                   decoration: InputDecoration(
                     labelText: context.texts.connectJeton,
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 8),

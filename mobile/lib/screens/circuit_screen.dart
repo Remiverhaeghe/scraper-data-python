@@ -25,7 +25,7 @@ class CircuitListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext pContext) => Scaffold(
-        appBar: AppBar(title: Text(context.texts.commonSchemasElectriques)),
+        appBar: AppBar(title: Text(pContext.texts.commonSchemasElectriques)),
         body: ListenableBuilder(
           listenable: state,
           builder: (pContext, _) => ListView(
@@ -34,8 +34,8 @@ class CircuitListScreen extends StatelessWidget {
               Card(
                 child: ListTile(
                   leading: const Icon(Icons.draw_outlined),
-                  title: Text(context.texts.circuitSchemaLibre),
-                  subtitle: Text(context.texts.circuitTousComposantsPourEssayer),
+                  title: Text(pContext.texts.circuitSchemaLibre),
+                  subtitle: Text(pContext.texts.circuitTousComposantsPourEssayer),
                   onTap: () => open(pContext, null),
                 ),
               ),
@@ -257,8 +257,8 @@ class _CircuitScreenState extends State<CircuitScreen> {
               decoration: InputDecoration(
                 labelText: draft.label(vItem['id'] as String),
                 suffixText: valueRanges[vItem['type']]!.$4,
-                helperText: context.texts.circuitText('${formatG(valueRanges[vItem['type']]!.$2)}',
-                    '${formatG(valueRanges[vItem['type']]!.$3)}'),
+                helperText: context.texts.circuitText(formatG(valueRanges[vItem['type']]!.$2),
+                    formatG(valueRanges[vItem['type']]!.$3)),
                 border: const OutlineInputBorder(),
                 isDense: true,
               ),
@@ -367,7 +367,7 @@ class _CircuitScreenState extends State<CircuitScreen> {
               ),
               if (vSelected != null)
                 IconButton(
-                  tooltip: context.texts.commonSupprimer('${draft.label(vSelected)}'),
+                  tooltip: context.texts.commonSupprimer(draft.label(vSelected)),
                   icon: const Icon(Icons.delete_outline),
                   onPressed: () {
                     final vLabel = draft.label(vSelected);

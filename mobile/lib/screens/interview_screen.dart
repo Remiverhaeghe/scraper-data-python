@@ -82,7 +82,7 @@ class _InterviewScreenState extends State<InterviewScreen> {
     if (widget.state.interviewQuestions.isEmpty) {
       vBody = Center(
         child: Padding(
-          padding: EdgeInsets.all(24),
+          padding: const EdgeInsets.all(24),
           child: Text(context.texts.interviewSynchronisezAvecPcPour),
         ),
       );
@@ -145,7 +145,7 @@ class _InterviewScreenState extends State<InterviewScreen> {
           minLines: 3,
           maxLines: 8,
           decoration: InputDecoration(
-            border: OutlineInputBorder(),
+            border: const OutlineInputBorder(),
             hintText: context.texts.interviewVotreReponsePourVous,
           ),
         ),
@@ -186,7 +186,7 @@ class _InterviewScreenState extends State<InterviewScreen> {
       padding: const EdgeInsets.all(16),
       children: [
         Text(
-          context.texts.interviewSerieTermineePointsCles('${vScore}'),
+          context.texts.interviewSerieTermineePointsCles('$vScore'),
           style: Theme.of(context).textTheme.titleMedium,
         ),
         if (vWeak.isNotEmpty) ...[

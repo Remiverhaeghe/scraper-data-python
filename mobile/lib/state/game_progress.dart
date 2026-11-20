@@ -86,4 +86,17 @@ mixin GameProgress on ChangeNotifier {
 
     return rRecord;
   }
+
+  /// Carnet de plongée : réponses du jour et justes, par jour.
+  Map<String, List<int>> get diveLog => {
+        for (final vEntry in (preferences[diveLogPreference] as Map? ?? const {}).entries)
+          if (vEntry.value is List && (vEntry.value as List).length == 2)
+            '${vEntry.key}': [
+              for (final vCount in vEntry.value as List) (vCount as num).toInt(),
+            ],
+      };
+
+  /// Note une réponse dans le carnet de plongée.
+  Future<void> recordDive(bool pCorrect, {DateTime? pAt}) =>
+      savePreference(diveLogPreference, logAnswer(diveLog, pAt ?? DateTime.now(), pCorrect));
 }

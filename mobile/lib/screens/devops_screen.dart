@@ -30,7 +30,7 @@ class DevopsListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext pContext) => Scaffold(
-        appBar: AppBar(title: Text(context.texts.commonMavenDocker)),
+        appBar: AppBar(title: Text(pContext.texts.commonMavenDocker)),
         body: ListenableBuilder(
           listenable: state,
           builder: (pContext, _) {
@@ -274,7 +274,7 @@ class _DevopsScreenState extends State<DevopsScreen> {
             Text(context.texts.commonIndice('${level['hint']}'), style: vTheme.textTheme.bodySmall),
           if (showSolution)
             Text(
-              context.texts.devopsCommandesSolution('${(level['commands'] as List).join(' · ')}'),
+              context.texts.devopsCommandesSolution((level['commands'] as List).join(' · ')),
               style: vTheme.textTheme.bodySmall,
             ),
         ],

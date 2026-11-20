@@ -339,7 +339,7 @@ class GoalRing extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  context.texts.brandSur('${goal}'),
+                  context.texts.brandSur('$goal'),
                   style: TextStyle(fontSize: size * 0.13, color: Colors.white70),
                 ),
               ],

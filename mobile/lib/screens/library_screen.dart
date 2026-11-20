@@ -42,16 +42,16 @@ class _LibraryScreenState extends State<LibraryScreen> {
         children: [
           TextField(
             decoration: InputDecoration(
-              prefixIcon: Icon(Icons.search),
+              prefixIcon: const Icon(Icons.search),
               hintText: context.texts.libraryChercherThemeMotGuide,
-              border: OutlineInputBorder(),
+              border: const OutlineInputBorder(),
             ),
             onChanged: (pValue) => setState(() => query = pValue),
           ),
           const SizedBox(height: 8),
           if (entries.isEmpty)
             Padding(
-              padding: EdgeInsets.all(24),
+              padding: const EdgeInsets.all(24),
               child: Text(
                 context.texts.libraryAucunGuideNiSchema,
                 textAlign: TextAlign.center,
@@ -59,7 +59,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
             )
           else if (vEntries.isEmpty)
             Padding(
-              padding: EdgeInsets.all(24),
+              padding: const EdgeInsets.all(24),
               child: Text(context.texts.libraryAucunResultat, textAlign: TextAlign.center),
             ),
           for (final (vIndex, vEntry) in vEntries.indexed) ...[

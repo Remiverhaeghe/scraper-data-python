@@ -59,7 +59,7 @@ class TrackingScreen extends StatelessWidget {
       body: vApplications.isEmpty
           ? Center(
               child: Padding(
-                padding: EdgeInsets.all(24),
+                padding: const EdgeInsets.all(24),
                 child: Text(
                   context.texts.trackingAucuneCandidatureRecueElles,
                   textAlign: TextAlign.center,
@@ -175,7 +175,7 @@ class MissionCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(context.texts.trackingMissionEntretien('${vPercent}'),
+            Text(context.texts.trackingMissionEntretien('$vPercent'),
                 style: vTheme.textTheme.titleMedium),
             const SizedBox(height: 6),
             LinearProgressIndicator(value: vPercent / 100),

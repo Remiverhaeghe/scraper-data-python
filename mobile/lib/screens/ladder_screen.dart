@@ -27,7 +27,7 @@ class LadderListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext pContext) => Scaffold(
-        appBar: AppBar(title: Text(context.texts.commonSimulateurAutomate)),
+        appBar: AppBar(title: Text(pContext.texts.commonSimulateurAutomate)),
         body: ListenableBuilder(
           listenable: state,
           builder: (pContext, _) => ListView(
@@ -336,7 +336,7 @@ class _LadderScreenState extends State<LadderScreen> {
             style: const TextStyle(fontFamily: 'monospace'),
             decoration: InputDecoration(
               labelText: context.texts.ladderProgrammeBarreauParLigne,
-              border: OutlineInputBorder(),
+              border: const OutlineInputBorder(),
             ),
             autocorrect: false,
             enableSuggestions: false,

@@ -761,5 +761,102 @@
         "type": "String"
       }
     }
-  }
+  },
+  "diveDepthLabel": "Profondeur atteinte : {depth}",
+  "@diveDepthLabel": {
+    "placeholders": {
+      "depth": {
+        "type": "String"
+      }
+    }
+  },
+  "diveFinish": "Sortir de l'eau",
+  "diveDeeperTitle": "Beau plongeon !",
+  "diveSteadyTitle": "Plongeon tenu",
+  "diveShallowerTitle": "Remontée vers la surface",
+  "diveDryTitle": "Pas encore dans l'eau",
+  "diveNoAnswer": "Aucune réponse pendant ce plongeon.",
+  "diveScore": "{answered, plural, =1{1 réponse} other{{answered} réponses}}, {correct} juste(s) : {percent} %",
+  "@diveScore": {
+    "placeholders": {
+      "answered": {
+        "type": "int"
+      },
+      "correct": {
+        "type": "int"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "diveDepthChange": "Profondeur du thème : {before} → {after}",
+  "@diveDepthChange": {
+    "placeholders": {
+      "before": {
+        "type": "String"
+      },
+      "after": {
+        "type": "String"
+      }
+    }
+  },
+  "diveDeeperHelp": "Les questions réussies montent de boîte : elles reviendront plus tard, et le thème descend vers les 3 m.",
+  "diveSteadyHelp": "Le thème garde sa profondeur. Les questions revues aujourd'hui reviendront à leur date.",
+  "diveShallowerHelp": "Les erreurs renvoient les questions en première boîte : elles reviennent dès demain, c'est normal.",
+  "diveDryHelp": "Répondez à une question pour mesurer la profondeur du thème.",
+  "diveAgain": "Replonger",
+  "diveBackToThemes": "Retour aux thèmes",
+  "diveLogTitle": "Carnet de plongée",
+  "diveLogWeek": "{count, plural, =0{Aucune réponse cette semaine} =1{1 réponse cette semaine} other{{count} réponses cette semaine}}",
+  "@diveLogWeek": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "diveLogSummary": "{correct} juste(s), {days} jour(s) dans l'eau, {percent} % de réussite",
+  "@diveLogSummary": {
+    "placeholders": {
+      "correct": {
+        "type": "int"
+      },
+      "days": {
+        "type": "int"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "diveLogEmpty": "Le carnet se remplit à chaque réponse, même sans le PC.",
+  "diveLogChart": "Réponses données chaque jour de la semaine",
+  "diveLogBestDay": "Meilleur jour : {day}, {count} réponse(s)",
+  "@diveLogBestDay": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "diveLogPrevious": "Semaine dernière : {count} réponse(s)",
+  "@diveLogPrevious": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "diveLogHelp": "La semaine va du lundi au dimanche. Le carnet garde huit semaines, sur le téléphone seulement.",
+  "diveMonday": "Lun",
+  "diveTuesday": "Mar",
+  "diveWednesday": "Mer",
+  "diveThursday": "Jeu",
+  "diveFriday": "Ven",
+  "diveSaturday": "Sam",
+  "diveSunday": "Dim"
 }

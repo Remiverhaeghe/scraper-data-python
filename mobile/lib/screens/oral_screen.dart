@@ -219,7 +219,7 @@ class _OralScreenState extends State<OralScreen> {
           ),
         ],
         if (seconds != null && feedback == null) ...[
-          Text(context.texts.oralReponse('${clock(seconds!)}')),
+          Text(context.texts.oralReponse(clock(seconds!))),
           buildRating(vCriteria[0][1], vCriteria[0][2], structure, (pValue) => structure = pValue),
           buildRating(vCriteria[1][1], vCriteria[1][2], example, (pValue) => example = pValue),
           const SizedBox(height: 8),
@@ -238,7 +238,7 @@ class _OralScreenState extends State<OralScreen> {
           const SizedBox(height: 8),
           if (finalScore case final vScore?)
             Text(
-              context.texts.oralSeanceTermineeXpAu('${vScore}', '${widget.state.oralXp}'),
+              context.texts.oralSeanceTermineeXpAu('$vScore', '${widget.state.oralXp}'),
               style: vTheme.textTheme.titleMedium?.copyWith(color: Colors.green.shade700),
             )
           else
@@ -262,19 +262,19 @@ class _OralScreenState extends State<OralScreen> {
       children: [
         if (vRecent.isNotEmpty)
           Text(context.texts
-              .oralNotesRecentes('${vRecent.map((pScore) => '$pScore %').join(', ')}')),
+              .oralNotesRecentes(vRecent.map((pScore) => '$pScore %').join(', '))),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           initialValue: mode,
           decoration: InputDecoration(
-              labelText: context.texts.oralTypeQuestions, border: OutlineInputBorder()),
+              labelText: context.texts.oralTypeQuestions, border: const OutlineInputBorder()),
           items: [
             for (final vEntry in vModes.entries)
               DropdownMenuItem(value: vEntry.key, child: Text(vEntry.value as String)),
           ],
           onChanged: (pMode) => setState(() => mode = pMode ?? mode),
         ),
-        if (vTarget.isNotEmpty) Text(context.texts.oralPour('${vTarget}')),
+        if (vTarget.isNotEmpty) Text(context.texts.oralPour(vTarget)),
         const SizedBox(height: 8),
         SegmentedButton<int>(
           segments: [

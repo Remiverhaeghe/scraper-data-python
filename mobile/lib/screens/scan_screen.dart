@@ -57,7 +57,7 @@ class _ScanScreenState extends State<ScanScreen> {
               onDetect: handle,
               errorBuilder: (_, pError) => Center(
                 child: Padding(
-                  padding: EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(24),
                   child: Text(
                     context.texts.scanCameraIndisponibleAutorisezDans,
                     textAlign: TextAlign.center,

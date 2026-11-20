@@ -41,15 +41,15 @@ class SetupScreen extends StatelessWidget {
                 ButtonSegment(
                     value: 'system',
                     label: Text(context.texts.setupAuto),
-                    icon: Icon(Icons.brightness_auto)),
+                    icon: const Icon(Icons.brightness_auto)),
                 ButtonSegment(
                     value: 'light',
                     label: Text(context.texts.setupClair),
-                    icon: Icon(Icons.light_mode)),
+                    icon: const Icon(Icons.light_mode)),
                 ButtonSegment(
                     value: 'dark',
                     label: Text(context.texts.setupSombre),
-                    icon: Icon(Icons.dark_mode)),
+                    icon: const Icon(Icons.dark_mode)),
               ],
               selected: {state.appearance},
               onSelectionChanged: (pChoice) => state.setDisplay(pAppearance: pChoice.first),
@@ -98,17 +98,18 @@ class SetupScreen extends StatelessWidget {
             builder: (_, __) => SwitchListTile(
               title: Text(context.texts.setupAlerteNouvellesOffres),
               subtitle: Text(
-                context.texts.setupVerifieesToutes3H('${offerAlertScore}'),
+                context.texts.setupVerifieesToutes3H('$offerAlertScore'),
               ),
               value: state.offerAlertsEnabled,
               onChanged: (pEnabled) async {
                 final vMessenger = ScaffoldMessenger.of(context);
+                final vRefused = context.texts.setupNotificationsRefuseesAutorisezDans;
                 final vEnabled = await state.setOfferAlerts(pEnabled);
 
                 if (pEnabled && !vEnabled) {
                   vMessenger.showSnackBar(
                     SnackBar(
-                      content: Text(context.texts.setupNotificationsRefuseesAutorisezDans),
+                      content: Text(vRefused),
                     ),
                   );
                 }
@@ -123,12 +124,13 @@ class SetupScreen extends StatelessWidget {
               value: state.reminderEnabled,
               onChanged: (pEnabled) async {
                 final vMessenger = ScaffoldMessenger.of(context);
+                final vRefused = context.texts.setupNotificationsRefuseesAutorisezDans;
                 final vEnabled = await state.setReminder(pEnabled);
 
                 if (pEnabled && !vEnabled) {
                   vMessenger.showSnackBar(
                     SnackBar(
-                      content: Text(context.texts.setupNotificationsRefuseesAutorisezDans),
+                      content: Text(vRefused),
                     ),
                   );
                 }

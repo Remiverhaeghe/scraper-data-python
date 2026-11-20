@@ -90,7 +90,7 @@ class SchemaView extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              context.texts.questionTouchezSchemaPourAgrandir('${description}'),
+              context.texts.questionTouchezSchemaPourAgrandir(description),
               style: vTheme.textTheme.bodySmall,
             ),
           ],
@@ -204,9 +204,9 @@ class ResultPanel extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              if (!grade.correct) Text(context.texts.questionVotreReponse('${grade.given}')),
+              if (!grade.correct) Text(context.texts.questionVotreReponse(grade.given)),
               Text(
-                context.texts.commonReponse('${grade.expected}'),
+                context.texts.commonReponse(grade.expected),
                 style: const TextStyle(fontWeight: FontWeight.w600),
               ),
               if (explanation.isNotEmpty) ...[

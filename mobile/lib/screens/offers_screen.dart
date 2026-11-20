@@ -21,7 +21,7 @@ Future<void> openOfferUrl(BuildContext pContext, Map<String, dynamic> pOffer) as
       await launchUrl(vUri, mode: LaunchMode.externalApplication);
 
   if (!vOpened) {
-    vMessenger.showSnackBar(SnackBar(content: Text(context.texts.offersAnnonceNPasPu)));
+    vMessenger.showSnackBar(SnackBar(content: Text(pContext.texts.offersAnnonceNPasPu)));
   }
 }
 
@@ -84,7 +84,7 @@ class _OffersScreenState extends State<OffersScreen> {
           if (vState.offers.isEmpty) {
             return Center(
               child: Padding(
-                padding: EdgeInsets.all(24),
+                padding: const EdgeInsets.all(24),
                 child: Text(
                   context.texts.offersAucuneOffreRecueOffres,
                   textAlign: TextAlign.center,
@@ -117,7 +117,7 @@ class _OffersScreenState extends State<OffersScreen> {
               ),
               if (vOffers.isEmpty)
                 Padding(
-                  padding: EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(24),
                   child: Text(context.texts.offersAucuneOffrePourCes, textAlign: TextAlign.center),
                 ),
               for (final vOffer in vOffers) OfferCard(state: vState, offer: vOffer),
@@ -193,7 +193,7 @@ class OfferCard extends StatelessWidget {
                 children: [
                   if (vScore != null)
                     Chip(
-                      label: Text(context.texts.offersCorrespondance('${vScore}')),
+                      label: Text(context.texts.offersCorrespondance('$vScore')),
                       visualDensity: VisualDensity.compact,
                     ),
                   const Spacer(),

@@ -7,12 +7,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../l10n/texts.dart';
+import '../logic/dive.dart';
 import '../logic/grading.dart';
 import '../logic/review.dart';
 import '../models/quiz_package.dart';
 import '../revision_state.dart';
 import '../widgets/question_input.dart';
 import '../widgets/question_parts.dart';
+import 'dive_result_screen.dart';
 import 'exam_screen.dart';
 import 'guide_screen.dart';
 
@@ -50,6 +52,9 @@ class _QuestionScreenState extends State<QuestionScreen> {
   int answered = 0;
   int correct = 0;
 
+  /// Profondeur du thème au départ du plongeon, pour le bilan.
+  late final double depthBefore;
+
   List<QuizQuestion> get questions {
     final vTheme = widget.theme;
 
@@ -67,6 +72,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
   @override
   void initState() {
     super.initState();
+    depthBefore = themeDepth(questions, widget.state.schedule);
 
     final vLimit = widget.timeLimit;
 
@@ -86,6 +92,29 @@ class _QuestionScreenState extends State<QuestionScreen> {
   void dispose() {
     ticker?.cancel();
     super.dispose();
+  }
+
+  /// Sort de l'eau : bilan du plongeon à la place de la série.
+  void finish() {
+    final DiveResult vDive = (
+      answered: answered,
+      correct: correct,
+      before: depthBefore,
+      after: themeDepth(questions, widget.state.schedule),
+    );
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(
+        builder: (pContext) => DiveResultScreen(
+          title: title,
+          dive: vDive,
+          onDiveAgain: () => Navigator.of(pContext).pushReplacement(
+            MaterialPageRoute<void>(
+              builder: (_) => QuestionScreen(state: widget.state, theme: widget.theme),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   void pickNext() {
@@ -154,8 +183,9 @@ class _QuestionScreenState extends State<QuestionScreen> {
       return;
     }
 
+    final vSignaled = context.texts.questionQuestionSignalee;
     await widget.state.flagQuestion(question!.id);
-    vMessenger.showSnackBar(SnackBar(content: Text(context.texts.questionQuestionSignalee)));
+    vMessenger.showSnackBar(SnackBar(content: Text(vSignaled)));
     pickNext();
   }
 
@@ -250,16 +280,23 @@ class _QuestionScreenState extends State<QuestionScreen> {
             Text(describeSprint(answered, correct), style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             FilledButton.icon(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: finish,
               icon: const Icon(Icons.task_alt),
               label: Text(context.texts.commonTerminer),
             ),
-          ] else
+          ] else ...[
             FilledButton.icon(
               onPressed: pickNext,
               icon: const Icon(Icons.arrow_forward),
               label: Text(context.texts.commonQuestionSuivante),
             ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: finish,
+              icon: const Icon(Icons.pool),
+              label: Text(context.texts.diveFinish),
+            ),
+          ],
         ],
       ],
     );

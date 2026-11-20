@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/texts.dart';
+import '../logic/dive.dart';
 import '../logic/review.dart';
 import '../models/quiz_package.dart';
 import '../revision_state.dart';
@@ -11,8 +12,10 @@ import '../services/api_client.dart';
 import '../theme.dart';
 import '../widgets/celebration.dart';
 import '../widgets/brand.dart';
+import '../widgets/depth_gauge.dart';
 import '../widgets/game_card.dart';
 import 'connect_screen.dart';
+import 'dive_log_screen.dart';
 import 'exam_screen.dart';
 import 'hub_tabs.dart';
 import 'offers_screen.dart';
@@ -186,6 +189,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           title: Text(context.texts.homeReviser),
           actions: [
             IconButton(
+              tooltip: context.texts.diveLogTitle,
+              icon: const Icon(Icons.menu_book_outlined),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => DiveLogScreen(state: state)),
+              ),
+            ),
+            IconButton(
               tooltip: context.texts.homeSynchroniser,
               onPressed: state.syncing ? null : synchronize,
               icon: const Icon(Icons.sync),
@@ -208,7 +218,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     leading: const Icon(Icons.event_available),
                     title: Text(
                       context.texts
-                          .homeEntretien('${formatMoment(vInterview['interview_at'] as String?)}'),
+                          .homeEntretien(formatMoment(vInterview['interview_at'] as String?)),
                     ),
                     subtitle: Text(context.texts.homeOuvrirFichePreparation(
                         '${vInterview['company'] ?? vInterview['title'] ?? ''}')),
@@ -224,7 +234,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ApplicationsCard(state: state),
               if (state.package == null)
                 Padding(
-                  padding: EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(24),
                   child: Text(
                     context.texts.homeAucuneQuestionPourMoment,
                     textAlign: TextAlign.center,
@@ -290,10 +300,10 @@ class SummaryCard extends StatelessWidget {
             if (vLastSync != null)
               Text(
                 context.texts.homeSynchronise(
-                    '${vLastSync.day.toString().padLeft(2, '0')}',
-                    '${vLastSync.month.toString().padLeft(2, '0')}',
-                    '${vLastSync.hour.toString().padLeft(2, '0')}',
-                    '${vLastSync.minute.toString().padLeft(2, '0')}'),
+                    vLastSync.day.toString().padLeft(2, '0'),
+                    vLastSync.month.toString().padLeft(2, '0'),
+                    vLastSync.hour.toString().padLeft(2, '0'),
+                    vLastSync.minute.toString().padLeft(2, '0')),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
           ],
@@ -366,14 +376,11 @@ class DomainCard extends StatelessWidget {
                     children: [
                       Text(
                         context.texts.homeRevoirNouvelleQuestion(
-                            '${vDue}', '${vNew}', '${vQuestions.length}'),
+                            '$vDue', '$vNew', '${vQuestions.length}'),
                       ),
                       const SizedBox(height: 6),
-                      AnimatedBar(
-                        value:
-                            vQuestions.isEmpty ? 0 : (vQuestions.length - vNew) / vQuestions.length,
-                        color: boardColor,
-                      ),
+                      // Profondeur du thème : boîte moyenne de ses questions, de 0 à 3 m
+                      DepthGauge(depth: themeDepth(vQuestions, state.schedule)),
                     ],
                   ),
                   trailing: vDue > 0

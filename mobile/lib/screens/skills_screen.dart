@@ -25,11 +25,12 @@ class _SkillsScreenState extends State<SkillsScreen> {
 
   Future<void> save() async {
     final vMessenger = ScaffoldMessenger.of(context);
+    final vSaved = context.texts.skillsNiveauxEnregistresEnvoyesAu;
 
     await widget.state.saveSkillLevels(levels);
 
     vMessenger.showSnackBar(
-      SnackBar(content: Text(context.texts.skillsNiveauxEnregistresEnvoyesAu)),
+      SnackBar(content: Text(vSaved)),
     );
   }
 
@@ -38,7 +39,7 @@ class _SkillsScreenState extends State<SkillsScreen> {
     final Widget vBody = levels.isEmpty
         ? Center(
             child: Padding(
-              padding: EdgeInsets.all(24),
+              padding: const EdgeInsets.all(24),
               child: Text(context.texts.skillsSynchronisezAvecPcPour),
             ),
           )

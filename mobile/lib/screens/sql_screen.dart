@@ -39,7 +39,7 @@ class SqlListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext pContext) => Scaffold(
-        appBar: AppBar(title: Text(context.texts.commonBacSableSql)),
+        appBar: AppBar(title: Text(pContext.texts.commonBacSableSql)),
         body: ListenableBuilder(
           listenable: state,
           builder: (pContext, _) {
@@ -182,20 +182,20 @@ class _SqlScreenState extends State<SqlScreen> {
         if (vRun['passed'] == true) ...[
           Text(
             context.texts.commonNiveauReussi(
-                '${first ? ' · +${widget.state.sqlXp} XP au retour sur le PC' : ''}'),
+                first ? ' · +${widget.state.sqlXp} XP au retour sur le PC' : ''),
             style: vTheme.textTheme.titleMedium?.copyWith(color: Colors.green.shade700),
           ),
           Text(level['explanation'] as String? ?? ''),
         ] else ...[
           Text(vRun['message'] as String, style: TextStyle(color: vTheme.colorScheme.error)),
           for (final vAdvice in vRun['advice'] as List)
-            Text(context.texts.commonConseil('${vAdvice}')),
+            Text(context.texts.commonConseil('$vAdvice')),
         ],
         const SizedBox(height: 8),
         Text(
           context.texts.sqlVotreResultat(
-              '${vResult['changed'] != null ? '${vResult['changed']} ligne(s) modifiée(s) · ' : ''}',
-              '${vResult['truncated'] == true ? '200 premières lignes' : '$vRows ligne(s)'}'),
+              vResult['changed'] != null ? '${vResult['changed']} ligne(s) modifiée(s) · ' : '',
+              vResult['truncated'] == true ? '200 premières lignes' : '$vRows ligne(s)'),
           style: vTheme.textTheme.labelLarge,
         ),
         ResultTable(columns: vResult['columns'] as List, rows: vResult['rows'] as List),
@@ -243,7 +243,7 @@ class _SqlScreenState extends State<SqlScreen> {
               enableSuggestions: false,
               decoration: InputDecoration(
                 labelText: context.texts.sqlRequete(
-                    '${widget.state.sqlDialect == 'sqlserver' ? 'SQL Server' : 'MySQL'}'),
+                    widget.state.sqlDialect == 'sqlserver' ? 'SQL Server' : 'MySQL'),
                 border: const OutlineInputBorder(),
               ),
             ),

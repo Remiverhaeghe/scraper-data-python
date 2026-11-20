@@ -40,7 +40,7 @@ class OfferDetailScreen extends StatelessWidget {
     final vText = await showDialog<String>(
       context: pContext,
       builder: (pDialogContext) => AlertDialog(
-        title: Text(context.texts.offerDetailNoteRapide),
+        title: Text(pContext.texts.offerDetailNoteRapide),
         content: TextField(
           controller: vController,
           autofocus: true,
@@ -48,16 +48,16 @@ class OfferDetailScreen extends StatelessWidget {
           maxLines: 6,
           maxLength: maxNoteLength,
           decoration:
-              InputDecoration(hintText: context.texts.offerDetailAppelRecruteurImpressionFaire),
+              InputDecoration(hintText: pContext.texts.offerDetailAppelRecruteurImpressionFaire),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(pDialogContext).pop(),
-            child: Text(context.texts.commonAnnuler),
+            child: Text(pContext.texts.commonAnnuler),
           ),
           FilledButton(
             onPressed: () => Navigator.of(pDialogContext).pop(vController.text),
-            child: Text(context.texts.offerDetailGarder),
+            child: Text(pContext.texts.offerDetailGarder),
           ),
         ],
       ),
@@ -71,7 +71,7 @@ class OfferDetailScreen extends StatelessWidget {
 
     await onNote!(vText);
     vMessenger.showSnackBar(
-      SnackBar(content: Text(context.texts.offerDetailNoteGardeeElleRejoint)),
+      SnackBar(content: Text(pContext.texts.offerDetailNoteGardeeElleRejoint)),
     );
   }
 

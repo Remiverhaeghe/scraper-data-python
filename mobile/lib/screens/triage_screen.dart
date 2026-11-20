@@ -34,7 +34,7 @@ class TriageScreen extends StatelessWidget {
           if (vUnsorted.isEmpty) {
             return Center(
               child: Padding(
-                padding: EdgeInsets.all(24),
+                padding: const EdgeInsets.all(24),
                 child: Text(
                   context.texts.triageToutesOffresSontTriees,
                   textAlign: TextAlign.center,

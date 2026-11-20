@@ -115,7 +115,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
               autocorrect: false,
               enableSuggestions: false,
               decoration: InputDecoration(
-                  labelText: context.texts.puzzleCeQuiRemplace, border: OutlineInputBorder()),
+                  labelText: context.texts.puzzleCeQuiRemplace, border: const OutlineInputBorder()),
               onSubmitted: (_) => submit(pPuzzle),
             ),
           ],
@@ -155,7 +155,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
               '${state.puzzleRules.seriesLength}',
               '${state.puzzleRules.types[pPuzzle['type']]}',
               '${pPuzzle['language']}',
-              '${state.puzzleRules.levelLabel(pPuzzle['level'] as int)}'),
+              state.puzzleRules.levelLabel(pPuzzle['level'] as int)),
           style: vTheme.textTheme.bodySmall,
         ),
         const SizedBox(height: 8),
@@ -183,7 +183,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
         Text(vPuzzle['title'] as String, style: vTheme.textTheme.titleLarge),
         Text(
           context.texts.puzzleReponsesJustesAffilee(
-              '${vCorrect ? 'Bonne réponse' : "Ce n'est pas la bonne réponse"}',
+              vCorrect ? 'Bonne réponse' : "Ce n'est pas la bonne réponse",
               '${state.puzzleProgress['streak']}'),
           style: vTheme.textTheme.titleMedium?.copyWith(
             color: vCorrect ? Colors.green.shade700 : vTheme.colorScheme.error,
@@ -258,7 +258,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
             child: ListTile(
               leading: const Icon(Icons.extension_outlined),
               title: Text(context.texts
-                  .puzzleNiveau('${state.puzzleRules.levelLabel(vProgress['level'] as int)}')),
+                  .puzzleNiveau(state.puzzleRules.levelLabel(vProgress['level'] as int))),
               subtitle: Text(
                 context.texts.puzzleReponsesJustesAffileeRecord(
                     '${vProgress['streak']}',

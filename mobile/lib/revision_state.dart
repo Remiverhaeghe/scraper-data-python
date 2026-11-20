@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
 import 'logic/devops.dart';
+import 'logic/dive.dart';
 import 'logic/circuit_drawing.dart';
 import 'logic/code_puzzles.dart';
 import 'logic/excel_levels.dart';
@@ -75,6 +76,7 @@ class RevisionState extends ChangeNotifier
   final ApiClient Function(ServerSettings) clientFactory;
 
   /// Rappel quotidien ; absent dans les tests, qui n'ont pas de notifications.
+  @override
   final Reminders? reminders;
 
   /// Widget de l'écran d'accueil ; absent dans les tests.
@@ -99,6 +101,7 @@ class RevisionState extends ChangeNotifier
   Map<String, dynamic> preferences = {};
   bool syncing = false;
 
+  @override
   bool get reminderEnabled => preferences[reminderPreference] == true;
 
   bool get offerAlertsEnabled => preferences[offerAlertPreference] == true;
@@ -772,6 +775,7 @@ class RevisionState extends ChangeNotifier
       goalCountPreference: answersToday + 1,
     };
     await store.savePreferences(preferences);
+    await recordDive(rGrade.correct, pAt: vNow);
 
     schedule = {
       ...schedule,

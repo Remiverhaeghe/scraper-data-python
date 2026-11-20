@@ -64,7 +64,7 @@ class GitListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext pContext) => Scaffold(
-        appBar: AppBar(title: Text(context.texts.commonBacSableGit)),
+        appBar: AppBar(title: Text(pContext.texts.commonBacSableGit)),
         body: ListenableBuilder(
           listenable: state,
           builder: (pContext, _) {
@@ -218,8 +218,8 @@ class _GitScreenState extends State<GitScreen> {
           if (vWorktree.isNotEmpty || vGoalWorktree.isNotEmpty)
             Text(
               context.texts.gitFichiersObjectif(
-                  '${vWorktree.isEmpty ? 'rien en cours' : vWorktree.join(' · ')}',
-                  '${vGoalWorktree.isEmpty ? 'rien en cours' : vGoalWorktree.join(' · ')}'),
+                  vWorktree.isEmpty ? 'rien en cours' : vWorktree.join(' · '),
+                  vGoalWorktree.isEmpty ? 'rien en cours' : vGoalWorktree.join(' · ')),
               style: vTheme.textTheme.bodySmall,
             ),
           if (message.isNotEmpty)
@@ -259,7 +259,7 @@ class _GitScreenState extends State<GitScreen> {
             ),
           ],
           if (history.isNotEmpty)
-            Text(context.texts.gitCommandes('${history.join(' · ')}'),
+            Text(context.texts.gitCommandes(history.join(' · ')),
                 style: vTheme.textTheme.bodySmall),
           Wrap(
             spacing: 8,
@@ -280,7 +280,7 @@ class _GitScreenState extends State<GitScreen> {
           ),
           if (showHint) Text(context.texts.commonIndice('${level['hint']}')),
           if (showSolution)
-            Text(context.texts.gitSolution('${(level['solution'] as List).join(' · ')}')),
+            Text(context.texts.gitSolution((level['solution'] as List).join(' · '))),
         ],
       ),
     );

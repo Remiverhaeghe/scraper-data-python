@@ -21,7 +21,7 @@ class LabsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext pContext) => Scaffold(
-        appBar: AppBar(title: Text(context.texts.labsSimulations)),
+        appBar: AppBar(title: Text(pContext.texts.labsSimulations)),
         body: ListenableBuilder(
           listenable: state,
           builder: (pContext, _) => ListView(
@@ -33,16 +33,16 @@ class LabsScreen extends StatelessWidget {
                   state.circuitLevels.isEmpty &&
                   state.puzzles.isEmpty)
                 Text(
-                  context.texts.commonSynchronisezFoisAvecPc,
+                  pContext.texts.commonSynchronisezFoisAvecPc,
                 ),
               if (state.pendingLabs.isNotEmpty)
-                Text(context.texts.commonPartieEnvoyerAuPc('${state.pendingLabs.length}')),
+                Text(pContext.texts.commonPartieEnvoyerAuPc('${state.pendingLabs.length}')),
               if (state.oralRules.isNotEmpty)
                 Card(
                   child: ListTile(
                     leading: const Icon(Icons.record_voice_over),
-                    title: Text(context.texts.commonEntretienOral),
-                    subtitle: Text(context.texts.labsQuestionsLuesVoixHaute),
+                    title: Text(pContext.texts.commonEntretienOral),
+                    subtitle: Text(pContext.texts.labsQuestionsLuesVoixHaute),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => Navigator.of(pContext).push(
                       MaterialPageRoute<void>(builder: (_) => OralScreen(state: state)),
@@ -53,10 +53,10 @@ class LabsScreen extends StatelessWidget {
                 Card(
                   child: ListTile(
                     leading: const Icon(Icons.extension_outlined),
-                    title: Text(context.texts.commonPuzzlesCode),
+                    title: Text(pContext.texts.commonPuzzlesCode),
                     subtitle: Text(
-                      context.texts.labsOrdreLigneFautiveCode(
-                          '${state.puzzleRules.levelLabel(state.puzzleProgress['level'] as int)}'),
+                      pContext.texts.labsOrdreLigneFautiveCode(
+                          state.puzzleRules.levelLabel(state.puzzleProgress['level'] as int)),
                     ),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => Navigator.of(pContext).push(
@@ -68,8 +68,8 @@ class LabsScreen extends StatelessWidget {
                 Card(
                   child: ListTile(
                     leading: const Icon(Icons.build_outlined),
-                    title: Text(context.texts.commonPannesResoudre),
-                    subtitle: Text(context.texts
+                    title: Text(pContext.texts.commonPannesResoudre),
+                    subtitle: Text(pContext.texts
                         .labsMachinesPanne('${state.troubleshootingScenarios.length}')),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => Navigator.of(pContext).push(
@@ -82,9 +82,9 @@ class LabsScreen extends StatelessWidget {
                 Card(
                   child: ListTile(
                     leading: const Icon(Icons.account_tree_outlined),
-                    title: Text(context.texts.commonBacSableGit),
+                    title: Text(pContext.texts.commonBacSableGit),
                     subtitle: Text(
-                      context.texts.labsNiveauxReussis(
+                      pContext.texts.labsNiveauxReussis(
                           '${state.gitLevels.where((pLevel) => state.gitBest(pLevel['id'] as String) != null).length}',
                           '${state.gitLevels.length}'),
                     ),
@@ -98,9 +98,9 @@ class LabsScreen extends StatelessWidget {
                 Card(
                   child: ListTile(
                     leading: const Icon(Icons.storage_outlined),
-                    title: Text(context.texts.commonBacSableSql),
+                    title: Text(pContext.texts.commonBacSableSql),
                     subtitle: Text(
-                      context.texts.labsNiveauxReussis(
+                      pContext.texts.labsNiveauxReussis(
                           '${state.sqlPassed.length}', '${state.sqlLevelList.length}'),
                     ),
                     trailing: const Icon(Icons.chevron_right),
@@ -113,9 +113,9 @@ class LabsScreen extends StatelessWidget {
                 Card(
                   child: ListTile(
                     leading: const Icon(Icons.table_chart_outlined),
-                    title: Text(context.texts.commonAtelierExcel),
+                    title: Text(pContext.texts.commonAtelierExcel),
                     subtitle: Text(
-                      context.texts.labsNiveauxReussis(
+                      pContext.texts.labsNiveauxReussis(
                           '${state.excelPassed.length}', '${state.excelLevelList.length}'),
                     ),
                     trailing: const Icon(Icons.chevron_right),
@@ -128,9 +128,9 @@ class LabsScreen extends StatelessWidget {
                 Card(
                   child: ListTile(
                     leading: const Icon(Icons.dns_outlined),
-                    title: Text(context.texts.commonMavenDocker),
+                    title: Text(pContext.texts.commonMavenDocker),
                     subtitle: Text(
-                      context.texts.labsNiveauxReussis(
+                      pContext.texts.labsNiveauxReussis(
                           '${state.devopsPassed.length}', '${state.devopsLevels.length}'),
                     ),
                     trailing: const Icon(Icons.chevron_right),
@@ -143,9 +143,9 @@ class LabsScreen extends StatelessWidget {
                 Card(
                   child: ListTile(
                     leading: const Icon(Icons.electrical_services),
-                    title: Text(context.texts.commonSchemasElectriques),
+                    title: Text(pContext.texts.commonSchemasElectriques),
                     subtitle: Text(
-                      context.texts.labsMontagesReussisModeLibre(
+                      pContext.texts.labsMontagesReussisModeLibre(
                           '${state.circuitPassed.length}', '${state.circuitLevels.length}'),
                     ),
                     trailing: const Icon(Icons.chevron_right),
@@ -158,9 +158,9 @@ class LabsScreen extends StatelessWidget {
                 Card(
                   child: ListTile(
                     leading: const Icon(Icons.memory_outlined),
-                    title: Text(context.texts.commonSimulateurAutomate),
+                    title: Text(pContext.texts.commonSimulateurAutomate),
                     subtitle: Text(
-                      context.texts.labsNiveauxReussis(
+                      pContext.texts.labsNiveauxReussis(
                           '${state.ladderPassed.length}', '${state.ladderLevels.length}'),
                     ),
                     trailing: const Icon(Icons.chevron_right),

@@ -116,8 +116,8 @@ class _ExamScreenState extends State<ExamScreen> {
               '${pResult.correct}',
               '${pResult.count}',
               '${pResult.seconds ~/ 60}',
-              '${(pResult.seconds % 60).toString().padLeft(2, '0')}',
-              '${pResult.overtime ? ', au-delà de la durée conseillée' : ''}'),
+              (pResult.seconds % 60).toString().padLeft(2, '0'),
+              pResult.overtime ? ', au-delà de la durée conseillée' : ''),
         ),
         const SizedBox(height: 16),
         if (wrong.isEmpty)
@@ -128,7 +128,7 @@ class _ExamScreenState extends State<ExamScreen> {
             Card(
               child: ListTile(
                 title: Text(vQuestion.text),
-                subtitle: Text(context.texts.commonReponse('${vGrade.expected}')),
+                subtitle: Text(context.texts.commonReponse(vGrade.expected)),
               ),
             ),
         ],

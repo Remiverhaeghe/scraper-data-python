@@ -14,7 +14,7 @@ class ExcelListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext pContext) => Scaffold(
-        appBar: AppBar(title: Text(context.texts.commonAtelierExcel)),
+        appBar: AppBar(title: Text(pContext.texts.commonAtelierExcel)),
         body: ListenableBuilder(
           listenable: state,
           builder: (pContext, _) {
@@ -28,7 +28,7 @@ class ExcelListScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               children: [
                 Text(
-                  context.texts.excelNomsFonctionsPointVirgule,
+                  pContext.texts.excelNomsFonctionsPointVirgule,
                   style: Theme.of(pContext).textTheme.bodySmall,
                 ),
                 for (final vEntry in vSeries.entries) ...[
@@ -184,14 +184,14 @@ class _ExcelScreenState extends State<ExcelScreen> {
         if (run['passed'] == true) ...[
           Text(
             context.texts.commonNiveauReussi(
-                '${first ? ' · +${widget.state.excelXp} XP au retour sur le PC' : ''}'),
+                first ? ' · +${widget.state.excelXp} XP au retour sur le PC' : ''),
             style: vTheme.textTheme.titleMedium?.copyWith(color: Colors.green.shade700),
           ),
           Text(level['explanation'] as String? ?? ''),
         ] else ...[
           Text(run['message'] as String, style: TextStyle(color: vTheme.colorScheme.error)),
           for (final vAdvice in run['advice'] as List)
-            Text(context.texts.commonConseil('${vAdvice}')),
+            Text(context.texts.commonConseil('$vAdvice')),
         ],
         for (final vCell in run['cells'] as List)
           Text(

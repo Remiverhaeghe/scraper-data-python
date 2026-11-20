@@ -18,14 +18,14 @@ class TroubleshootingListScreen extends StatelessWidget {
     final vScenarios = state.troubleshootingScenarios;
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.texts.commonPannesResoudre)),
+      appBar: AppBar(title: Text(pContext.texts.commonPannesResoudre)),
       body: ListenableBuilder(
         listenable: state,
         builder: (pContext, _) => vScenarios.isEmpty
             ? Padding(
-                padding: EdgeInsets.all(24),
+                padding: const EdgeInsets.all(24),
                 child: Text(
-                  context.texts.commonSynchronisezFoisAvecPc,
+                  pContext.texts.commonSynchronisezFoisAvecPc,
                 ),
               )
             : ListView(
@@ -35,7 +35,7 @@ class TroubleshootingListScreen extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Text(
-                        context.texts.commonPartieEnvoyerAuPc('${state.pendingLabs.length}'),
+                        pContext.texts.commonPartieEnvoyerAuPc('${state.pendingLabs.length}'),
                       ),
                     ),
                   for (final vScenario in vScenarios)
@@ -136,7 +136,7 @@ class _TroubleshootingScreenState extends State<TroubleshootingScreen> {
                   children: [
                     Text(
                       context.texts.troubleshootingPanneResoluePoints(
-                          '${vGame['score']}', '${'★' * (vGame['stars'] as int)}'),
+                          '${vGame['score']}', '★' * (vGame['stars'] as int)),
                       style: vTheme.textTheme.titleMedium,
                     ),
                     Text(
