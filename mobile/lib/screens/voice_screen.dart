@@ -79,7 +79,8 @@ class _VoiceScreenState extends State<VoiceScreen> {
     final vText = context.texts;
     setState(() => busy = true);
     final vHeard = await widget.speech.listen();
-    final vChoice = matchSpokenChoice(vHeard, vQuestion.choices.take(choiceLetters.length).toList());
+    final vChoice =
+        matchSpokenChoice(vHeard, vQuestion.choices.take(choiceLetters.length).toList());
     if (!mounted) {
       return;
     }

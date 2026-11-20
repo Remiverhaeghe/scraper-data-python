@@ -33,7 +33,7 @@ class Speech {
     }
   }
 
-    Future<void> stop() async {
+  Future<void> stop() async {
     try {
       await _channel.invokeMethod<void>('stop');
     } on MissingPluginException {

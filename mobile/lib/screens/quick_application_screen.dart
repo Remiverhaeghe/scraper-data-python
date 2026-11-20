@@ -124,7 +124,8 @@ class _QuickApplicationScreenState extends State<QuickApplicationScreen> {
           ),
           if (vPending.isNotEmpty) ...[
             const SizedBox(height: 24),
-            Text(vText.quickPending(vPending.length), style: Theme.of(context).textTheme.titleSmall),
+            Text(vText.quickPending(vPending.length),
+                style: Theme.of(context).textTheme.titleSmall),
             for (final (vIndex, vItem) in vPending.indexed)
               ListTile(
                 contentPadding: EdgeInsets.zero,

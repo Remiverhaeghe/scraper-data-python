@@ -55,7 +55,8 @@ void main() {
     if (vAsked.contains("L'image est le modèle")) {
       expect(vState.pending, hasLength(1));
       expect(find.text('Question suivante'), findsOneWidget);
-      expect(find.text('1 réponse, ' '${vState.pending.single['correct'] == true ? 1 : 0} juste(s)'),
+      expect(
+          find.text('1 réponse, ' '${vState.pending.single['correct'] == true ? 1 : 0} juste(s)'),
           findsOneWidget);
     }
   });
