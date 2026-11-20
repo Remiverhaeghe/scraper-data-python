@@ -257,7 +257,8 @@ class _CircuitScreenState extends State<CircuitScreen> {
               decoration: InputDecoration(
                 labelText: draft.label(vItem['id'] as String),
                 suffixText: valueRanges[vItem['type']]!.$4,
-                helperText: context.texts.circuitText('${formatG(valueRanges[vItem['type']]!.$2)}', '${formatG(valueRanges[vItem['type']]!.$3)}'),
+                helperText: context.texts.circuitText('${formatG(valueRanges[vItem['type']]!.$2)}',
+                    '${formatG(valueRanges[vItem['type']]!.$3)}'),
                 border: const OutlineInputBorder(),
                 isDense: true,
               ),
@@ -343,7 +344,9 @@ class _CircuitScreenState extends State<CircuitScreen> {
         children: [
           Text(level?['goal'] as String? ??
               'Composez librement : le simulateur calcule tensions et courants.'),
-          if (showHint) Text(context.texts.commonIndice('${level!['hint']}'), style: vTheme.textTheme.bodySmall),
+          if (showHint)
+            Text(context.texts.commonIndice('${level!['hint']}'),
+                style: vTheme.textTheme.bodySmall),
           const SizedBox(height: 8),
           buildPalette(),
           const SizedBox(height: 8),
@@ -385,10 +388,13 @@ class _CircuitScreenState extends State<CircuitScreen> {
                     icon: const Icon(Icons.task_alt),
                     label: Text(context.texts.commonVerifier)),
               OutlinedButton.icon(
-                  onPressed: simulate, icon: const Icon(Icons.bolt), label: Text(context.texts.circuitSimuler)),
+                  onPressed: simulate,
+                  icon: const Icon(Icons.bolt),
+                  label: Text(context.texts.circuitSimuler)),
               if (level != null)
                 TextButton(
-                    onPressed: () => setState(() => showHint = true), child: Text(context.texts.commonIndice2)),
+                    onPressed: () => setState(() => showHint = true),
+                    child: Text(context.texts.commonIndice2)),
               if (level != null)
                 TextButton(onPressed: showSolution, child: Text(context.texts.commonVoirSolution)),
               TextButton(

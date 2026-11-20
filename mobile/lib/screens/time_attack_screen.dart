@@ -211,7 +211,8 @@ class _TimeAttackScreenState extends State<TimeAttackScreen> with TickerProvider
               duration: const Duration(milliseconds: 250),
               child: Chip(
                 avatar: Icon(Icons.local_fire_department, color: Colors.orange.shade700),
-                label: Text(context.texts.timeAttackXSerie('${score.multiplier}', '${score.combo}')),
+                label:
+                    Text(context.texts.timeAttackXSerie('${score.multiplier}', '${score.combo}')),
               ),
             ),
           ],

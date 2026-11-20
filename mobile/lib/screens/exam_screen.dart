@@ -112,7 +112,12 @@ class _ExamScreenState extends State<ExamScreen> {
       children: [
         Text('${pResult.score} %', style: vTextTheme.displaySmall),
         Text(
-          context.texts.examBonnesReponsesMin('${pResult.correct}', '${pResult.count}', '${pResult.seconds ~/ 60}', '${(pResult.seconds % 60).toString().padLeft(2, '0')}', '${pResult.overtime ? ', au-delà de la durée conseillée' : ''}'),
+          context.texts.examBonnesReponsesMin(
+              '${pResult.correct}',
+              '${pResult.count}',
+              '${pResult.seconds ~/ 60}',
+              '${(pResult.seconds % 60).toString().padLeft(2, '0')}',
+              '${pResult.overtime ? ', au-delà de la durée conseillée' : ''}'),
         ),
         const SizedBox(height: 16),
         if (wrong.isEmpty)

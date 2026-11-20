@@ -207,9 +207,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   child: ListTile(
                     leading: const Icon(Icons.event_available),
                     title: Text(
-                      context.texts.homeEntretien('${formatMoment(vInterview['interview_at'] as String?)}'),
+                      context.texts
+                          .homeEntretien('${formatMoment(vInterview['interview_at'] as String?)}'),
                     ),
-                    subtitle: Text(context.texts.homeOuvrirFichePreparation('${vInterview['company'] ?? vInterview['title'] ?? ''}')),
+                    subtitle: Text(context.texts.homeOuvrirFichePreparation(
+                        '${vInterview['company'] ?? vInterview['title'] ?? ''}')),
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(
                         builder: (_) => SheetScreen(sheet: state.sheetOf(vInterview)!),
@@ -287,7 +289,11 @@ class SummaryCard extends StatelessWidget {
               ),
             if (vLastSync != null)
               Text(
-                context.texts.homeSynchronise('${vLastSync.day.toString().padLeft(2, '0')}', '${vLastSync.month.toString().padLeft(2, '0')}', '${vLastSync.hour.toString().padLeft(2, '0')}', '${vLastSync.minute.toString().padLeft(2, '0')}'),
+                context.texts.homeSynchronise(
+                    '${vLastSync.day.toString().padLeft(2, '0')}',
+                    '${vLastSync.month.toString().padLeft(2, '0')}',
+                    '${vLastSync.hour.toString().padLeft(2, '0')}',
+                    '${vLastSync.minute.toString().padLeft(2, '0')}'),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
           ],
@@ -359,7 +365,8 @@ class DomainCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        context.texts.homeRevoirNouvelleQuestion('${vDue}', '${vNew}', '${vQuestions.length}'),
+                        context.texts.homeRevoirNouvelleQuestion(
+                            '${vDue}', '${vNew}', '${vQuestions.length}'),
                       ),
                       const SizedBox(height: 6),
                       AnimatedBar(
@@ -500,7 +507,8 @@ class ApplicationsCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(context.texts.homePourMesCandidatures, style: Theme.of(context).textTheme.titleMedium),
+            Text(context.texts.homePourMesCandidatures,
+                style: Theme.of(context).textTheme.titleMedium),
             for (final vApplication in state.applications) ...[
               const SizedBox(height: 12),
               Text(

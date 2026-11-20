@@ -347,7 +347,9 @@ class _LadderScreenState extends State<LadderScreen> {
             spacing: 8,
             children: [
               FilledButton.icon(
-                  onPressed: check, icon: const Icon(Icons.check), label: Text(context.texts.commonVerifier)),
+                  onPressed: check,
+                  icon: const Icon(Icons.check),
+                  label: Text(context.texts.commonVerifier)),
               OutlinedButton.icon(
                 onPressed: toggleSimulation,
                 icon: Icon(timer == null ? Icons.play_arrow : Icons.stop),

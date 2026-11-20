@@ -163,7 +163,9 @@ class ThemeProgress extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
             color: theme.share >= 0.8 ? successColorOf(context) : null,
           ),
-          if (theme.due > 0) Text(context.texts.statisticsRevoirAujourdHui('${theme.due}'), style: vTextTheme.bodySmall),
+          if (theme.due > 0)
+            Text(context.texts.statisticsRevoirAujourdHui('${theme.due}'),
+                style: vTextTheme.bodySmall),
         ],
       ),
     );

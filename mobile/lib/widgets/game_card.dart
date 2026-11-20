@@ -85,7 +85,8 @@ class GameCard extends StatelessWidget {
                 children: [
                   Text('${pGame['title']}', style: vTheme.textTheme.titleMedium),
                   Text(
-                    context.texts.gameXpProchain('${vInLevel.toInt()}', '${vForLevel.toInt()}', '${pGame['next_title']}'),
+                    context.texts.gameXpProchain(
+                        '${vInLevel.toInt()}', '${vForLevel.toInt()}', '${pGame['next_title']}'),
                     style: vTheme.textTheme.bodySmall,
                   ),
                 ],
@@ -197,7 +198,8 @@ class GameCard extends StatelessWidget {
         '${pQuest['weekly'] == true ? 'Semaine · ' : ''}${pQuest['label']}',
         style: vDone ? const TextStyle(decoration: TextDecoration.lineThrough) : null,
       ),
-      trailing: Text(context.texts.gameXp('${pQuest['progress']}', '${pQuest['target']}', '${pQuest['xp']}')),
+      trailing: Text(
+          context.texts.gameXp('${pQuest['progress']}', '${pQuest['target']}', '${pQuest['xp']}')),
     );
 
     return rQuest;
@@ -232,7 +234,8 @@ class GameCard extends StatelessWidget {
                 ),
                 icon: const Icon(Icons.timer_outlined),
                 label: Text(
-                  context.texts.gameContreMontre60('${state.timeAttackBest > 0 ? ' · record ${state.timeAttackBest}' : ''}'),
+                  context.texts.gameContreMontre60(
+                      '${state.timeAttackBest > 0 ? ' · record ${state.timeAttackBest}' : ''}'),
                 ),
               ),
             ],

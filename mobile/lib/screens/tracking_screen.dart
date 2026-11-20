@@ -175,7 +175,8 @@ class MissionCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(context.texts.trackingMissionEntretien('${vPercent}'), style: vTheme.textTheme.titleMedium),
+            Text(context.texts.trackingMissionEntretien('${vPercent}'),
+                style: vTheme.textTheme.titleMedium),
             const SizedBox(height: 6),
             LinearProgressIndicator(value: vPercent / 100),
             if (mission['completed_at'] != null)

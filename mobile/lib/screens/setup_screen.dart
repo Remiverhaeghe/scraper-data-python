@@ -39,9 +39,17 @@ class SetupScreen extends StatelessWidget {
             builder: (_, __) => SegmentedButton<String>(
               segments: [
                 ButtonSegment(
-                    value: 'system', label: Text(context.texts.setupAuto), icon: Icon(Icons.brightness_auto)),
-                ButtonSegment(value: 'light', label: Text(context.texts.setupClair), icon: Icon(Icons.light_mode)),
-                ButtonSegment(value: 'dark', label: Text(context.texts.setupSombre), icon: Icon(Icons.dark_mode)),
+                    value: 'system',
+                    label: Text(context.texts.setupAuto),
+                    icon: Icon(Icons.brightness_auto)),
+                ButtonSegment(
+                    value: 'light',
+                    label: Text(context.texts.setupClair),
+                    icon: Icon(Icons.light_mode)),
+                ButtonSegment(
+                    value: 'dark',
+                    label: Text(context.texts.setupSombre),
+                    icon: Icon(Icons.dark_mode)),
               ],
               selected: {state.appearance},
               onSelectionChanged: (pChoice) => state.setDisplay(pAppearance: pChoice.first),

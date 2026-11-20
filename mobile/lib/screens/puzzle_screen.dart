@@ -150,7 +150,12 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
       children: [
         Text(pPuzzle['title'] as String, style: vTheme.textTheme.titleLarge),
         Text(
-          context.texts.puzzlePuzzleSur('${vPosition + 1}', '${state.puzzleRules.seriesLength}', '${state.puzzleRules.types[pPuzzle['type']]}', '${pPuzzle['language']}', '${state.puzzleRules.levelLabel(pPuzzle['level'] as int)}'),
+          context.texts.puzzlePuzzleSur(
+              '${vPosition + 1}',
+              '${state.puzzleRules.seriesLength}',
+              '${state.puzzleRules.types[pPuzzle['type']]}',
+              '${pPuzzle['language']}',
+              '${state.puzzleRules.levelLabel(pPuzzle['level'] as int)}'),
           style: vTheme.textTheme.bodySmall,
         ),
         const SizedBox(height: 8),
@@ -177,7 +182,9 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
       children: [
         Text(vPuzzle['title'] as String, style: vTheme.textTheme.titleLarge),
         Text(
-          context.texts.puzzleReponsesJustesAffilee('${vCorrect ? 'Bonne réponse' : "Ce n'est pas la bonne réponse"}', '${state.puzzleProgress['streak']}'),
+          context.texts.puzzleReponsesJustesAffilee(
+              '${vCorrect ? 'Bonne réponse' : "Ce n'est pas la bonne réponse"}',
+              '${state.puzzleProgress['streak']}'),
           style: vTheme.textTheme.titleMedium?.copyWith(
             color: vCorrect ? Colors.green.shade700 : vTheme.colorScheme.error,
           ),
@@ -211,7 +218,8 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
       children: [
         Text(context.texts.puzzleBilanSerieSur('${pRecap['score']}', '${pRecap['total']}'),
             style: vTheme.textTheme.titleLarge),
-        if ((pRecap['mistakes'] as List).isEmpty) Text(context.texts.puzzleAucuneErreurSerieParfaite),
+        if ((pRecap['mistakes'] as List).isEmpty)
+          Text(context.texts.puzzleAucuneErreurSerieParfaite),
         for (final vMistake in pRecap['mistakes'] as List)
           if (vTitles[(vMistake as Map)['id']] case final vPuzzle?)
             Card(
@@ -249,9 +257,14 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
           Card(
             child: ListTile(
               leading: const Icon(Icons.extension_outlined),
-              title: Text(context.texts.puzzleNiveau('${state.puzzleRules.levelLabel(vProgress['level'] as int)}')),
+              title: Text(context.texts
+                  .puzzleNiveau('${state.puzzleRules.levelLabel(vProgress['level'] as int)}')),
               subtitle: Text(
-                context.texts.puzzleReponsesJustesAffileeRecord('${vProgress['streak']}', '${vProgress['best_streak']}', '${state.puzzleRules.levelUp}', '${state.puzzleRules.levelDown}'),
+                context.texts.puzzleReponsesJustesAffileeRecord(
+                    '${vProgress['streak']}',
+                    '${vProgress['best_streak']}',
+                    '${state.puzzleRules.levelUp}',
+                    '${state.puzzleRules.levelDown}'),
               ),
             ),
           ),

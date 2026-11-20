@@ -134,7 +134,8 @@ class _InterviewScreenState extends State<InterviewScreen> {
       padding: const EdgeInsets.all(16),
       children: [
         Text(
-          context.texts.interviewQuestionSur('${pQuestion['theme']}', '${position + 1}', '${questions.length}'),
+          context.texts.interviewQuestionSur(
+              '${pQuestion['theme']}', '${position + 1}', '${questions.length}'),
           style: vTheme.textTheme.bodySmall,
         ),
         const SizedBox(height: 8),

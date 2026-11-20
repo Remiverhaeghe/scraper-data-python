@@ -213,8 +213,10 @@ class _DevopsScreenState extends State<DevopsScreen> {
             decoration: InputDecoration(
               labelText: context.texts.commonCommande,
               border: const OutlineInputBorder(),
-              suffixIcon:
-                  IconButton(icon: const Icon(Icons.send), tooltip: context.texts.commonExecuter, onPressed: run),
+              suffixIcon: IconButton(
+                  icon: const Icon(Icons.send),
+                  tooltip: context.texts.commonExecuter,
+                  onPressed: run),
             ),
             onSubmitted: (_) => run(),
           ),
@@ -257,7 +259,8 @@ class _DevopsScreenState extends State<DevopsScreen> {
             children: [
               TextButton(onPressed: restart, child: Text(context.texts.commonRecommencer)),
               TextButton(
-                  onPressed: () => setState(() => showHint = true), child: Text(context.texts.commonIndice2)),
+                  onPressed: () => setState(() => showHint = true),
+                  child: Text(context.texts.commonIndice2)),
               TextButton(
                 onPressed: () => setState(() {
                   showSolution = true;
@@ -267,7 +270,8 @@ class _DevopsScreenState extends State<DevopsScreen> {
               ),
             ],
           ),
-          if (showHint) Text(context.texts.commonIndice('${level['hint']}'), style: vTheme.textTheme.bodySmall),
+          if (showHint)
+            Text(context.texts.commonIndice('${level['hint']}'), style: vTheme.textTheme.bodySmall),
           if (showSolution)
             Text(
               context.texts.devopsCommandesSolution('${(level['commands'] as List).join(' · ')}'),

@@ -124,7 +124,8 @@ class _TroubleshootingScreenState extends State<TroubleshootingScreen> {
           const SizedBox(height: 8),
           Text(widget.scenario['machine'] as String, style: vTheme.textTheme.bodySmall),
           const SizedBox(height: 12),
-          Text(context.texts.troubleshootingTempsPasseMin('${vGame['minutes']}'), style: vTheme.textTheme.labelLarge),
+          Text(context.texts.troubleshootingTempsPasseMin('${vGame['minutes']}'),
+              style: vTheme.textTheme.labelLarge),
           if (vSolved)
             Card(
               color: vTheme.colorScheme.primaryContainer,
@@ -134,11 +135,14 @@ class _TroubleshootingScreenState extends State<TroubleshootingScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      context.texts.troubleshootingPanneResoluePoints('${vGame['score']}', '${'★' * (vGame['stars'] as int)}'),
+                      context.texts.troubleshootingPanneResoluePoints(
+                          '${vGame['score']}', '${'★' * (vGame['stars'] as int)}'),
                       style: vTheme.textTheme.titleMedium,
                     ),
                     Text(
-                      context.texts.troubleshootingTechnicienExperimenteMetMin('${widget.scenario['best_minutes']}', '${xpOf(vGame['score'] as int, vRules)}'),
+                      context.texts.troubleshootingTechnicienExperimenteMetMin(
+                          '${widget.scenario['best_minutes']}',
+                          '${xpOf(vGame['score'] as int, vRules)}'),
                     ),
                     if (vGame['proven'] != true)
                       Text(context.texts.troubleshootingReparationDevineeSansMesure),
@@ -173,7 +177,8 @@ class _TroubleshootingScreenState extends State<TroubleshootingScreen> {
               ),
           ],
           const SizedBox(height: 12),
-          Text(context.texts.troubleshootingJournalIntervention, style: vTheme.textTheme.titleSmall),
+          Text(context.texts.troubleshootingJournalIntervention,
+              style: vTheme.textTheme.titleSmall),
           for (final vEntry in (vGame['log'] as List).reversed)
             ListTile(
               dense: true,

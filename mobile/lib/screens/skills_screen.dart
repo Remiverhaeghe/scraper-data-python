@@ -69,7 +69,10 @@ class _SkillsScreenState extends State<SkillsScreen> {
         title: Text(context.texts.skillsAutoEvaluation),
         actions: [
           if (levels.isNotEmpty)
-            IconButton(tooltip: context.texts.skillsEnregistrer, onPressed: save, icon: const Icon(Icons.save)),
+            IconButton(
+                tooltip: context.texts.skillsEnregistrer,
+                onPressed: save,
+                icon: const Icon(Icons.save)),
         ],
       ),
       body: vBody,

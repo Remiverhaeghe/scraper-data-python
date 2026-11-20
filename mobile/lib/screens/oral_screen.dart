@@ -185,7 +185,8 @@ class _OralScreenState extends State<OralScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          context.texts.oralQuestionSur('${min(position + 1, questions.length)}', '${questions.length}'),
+          context.texts
+              .oralQuestionSur('${min(position + 1, questions.length)}', '${questions.length}'),
           style: vTheme.textTheme.bodySmall,
         ),
         Text(vQuestion[0] as String, style: vTheme.textTheme.titleLarge),
@@ -229,7 +230,8 @@ class _OralScreenState extends State<OralScreen> {
         ],
         if (feedback case final vFeedback?) ...[
           Text(
-            context.texts.oralReponseNotee('${vFeedback['score']}', '${vFeedback['seconds']}', '${(rules['duration_ratings'] as Map)['${vFeedback['duration']}']}'),
+            context.texts.oralReponseNotee('${vFeedback['score']}', '${vFeedback['seconds']}',
+                '${(rules['duration_ratings'] as Map)['${vFeedback['duration']}']}'),
             style: vTheme.textTheme.titleMedium,
           ),
           Text(context.texts.oralConseil('${vQuestion[1]}')),
@@ -259,12 +261,13 @@ class _OralScreenState extends State<OralScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (vRecent.isNotEmpty)
-          Text(context.texts.oralNotesRecentes('${vRecent.map((pScore) => '$pScore %').join(', ')}')),
+          Text(context.texts
+              .oralNotesRecentes('${vRecent.map((pScore) => '$pScore %').join(', ')}')),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           initialValue: mode,
-          decoration:
-              InputDecoration(labelText: context.texts.oralTypeQuestions, border: OutlineInputBorder()),
+          decoration: InputDecoration(
+              labelText: context.texts.oralTypeQuestions, border: OutlineInputBorder()),
           items: [
             for (final vEntry in vModes.entries)
               DropdownMenuItem(value: vEntry.key, child: Text(vEntry.value as String)),

@@ -47,7 +47,8 @@ class OfferDetailScreen extends StatelessWidget {
           minLines: 3,
           maxLines: 6,
           maxLength: maxNoteLength,
-          decoration: InputDecoration(hintText: context.texts.offerDetailAppelRecruteurImpressionFaire),
+          decoration:
+              InputDecoration(hintText: context.texts.offerDetailAppelRecruteurImpressionFaire),
         ),
         actions: [
           TextButton(
@@ -70,8 +71,7 @@ class OfferDetailScreen extends StatelessWidget {
 
     await onNote!(vText);
     vMessenger.showSnackBar(
-      SnackBar(
-          content: Text(context.texts.offerDetailNoteGardeeElleRejoint)),
+      SnackBar(content: Text(context.texts.offerDetailNoteGardeeElleRejoint)),
     );
   }
 
@@ -111,7 +111,8 @@ class OfferDetailScreen extends StatelessWidget {
           Text('${offer['title'] ?? ''}', style: vTheme.textTheme.titleLarge),
           if (vDetails.isNotEmpty) Text(vDetails, style: vTheme.textTheme.bodyMedium),
           if (offer['match_score'] != null)
-            Text(context.texts.commonDetailCorrespondanceAvecVotreProfil('${offer['match_score']}')),
+            Text(
+                context.texts.commonDetailCorrespondanceAvecVotreProfil('${offer['match_score']}')),
           if (offer['education'] != null)
             Padding(
               padding: const EdgeInsets.only(top: 6),

@@ -183,13 +183,15 @@ class _ExcelScreenState extends State<ExcelScreen> {
       children: [
         if (run['passed'] == true) ...[
           Text(
-            context.texts.commonNiveauReussi('${first ? ' · +${widget.state.excelXp} XP au retour sur le PC' : ''}'),
+            context.texts.commonNiveauReussi(
+                '${first ? ' · +${widget.state.excelXp} XP au retour sur le PC' : ''}'),
             style: vTheme.textTheme.titleMedium?.copyWith(color: Colors.green.shade700),
           ),
           Text(level['explanation'] as String? ?? ''),
         ] else ...[
           Text(run['message'] as String, style: TextStyle(color: vTheme.colorScheme.error)),
-          for (final vAdvice in run['advice'] as List) Text(context.texts.commonConseil('${vAdvice}')),
+          for (final vAdvice in run['advice'] as List)
+            Text(context.texts.commonConseil('${vAdvice}')),
         ],
         for (final vCell in run['cells'] as List)
           Text(
@@ -243,13 +245,15 @@ class _ExcelScreenState extends State<ExcelScreen> {
                 label: Text(context.texts.commonValider),
               ),
               TextButton(
-                  onPressed: () => setState(() => showHint = true), child: Text(context.texts.commonIndice2)),
+                  onPressed: () => setState(() => showHint = true),
+                  child: Text(context.texts.commonIndice2)),
               TextButton(
                   onPressed: () => setState(() => editor.text = level['solution'] as String),
                   child: Text(context.texts.commonVoirSolution)),
             ],
           ),
-          if (showHint) Text(context.texts.commonIndice('${level['hint']}'), style: vTheme.textTheme.bodySmall),
+          if (showHint)
+            Text(context.texts.commonIndice('${level['hint']}'), style: vTheme.textTheme.bodySmall),
           if (tried) buildVerdict(),
         ],
       ),

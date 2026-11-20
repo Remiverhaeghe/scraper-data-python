@@ -217,7 +217,9 @@ class _GitScreenState extends State<GitScreen> {
           ],
           if (vWorktree.isNotEmpty || vGoalWorktree.isNotEmpty)
             Text(
-              context.texts.gitFichiersObjectif('${vWorktree.isEmpty ? 'rien en cours' : vWorktree.join(' · ')}', '${vGoalWorktree.isEmpty ? 'rien en cours' : vGoalWorktree.join(' · ')}'),
+              context.texts.gitFichiersObjectif(
+                  '${vWorktree.isEmpty ? 'rien en cours' : vWorktree.join(' · ')}',
+                  '${vGoalWorktree.isEmpty ? 'rien en cours' : vGoalWorktree.join(' · ')}'),
               style: vTheme.textTheme.bodySmall,
             ),
           if (message.isNotEmpty)
@@ -235,8 +237,10 @@ class _GitScreenState extends State<GitScreen> {
                 labelText: context.texts.commonCommande,
                 hintText: context.texts.gitGitCommit,
                 border: const OutlineInputBorder(),
-                suffixIcon:
-                    IconButton(icon: const Icon(Icons.send), tooltip: context.texts.commonExecuter, onPressed: run),
+                suffixIcon: IconButton(
+                    icon: const Icon(Icons.send),
+                    tooltip: context.texts.commonExecuter,
+                    onPressed: run),
               ),
               onSubmitted: (_) => run(),
             ),
@@ -255,7 +259,8 @@ class _GitScreenState extends State<GitScreen> {
             ),
           ],
           if (history.isNotEmpty)
-            Text(context.texts.gitCommandes('${history.join(' · ')}'), style: vTheme.textTheme.bodySmall),
+            Text(context.texts.gitCommandes('${history.join(' · ')}'),
+                style: vTheme.textTheme.bodySmall),
           Wrap(
             spacing: 8,
             children: [
@@ -263,16 +268,19 @@ class _GitScreenState extends State<GitScreen> {
                 TextButton(
                     onPressed: () => restart(history.sublist(0, history.length - 1)),
                     child: Text(context.texts.commonAnnuler)),
-              TextButton(onPressed: () => restart([]), child: Text(context.texts.commonRecommencer)),
               TextButton(
-                  onPressed: () => setState(() => showHint = true), child: Text(context.texts.commonIndice2)),
+                  onPressed: () => restart([]), child: Text(context.texts.commonRecommencer)),
+              TextButton(
+                  onPressed: () => setState(() => showHint = true),
+                  child: Text(context.texts.commonIndice2)),
               TextButton(
                   onPressed: () => setState(() => showSolution = true),
                   child: Text(context.texts.commonSolution)),
             ],
           ),
           if (showHint) Text(context.texts.commonIndice('${level['hint']}')),
-          if (showSolution) Text(context.texts.gitSolution('${(level['solution'] as List).join(' · ')}')),
+          if (showSolution)
+            Text(context.texts.gitSolution('${(level['solution'] as List).join(' · ')}')),
         ],
       ),
     );

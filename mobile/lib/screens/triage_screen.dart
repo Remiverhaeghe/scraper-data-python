@@ -131,7 +131,8 @@ class TriageCard extends StatelessWidget {
           Text('${offer['title'] ?? 'Offre sans titre'}', style: vTheme.textTheme.titleLarge),
           if (vDetails.isNotEmpty) Text(vDetails),
           if (offer['match_score'] != null)
-            Text(context.texts.commonDetailCorrespondanceAvecVotreProfil('${offer['match_score']}')),
+            Text(
+                context.texts.commonDetailCorrespondanceAvecVotreProfil('${offer['match_score']}')),
           const SizedBox(height: 12),
           if (vDescription.isNotEmpty)
             Text(vDescription, maxLines: 12, overflow: TextOverflow.ellipsis),
