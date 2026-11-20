@@ -100,9 +100,8 @@ DiveWeek diveWeek(Map<String, List<int>> pLog, DateTime pToday) {
     answered: vDays.fold(0, (pSum, pDay) => pSum + pDay.answered),
     correct: vDays.fold(0, (pSum, pDay) => pSum + pDay.correct),
     activeDays: vActive.length,
-    bestDay: vActive.isEmpty
-        ? null
-        : vActive.reduce((pA, pB) => pB.answered > pA.answered ? pB : pA),
+    bestDay:
+        vActive.isEmpty ? null : vActive.reduce((pA, pB) => pB.answered > pA.answered ? pB : pA),
     previousAnswered: vPrevious.fold(0, (pSum, pDay) => pSum + pDay.answered),
   );
 

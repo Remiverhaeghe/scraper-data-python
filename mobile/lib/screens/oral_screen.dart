@@ -261,8 +261,7 @@ class _OralScreenState extends State<OralScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (vRecent.isNotEmpty)
-          Text(context.texts
-              .oralNotesRecentes(vRecent.map((pScore) => '$pScore %').join(', '))),
+          Text(context.texts.oralNotesRecentes(vRecent.map((pScore) => '$pScore %').join(', '))),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           initialValue: mode,

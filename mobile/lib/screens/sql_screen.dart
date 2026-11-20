@@ -242,8 +242,8 @@ class _SqlScreenState extends State<SqlScreen> {
               autocorrect: false,
               enableSuggestions: false,
               decoration: InputDecoration(
-                labelText: context.texts.sqlRequete(
-                    widget.state.sqlDialect == 'sqlserver' ? 'SQL Server' : 'MySQL'),
+                labelText: context.texts
+                    .sqlRequete(widget.state.sqlDialect == 'sqlserver' ? 'SQL Server' : 'MySQL'),
                 border: const OutlineInputBorder(),
               ),
             ),

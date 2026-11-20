@@ -20,7 +20,8 @@ void main() {
     expect(themeDepth(vQuestions, const {}), 0);
     expect(themeDepth(const [], const {}), 0);
     expect(
-      themeDepth(vQuestions, {for (final vQuestion in vQuestions) vQuestion.id: ReviewState(box: 5, due: vDue)}),
+      themeDepth(vQuestions,
+          {for (final vQuestion in vQuestions) vQuestion.id: ReviewState(box: 5, due: vDue)}),
       poolDepthMetres,
     );
     expect(
@@ -40,7 +41,9 @@ void main() {
   });
 
   test('Le carnet compte la semaine du lundi au dimanche et garde huit semaines', () {
-    var vLog = <String, List<int>>{'2026-09-01': [5, 5]};
+    var vLog = <String, List<int>>{
+      '2026-09-01': [5, 5]
+    };
     vLog = logAnswer(vLog, DateTime(2026, 11, 16, 9), true);
     vLog = logAnswer(vLog, DateTime(2026, 11, 16, 21), false);
     vLog = logAnswer(vLog, DateTime(2026, 11, 18, 8), true);

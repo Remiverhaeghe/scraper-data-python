@@ -375,8 +375,8 @@ class DomainCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        context.texts.homeRevoirNouvelleQuestion(
-                            '$vDue', '$vNew', '${vQuestions.length}'),
+                        context.texts
+                            .homeRevoirNouvelleQuestion('$vDue', '$vNew', '${vQuestions.length}'),
                       ),
                       const SizedBox(height: 6),
                       // Profondeur du thème : boîte moyenne de ses questions, de 0 à 3 m
