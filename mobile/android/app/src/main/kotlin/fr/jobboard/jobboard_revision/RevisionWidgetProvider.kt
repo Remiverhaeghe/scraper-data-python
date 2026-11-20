@@ -3,12 +3,14 @@ package fr.jobboard.jobboard_revision
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.SharedPreferences
+import android.net.Uri
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetLaunchIntent
 import es.antonborri.home_widget.HomeWidgetProvider
 
 // Widget de l'écran d'accueil : lignes préparées par l'application Flutter
-// (lib/services/home_widget_service.dart), ouverture de l'application au toucher.
+// (lib/services/home_widget_service.dart), ouverture de l'application au toucher, et bouton
+// « 5 min » qui lance directement la révision express.
 class RevisionWidgetProvider : HomeWidgetProvider() {
     override fun onUpdate(
         context: Context,
@@ -26,6 +28,14 @@ class RevisionWidgetProvider : HomeWidgetProvider() {
                 setOnClickPendingIntent(
                     R.id.widget_root,
                     HomeWidgetLaunchIntent.getActivity(context, MainActivity::class.java),
+                )
+                setOnClickPendingIntent(
+                    R.id.widget_sprint,
+                    HomeWidgetLaunchIntent.getActivity(
+                        context,
+                        MainActivity::class.java,
+                        Uri.parse("tremplin://sprint"),
+                    ),
                 )
             }
 

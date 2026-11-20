@@ -1,6 +1,8 @@
 // Accueil : progression, synchronisation et thèmes rangés par domaine, avec
 // pour chacun les questions à revoir aujourd'hui.
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../l10n/texts.dart';
@@ -9,6 +11,7 @@ import '../logic/review.dart';
 import '../models/quiz_package.dart';
 import '../revision_state.dart';
 import '../services/api_client.dart';
+import '../services/home_widget_service.dart';
 import '../theme.dart';
 import '../widgets/celebration.dart';
 import '../widgets/brand.dart';
@@ -42,12 +45,28 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
     // Synchronisation à l'ouverture, sans attendre un geste de l'utilisateur.
     WidgetsBinding.instance.addPostFrameCallback((_) => state.synchronizeQuietly());
+    // Bouton « 5 min » du widget : révision express tout de suite
+    widgetLaunches = state.homeWidget?.launches().listen((pUri) {
+      if (isSprintLaunch(pUri) && mounted) {
+        openSprint();
+      }
+    });
   }
+
+  StreamSubscription<Uri?>? widgetLaunches;
+
+  /// Révision express de cinq minutes, tous thèmes confondus.
+  void openSprint() => Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => QuestionScreen(state: state, timeLimit: sprintDuration),
+        ),
+      );
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     state.removeListener(celebrateLevel);
+    widgetLaunches?.cancel();
     super.dispose();
   }
 
