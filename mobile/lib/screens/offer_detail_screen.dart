@@ -36,6 +36,7 @@ class OfferDetailScreen extends StatelessWidget {
 
   Future<void> writeNote(BuildContext pContext) async {
     final vMessenger = ScaffoldMessenger.of(pContext);
+    final vKept = pContext.texts.offerDetailNoteGardeeElleRejoint;
     final vController = TextEditingController();
     final vText = await showDialog<String>(
       context: pContext,
@@ -70,9 +71,7 @@ class OfferDetailScreen extends StatelessWidget {
     }
 
     await onNote!(vText);
-    vMessenger.showSnackBar(
-      SnackBar(content: Text(pContext.texts.offerDetailNoteGardeeElleRejoint)),
-    );
+    vMessenger.showSnackBar(SnackBar(content: Text(vKept)));
   }
 
   /// Couleur du diplôme demandé : vert accessible, orange un niveau au-dessus,

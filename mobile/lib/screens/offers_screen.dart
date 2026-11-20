@@ -14,6 +14,7 @@ import 'triage_screen.dart';
 /// Ouvre l'annonce dans le navigateur ; seules les adresses web sont ouvertes.
 Future<void> openOfferUrl(BuildContext pContext, Map<String, dynamic> pOffer) async {
   final vMessenger = ScaffoldMessenger.of(pContext);
+  final vFailed = pContext.texts.offersAnnonceNPasPu;
   final vUri = Uri.tryParse('${pOffer['url'] ?? ''}');
 
   final vOpened = vUri != null &&
@@ -21,7 +22,7 @@ Future<void> openOfferUrl(BuildContext pContext, Map<String, dynamic> pOffer) as
       await launchUrl(vUri, mode: LaunchMode.externalApplication);
 
   if (!vOpened) {
-    vMessenger.showSnackBar(SnackBar(content: Text(pContext.texts.offersAnnonceNPasPu)));
+    vMessenger.showSnackBar(SnackBar(content: Text(vFailed)));
   }
 }
 

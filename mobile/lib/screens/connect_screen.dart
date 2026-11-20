@@ -206,7 +206,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
           key: const ValueKey('searching'),
           leading: const SizedBox.square(
             dimension: 24,
-            child: const CircularProgressIndicator(strokeWidth: 3),
+            child: CircularProgressIndicator(strokeWidth: 3),
           ),
           title: Text(context.texts.connectRechercheTonPcSur),
         ),
