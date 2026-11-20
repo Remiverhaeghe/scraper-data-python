@@ -137,7 +137,7 @@ class WavesPainter extends CustomPainter {
   bool shouldRepaint(WavesPainter pOld) => pOld.phase != phase;
 }
 
-/// Carte d'en-tête couleur d'eau, avec des reflets qui ondulent lentement et le
+/// Carte d'en-tête couleur d'eau, avec des reflets qui ondulent à l'ouverture et le
 /// livre-tremplin en filigrane.
 class PoolCard extends StatefulWidget {
   const PoolCard({super.key, required this.child});
@@ -150,16 +150,17 @@ class PoolCard extends StatefulWidget {
 
 class _PoolCardState extends State<PoolCard> with SingleTickerProviderStateMixin {
   late final AnimationController waves =
-      AnimationController(vsync: this, duration: const Duration(seconds: 9));
+      AnimationController(vsync: this, duration: const Duration(seconds: 6));
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Vagues figées quand le téléphone demande de réduire les animations
+    // Trois passages de vagues à l'ouverture, puis l'eau se calme : pas d'animation
+    // sans fin qui use la batterie. Figées si le téléphone réduit les animations.
     if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) {
       waves.stop();
-    } else if (!waves.isAnimating) {
-      waves.repeat();
+    } else if (!waves.isAnimating && waves.value == 0) {
+      waves.repeat(count: 3);
     }
   }
 
